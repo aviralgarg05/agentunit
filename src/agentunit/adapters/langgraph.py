@@ -10,6 +10,7 @@ import logging
 import yaml
 
 from .base import BaseAdapter, AdapterOutcome
+from .registry import register_adapter
 from ..core.exceptions import AdapterNotAvailableError, AgentUnitError
 from ..core.trace import TraceLog
 from ..datasets.base import DatasetCase
@@ -77,9 +78,13 @@ class LangGraphAdapter(BaseAdapter):
     # Helpers -----------------------------------------------------------------
     def _wrap_callable(self, candidate: Any) -> Callable[[Dict[str, Any]], Any]:
         if hasattr(candidate, "invoke"):
-            return lambda payload: candidate.invoke(payload)
+            method = getattr(candidate, "invoke")
+            if callable(method):
+                return method
         if hasattr(candidate, "run"):
-            return lambda payload: candidate.run(payload)
+            method = getattr(candidate, "run")
+            if callable(method):
+                return method
         if callable(candidate):
             return candidate
         raise AgentUnitError("Unsupported LangGraph source; expected callable or graph instance")
@@ -118,3 +123,6 @@ class LangGraphAdapter(BaseAdapter):
             raise AgentUnitError(f"Module {module_name} does not expose attribute '{target_name}'")
         candidate = getattr(module, target_name)
         return self._wrap_callable(candidate)
+
+
+register_adapter(LangGraphAdapter, aliases=("langgraph_graph",))

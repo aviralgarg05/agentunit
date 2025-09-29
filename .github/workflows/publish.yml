@@ -12,7 +12,8 @@ permissions:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-    environment: release  # Use environment for additional protection
+    environment:
+      name: release  # Use environment for additional protection
     
     steps:
     - name: Checkout code
@@ -35,6 +36,8 @@ jobs:
       run: twine check dist/*
       
     - name: Publish to PyPI
+      # Fixed: previous pinned SHA not found. Using maintained major release tag.
+      # (Optional) After verifying, you may hard-pin to the current commit for stricter supply-chain control.
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}

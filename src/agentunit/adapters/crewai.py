@@ -5,6 +5,7 @@ from typing import Any, Callable, Optional
 import logging
 
 from .base import BaseAdapter, AdapterOutcome
+from .registry import register_adapter
 from ..core.exceptions import AgentUnitError
 from ..core.trace import TraceLog
 from ..datasets.base import DatasetCase
@@ -12,10 +13,9 @@ from ..datasets.base import DatasetCase
 logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional dependency
-    from crewai import Crew, Task
+    from crewai import Crew
 except Exception:  # pragma: no cover
     Crew = None  # type: ignore
-    Task = None  # type: ignore
 
 
 class CrewAIAdapter(BaseAdapter):
@@ -67,3 +67,6 @@ class CrewAIAdapter(BaseAdapter):
             logger.exception("CrewAI execution failed")
             trace.record("error", message=str(exc))
             return AdapterOutcome(success=False, output=None, error=str(exc))
+
+
+register_adapter(CrewAIAdapter, aliases=("crew_ai",))

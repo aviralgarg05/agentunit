@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, Optional
 import logging
 
 from .base import BaseAdapter, AdapterOutcome
+from .registry import register_adapter
 from ..core.exceptions import AgentUnitError
 from ..core.trace import TraceLog
 from ..datasets.base import DatasetCase
@@ -12,7 +13,7 @@ from ..datasets.base import DatasetCase
 logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - optional dependency
-    from openai_agents_sdk import AgentsClient
+    from openai_agents_sdk import AgentsClient  # type: ignore[import-not-found]
 except Exception:  # pragma: no cover
     AgentsClient = None  # type: ignore
 
@@ -84,3 +85,6 @@ class OpenAIAgentsAdapter(BaseAdapter):
             logger.debug("Instantiating AgentsClient using environment credentials")
             return AgentsClient()
         return AgentsClient(api_key=api_key)
+
+
+register_adapter(OpenAIAgentsAdapter, aliases=("openai_agents", "openai_sdk"))

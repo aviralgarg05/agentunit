@@ -92,7 +92,7 @@ suite = create_suite(agent=...)  # pragma: no cover - replace with actual agent
 
 ### Using convenience constructors
 
-AgentUnit ships with adapter helpers when you use popular frameworks:
+AgentUnit ships with adapter helpers for many ecosystem frameworks. Each helper instantiates the right adapter, applies sensible defaults, and keeps your suite code focused on datasets and policy.
 
 ```python
 from agentunit.core.scenario import Scenario
@@ -107,9 +107,68 @@ openai_scenario = Scenario.from_openai_agents(support_flow, dataset="faq", name=
 # CrewAI
 from my_crewai_setup import crew
 crewai_scenario = Scenario.from_crewai(crew, dataset="faq", retries=2)
+
+# Phidata agents
+from my_phi_project import marketing_agent
+phidata_scenario = Scenario.from_phidata(marketing_agent, dataset="faq", name="marketing-phi")
+
+# Microsoft PromptFlow
+from promptflow import load_flow
+promptflow_scenario = Scenario.from_promptflow(load_flow("flows/support.yaml"), dataset="faq")
+
+# OpenAI Swarm orchestrations
+from my_swarm import escalation_swarm
+swarm_scenario = Scenario.from_openai_swarm(escalation_swarm, dataset="faq")
+
+# Anthropic Claude on Amazon Bedrock
+bedrock_scenario = Scenario.from_anthropic_bedrock(
+    client=my_bedrock_runtime,
+    model_id="anthropic.claude-3-sonnet",
+    dataset="faq",
+    name="claude-bedrock",
+)
+
+# Self-hosted Mistral server
+mistral_scenario = Scenario.from_mistral_server(
+    base_url="https://mistral.company.internal",
+    dataset="faq",
+    name="mistral-production",
+)
+
+# Rasa HTTP endpoint or callable
+rasa_scenario = Scenario.from_rasa_endpoint("https://rasa.company.com/webhooks/rest/webhook", dataset="faq")
 ```
 
 Mix and match scenarios in a plain list or generator; the CLI accepts anything iterable.
+
+#### Helper reference
+
+| Helper | Typical input | Optional dependency | Key kwargs | Output name default |
+| --- | --- | --- | --- | --- |
+| `Scenario.load_langgraph` | Path or graph object | `langgraph` | `config`, `name` | Stem of file path |
+| `Scenario.from_openai_agents` | Flow callable/module | `openai-agents` | `options`, `name` | Flow `__name__` |
+| `Scenario.from_crewai` | `Crew` instance | `crewai` | `options`, `name` | Crew `.name` |
+| `Scenario.from_phidata` | Phidata agent or callable | `phi` / `phidata` | `input_builder`, `extra` | Agent class name |
+| `Scenario.from_promptflow` | PromptFlow flow or callable | `promptflow` | `context_builder`, `output_key` | Flow name |
+| `Scenario.from_openai_swarm` | Swarm orchestrator/callable | `openai` (swarm preview) | `message_builder`, `metadata_builder` | Swarm class name |
+| `Scenario.from_anthropic_bedrock` | Bedrock runtime client | `boto3` (Bedrock) | `prompt_builder`, `invoke_kwargs` | `<model_id>-bedrock` |
+| `Scenario.from_mistral_server` | Mistral API base URL | `httpx` (bundled) | `model`, `max_tokens`, `temperature` | "mistral-server-scenario" |
+| `Scenario.from_rasa_endpoint` | REST URL or callable | `httpx` (bundled) | `sender_id`, `session_params`, `headers` | Target stem |
+
+> **Dependency tip**: AgentUnit keeps these integrations optional. Install only the frameworks you need (for example `pip install phidata promptflow`). The helpers gracefully raise `AgentUnitError` if a required SDK is missing.
+
+#### Customising inputs and outputs
+
+Each helper accepts builder callbacks so you can reshape payloads without subclassing adapters:
+
+- **Phidata** – `input_builder(case)` lets you add derived fields (for example retrieval hints). Return a dict that matches your agent signature.
+- **PromptFlow** – Provide a custom `context_builder(case)` when your flow expects nested keys; override `output_key` to target a different field in the flow result.
+- **OpenAI Swarm** – Supply `message_builder(case)` when you need advanced role sequencing, or `metadata_builder(case)` to attach scenario metadata to the swarm run.
+- **Anthropic Bedrock** – Override `prompt_builder(case)` to customise Claude's message format or provide tool definitions. Pass `invoke_kwargs` to tweak Bedrock runtime parameters (e.g. `temperature`).
+- **Mistral server** – Adjust decoding parameters with `max_tokens` and `temperature`, and pass a pre-configured `http_client` for connection pooling or mTLS.
+- **Rasa** – Use a callable target (e.g. a Python SDK dispatcher) for local testing, or an HTTPS URL for production bots. Override `response_key` when your responses embed text under a different field.
+
+See the templates at the end of this guide for end-to-end examples that combine datasets, adapters, and these helpers, and refer to the [Framework Integrations catalog](framework-integrations.md) for deeper walkthroughs and installation notes.
 
 ## Organizing suites
 
