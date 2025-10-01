@@ -3,13 +3,17 @@ from __future__ import annotations
 
 from .core.scenario import Scenario
 from .core.runner import Runner, run_suite
-from .reporting.results import SuiteResult
+from .reporting.results import SuiteResult, ScenarioResult
+from .datasets.base import DatasetSource, DatasetCase
 
 __all__ = [
     "Scenario",
-    "Runner",
+    "Runner", 
     "run_suite",
     "SuiteResult",
+    "ScenarioResult",
+    "DatasetSource",
+    "DatasetCase",
 ]
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"

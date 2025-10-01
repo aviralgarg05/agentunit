@@ -5,22 +5,44 @@ from contextlib import contextmanager
 from typing import Iterator
 import logging
 
-from opentelemetry import trace
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter, SimpleSpanProcessor
+# Optional OpenTelemetry imports
+try:
+    from opentelemetry import trace
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter, SimpleSpanProcessor
+    HAS_OPENTELEMETRY = True
+except ImportError:
+    HAS_OPENTELEMETRY = False
+    # Provide minimal stubs for when OpenTelemetry is not available
+    trace = None
+    Resource = None
+    TracerProvider = None
+    BatchSpanProcessor = None
+    ConsoleSpanExporter = None
+    SimpleSpanProcessor = None
 
-try:  # pragma: no cover - preferred import path in recent releases
-    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-except ImportError:  # pragma: no cover - fallback for older distributions
-    from opentelemetry.sdk.trace.export import OTLPSpanExporter  # type: ignore[attr-defined]
+if HAS_OPENTELEMETRY:
+    try:  # pragma: no cover - preferred import path in recent releases
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    except ImportError:  # pragma: no cover - fallback for older distributions
+        try:
+            from opentelemetry.sdk.trace.export import OTLPSpanExporter  # type: ignore[attr-defined]
+        except ImportError:
+            OTLPSpanExporter = None
+else:
+    OTLPSpanExporter = None
 
 logger = logging.getLogger(__name__)
 
 
 def configure_tracer(exporter: str | None = None) -> None:
+    """Configure OpenTelemetry tracer if available."""
+    if not HAS_OPENTELEMETRY:
+        logger.debug("OpenTelemetry not available, skipping tracer configuration")
+        return
+        
     current_provider = trace.get_tracer_provider()
-    provider: TracerProvider
     if isinstance(current_provider, TracerProvider):
         provider = current_provider
     else:
@@ -43,7 +65,11 @@ def configure_tracer(exporter: str | None = None) -> None:
     if exporter in {None, "console"}:
         processor = SimpleSpanProcessor(ConsoleSpanExporter())
     elif exporter == "otlp":
-        processor = BatchSpanProcessor(OTLPSpanExporter())
+        if OTLPSpanExporter is not None:
+            processor = BatchSpanProcessor(OTLPSpanExporter())
+        else:
+            logger.warning("OTLP exporter not available, falling back to console")
+            processor = SimpleSpanProcessor(ConsoleSpanExporter())
     else:
         logger.warning("Unknown exporter '%s', falling back to console", exporter)
         processor = SimpleSpanProcessor(ConsoleSpanExporter())
@@ -52,7 +78,16 @@ def configure_tracer(exporter: str | None = None) -> None:
 
 
 @contextmanager
-def span(name: str, **attributes: object) -> Iterator[trace.Span]:
+def span(name: str, **attributes: object) -> Iterator[object]:
+    """Create a tracing span if OpenTelemetry is available."""
+    if not HAS_OPENTELEMETRY or trace is None:
+        # Return a no-op context manager when OpenTelemetry is not available
+        class NoOpSpan:
+            def set_attribute(self, key: str, value: object) -> None:
+                pass
+        yield NoOpSpan()
+        return
+        
     tracer = trace.get_tracer("agentunit")
     with tracer.start_as_current_span(name) as current_span:
         for key, value in attributes.items():

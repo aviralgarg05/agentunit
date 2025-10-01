@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "agentunit"
-version = "0.3.0"
+version = "0.4.0"
 description = "Pytest-style evaluation harness for agentic AI and RAG workflows"
 authors = ["AgentUnit Contributors <opensource@agentunit.dev>"]
 license = "MIT"

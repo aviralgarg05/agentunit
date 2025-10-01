@@ -1,13 +1,28 @@
 # AgentUnit
 
-AgentUnit is a pytest-inspired evaluation harness for autonomous agents and retrieval-augmented generation (RAG) workflows. It helps you describe repeatable scenarios, connect them to your agent stack, and score results with both heuristic and LLM-backed metrics.
+**AgentUnit** is a comprehensive framework for testing, monitoring, and validating multi-agent AI systems across different platforms. It provides a unified interface to test agent interactions, measure performance, and ensure reliability of conversational AI workflows.
 
-## At a glance
+## 🚀 Features
 
-- 📦 **Installable package**: `pip install agentunit` brings the CLI, adapters, metrics, and scenario primitives into your project.
-- 🧪 **Scenario-driven evaluations**: Define deterministic test suites for LangGraph, OpenAI Agents, CrewAI, or custom adapters.
-- 📊 **Built-in metrics & reports**: Export Markdown, JSON, and JUnit summaries. Optional OpenTelemetry spans keep your observability stack in sync.
-- 🧱 **Composable templates**: Copy-ready skeletons help you scaffold datasets, adapters, and suites in minutes.
+### Multi-Platform Support
+- **AutoGen AG2**: Microsoft's conversational AI framework
+- **OpenAI Swarm**: Multi-agent coordination and orchestration
+- **LangSmith**: Advanced language model monitoring and evaluation
+- **AgentOps**: Production monitoring and observability
+- **Wandb**: Experiment tracking and performance analytics
+
+### Core Capabilities
+- **Multi-Agent Testing**: Comprehensive testing of agent interactions and workflows
+- **Production Monitoring**: Real-time monitoring of agent performance and behavior
+- **Performance Analytics**: Detailed metrics and insights into agent system performance
+- **Scenario Management**: Create, run, and manage test scenarios across platforms
+- **Reporting & Export**: Generate detailed reports in multiple formats (JSON, XML, HTML)
+
+### Architecture Highlights
+- **Modular Design**: Platform-agnostic architecture with pluggable adapters
+- **Async Processing**: Fully asynchronous execution for high-performance testing
+- **Extensible Framework**: Easy to add new platforms and monitoring capabilities
+- **Production Ready**: Built for enterprise-scale deployment and monitoring
 
 > Looking for a crash course? Jump to the [five-minute quickstart](#five-minute-quickstart).
 
@@ -23,12 +38,132 @@ AgentUnit is a pytest-inspired evaluation harness for autonomous agents and retr
 8. [Local development](#local-development)
 9. [Additional resources](#additional-resources)
 
-## Installation
+## 📦 Installation
 
-AgentUnit targets Python 3.10 and newer. Install from PyPI:
+### Prerequisites
+- Python 3.9 or higher
+- Virtual environment (recommended)
+
+### Quick Installation
 
 ```bash
-pip install agentunit
+# Clone the repository
+git clone https://github.com/yourusername/agentunit.git
+cd agentunit
+
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install AgentUnit
+pip install -e .
+
+# Verify installation
+agentunit --help
+```
+
+### Platform-Specific Dependencies
+
+Install additional dependencies for specific platforms:
+
+```bash
+# For AutoGen AG2 support
+pip install pyautogen[ag2]
+
+# For OpenAI Swarm support
+pip install openai-swarm
+
+# For LangSmith integration
+pip install langsmith
+
+# For AgentOps monitoring
+pip install agentops
+
+# For Wandb tracking
+pip install wandb
+```
+
+## 🏃‍♂️ Quick Start
+
+### 1. Basic Multi-Agent Test
+
+```python
+from agentunit.core import Scenario, DatasetSource, DatasetCase
+from agentunit.adapters.autogen_ag2 import AG2Adapter
+
+# Create a test case
+test_case = DatasetCase(
+    id="greeting_test",
+    query="Hello, can you help me plan a meeting?",
+    expected_output="I'd be happy to help you plan a meeting.",
+    metadata={"category": "greeting", "complexity": "simple"}
+)
+
+# Create dataset
+dataset = DatasetSource("meeting_scenarios", lambda: [test_case])
+
+# Configure adapter
+adapter = AG2Adapter({
+    "model": "gpt-4",
+    "max_turns": 10,
+    "timeout": 60
+})
+
+# Create and run scenario
+scenario = Scenario(
+    name="meeting_planning_test",
+    adapter=adapter,
+    dataset=dataset
+)
+
+# Execute the test
+from agentunit.core import Runner
+runner = Runner()
+results = await runner.run_scenario(scenario)
+
+print(f"Success rate: {results.success_rate}")
+```
+
+### 2. CLI Usage
+
+```bash
+# Run a multi-agent test scenario
+agentunit multiagent run --scenario meeting_test.json --adapter autogen_ag2
+
+# Monitor production deployment
+agentunit monitoring start --platform langsmith --project my_agents
+
+# Generate analysis report
+agentunit analyze --results results.json --output report.html
+
+# Configure AgentUnit settings
+agentunit config set adapter.default autogen_ag2
+agentunit config set monitoring.enabled true
+```
+
+### 3. Production Monitoring
+
+```python
+from agentunit.monitoring import ProductionMonitor
+from agentunit.adapters.langsmith_adapter import LangSmithAdapter
+
+# Setup production monitoring
+monitor = ProductionMonitor()
+adapter = LangSmithAdapter({
+    "project_name": "production_agents",
+    "api_key": "your_langsmith_key"
+})
+
+# Start monitoring
+await monitor.start_monitoring(adapter)
+
+# Monitor specific agent interactions
+session_id = await monitor.create_session("customer_support")
+# Your agent interactions here...
+await monitor.end_session(session_id)
+
+# Generate monitoring report
+report = await monitor.generate_report()
 ```
 
 Or add it to a Poetry project:

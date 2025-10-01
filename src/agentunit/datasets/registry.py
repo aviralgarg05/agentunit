@@ -6,7 +6,12 @@ from typing import Optional, Iterable
 import logging
 from pathlib import Path
 
-from huggingface_hub import hf_hub_download
+try:
+    from huggingface_hub import hf_hub_download
+    HF_HUB_AVAILABLE = True
+except ImportError:
+    HF_HUB_AVAILABLE = False
+    hf_hub_download = None
 
 from .base import DatasetSource, DatasetCase, load_local_json, load_local_csv
 from .builtins import BUILTIN_DATASETS
@@ -46,6 +51,8 @@ def _load_from_huggingface(spec: str) -> DatasetSource:
     filename = repo_and_file[1] if len(repo_and_file) > 1 else "data.json"
 
     def _loader() -> Iterable[DatasetCase]:
+        if not HF_HUB_AVAILABLE:
+            raise AgentUnitError("huggingface_hub is not installed. Install it with: pip install huggingface_hub")
         try:
             downloaded = hf_hub_download(repo_id=repo, filename=filename)
         except Exception as exc:  # pragma: no cover - depends on network

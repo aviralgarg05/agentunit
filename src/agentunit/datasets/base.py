@@ -42,6 +42,10 @@ class DatasetSource:
         return cls(name=f"single:{case.id}", loader=lambda: [case])
 
     @classmethod
+    def from_list(cls, cases: List[DatasetCase], name: str = "from_list") -> "DatasetSource":
+        return cls(name=name, loader=lambda: cases)
+
+    @classmethod
     def empty(cls, name: str = "empty") -> "DatasetSource":
         return cls(name=name, loader=lambda: [])
 

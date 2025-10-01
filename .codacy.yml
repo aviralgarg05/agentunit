@@ -1,0 +1,45 @@
+---
+# Codacy configuration for AgentUnit
+# This file documents expected patterns and suppresses false positives
+
+engines:
+  # Python linting configuration
+  pylint:
+    enabled: true
+    exclude_paths:
+      - "tests/**"
+      - "examples/**"
+    python_version: 3
+  
+  prospector:
+    enabled: true
+  
+  bandit:
+    enabled: true
+
+# Exclude patterns for paths that should not be analyzed
+exclude_paths:
+  - "tests/**"
+  - "examples/**"
+  - "docs/**"
+  - "build/**"
+  - "dist/**"
+  - "*.egg-info/**"
+  - ".venv/**"
+  - "venv/**"
+
+# File-specific overrides for known patterns
+file_overrides:
+  # Lazy-loading pattern in adapters module
+  # Names in __all__ are dynamically loaded via __getattr__ and provided
+  # via TYPE_CHECKING imports for static analysis. This is the recommended
+  # pattern for optional dependencies in Python.
+  - path: "src/agentunit/adapters/__init__.py"
+    tools:
+      - pylint:
+          disable:
+            - undefined-variable
+            - undefined-all-variable
+      - prospector:
+          disable:
+            - undefined-variable

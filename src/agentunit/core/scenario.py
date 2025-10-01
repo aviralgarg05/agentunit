@@ -7,19 +7,6 @@ from pathlib import Path
 import random
 
 from ..adapters.base import BaseAdapter
-from ..adapters.langgraph import LangGraphAdapter
-from ..adapters.openai_agents import OpenAIAgentsAdapter
-from ..adapters.crewai import CrewAIAdapter
-from ..adapters.autogen import AutoGenAdapter
-from ..adapters.haystack import HaystackAdapter
-from ..adapters.llama_index import LlamaIndexAdapter
-from ..adapters.semantic_kernel import SemanticKernelAdapter
-from ..adapters.phidata import PhidataAdapter
-from ..adapters.promptflow import PromptFlowAdapter
-from ..adapters.openai_swarm import OpenAISwarmAdapter
-from ..adapters.anthropic_bedrock import AnthropicBedrockAdapter
-from ..adapters.mistral_server import MistralServerAdapter
-from ..adapters.rasa import RasaAdapter
 from ..datasets.base import DatasetSource, DatasetCase
 from ..datasets.registry import resolve_dataset
 
@@ -53,6 +40,7 @@ class Scenario:
         name: Optional[str] = None,
         **config: object,
     ) -> "Scenario":
+        from ..adapters.langgraph import LangGraphAdapter
         adapter = LangGraphAdapter.from_source(path, **config)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(path, fallback="langgraph-scenario")
@@ -66,6 +54,7 @@ class Scenario:
         name: Optional[str] = None,
         **options: object,
     ) -> "Scenario":
+        from ..adapters.openai_agents import OpenAIAgentsAdapter
         adapter = OpenAIAgentsAdapter.from_flow(flow, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or getattr(flow, "__name__", "openai-agents-scenario")
@@ -73,25 +62,29 @@ class Scenario:
 
     @classmethod
     def from_crewai(
-        cls,
+        cls, 
         crew: object,
         dataset: str | DatasetSource | None = None,
         name: Optional[str] = None,
-        **options: object,
-    ) -> "Scenario":
+        **options: object
+    ) -> 'Scenario':
+        """Create scenario from CrewAI crew."""
+        from ..adapters.crewai import CrewAIAdapter
         adapter = CrewAIAdapter.from_crew(crew, **options)
         ds = resolve_dataset(dataset)
-        scenario_name = name or getattr(crew, "name", "crewai-scenario")
+        scenario_name = name or _infer_name(crew, fallback="crewai-scenario")
         return cls(name=scenario_name, adapter=adapter, dataset=ds)
 
     @classmethod
     def from_autogen(
-        cls,
+        cls, 
         orchestrator: object,
         dataset: str | DatasetSource | None = None,
         name: Optional[str] = None,
-        **options: object,
-    ) -> "Scenario":
+        **options: object
+    ) -> 'Scenario':
+        """Create scenario from AutoGen orchestrator."""
+        from ..adapters.autogen import AutoGenAdapter
         adapter = AutoGenAdapter(orchestrator=orchestrator, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(orchestrator, fallback="autogen-scenario")
@@ -105,6 +98,7 @@ class Scenario:
         name: Optional[str] = None,
         **options: object,
     ) -> "Scenario":
+        from ..adapters.haystack import HaystackAdapter
         adapter = HaystackAdapter(pipeline=pipeline, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(pipeline, fallback="haystack-scenario")
@@ -118,6 +112,7 @@ class Scenario:
         name: Optional[str] = None,
         **options: object,
     ) -> "Scenario":
+        from ..adapters.llama_index import LlamaIndexAdapter
         adapter = LlamaIndexAdapter(engine=engine, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(engine, fallback="llama-index-scenario")
@@ -131,6 +126,7 @@ class Scenario:
         name: Optional[str] = None,
         **options: object,
     ) -> "Scenario":
+        from ..adapters.semantic_kernel import SemanticKernelAdapter
         adapter = SemanticKernelAdapter(invoker=invoker, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(invoker, fallback="semantic-kernel-scenario")
@@ -144,6 +140,7 @@ class Scenario:
         name: Optional[str] = None,
         **options: object,
     ) -> "Scenario":
+        from ..adapters.phidata import PhidataAdapter
         adapter = PhidataAdapter(agent=agent, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(agent, fallback="phidata-scenario")
@@ -157,6 +154,7 @@ class Scenario:
         name: Optional[str] = None,
         **options: object,
     ) -> "Scenario":
+        from ..adapters.promptflow import PromptFlowAdapter
         adapter = PromptFlowAdapter(flow=flow, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(flow, fallback="promptflow-scenario")
@@ -170,6 +168,7 @@ class Scenario:
         name: Optional[str] = None,
         **options: object,
     ) -> "Scenario":
+        from ..adapters.openai_swarm import OpenAISwarmAdapter
         adapter = OpenAISwarmAdapter(swarm=swarm, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(swarm, fallback="openai-swarm-scenario")
@@ -184,6 +183,7 @@ class Scenario:
         name: Optional[str] = None,
         **options: object,
     ) -> "Scenario":
+        from ..adapters.anthropic_bedrock import AnthropicBedrockAdapter
         adapter = AnthropicBedrockAdapter(client=client, model_id=model_id, **options)
         ds = resolve_dataset(dataset)
         base_name = name or f"{model_id}-bedrock"
@@ -197,6 +197,7 @@ class Scenario:
         name: Optional[str] = None,
         **options: object,
     ) -> "Scenario":
+        from ..adapters.mistral_server import MistralServerAdapter
         adapter = MistralServerAdapter(base_url=base_url, **options)
         ds = resolve_dataset(dataset)
         if name is not None:
@@ -215,6 +216,7 @@ class Scenario:
         name: Optional[str] = None,
         **options: object,
     ) -> "Scenario":
+        from ..adapters.rasa import RasaAdapter
         adapter = RasaAdapter(target=target, **options)
         ds = resolve_dataset(dataset)
         if name is not None:
