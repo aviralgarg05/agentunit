@@ -1,6 +1,6 @@
 # Writing Scenarios
 
-This guide covers the building blocks that make up an AgentUnit evaluation suite. By the end you will understand how datasets, adapters, and scenarios cooperate, and you will have reusable templates to adapt for your project.
+This guide covers the building blocks that make up an AgentUnit evaluation suite. Read it after the [Quickstart](quickstart.md) and reference the [architecture overview](architecture.md) for context on how scenarios interact with the wider platform.
 
 ## Core data structures
 
@@ -168,7 +168,7 @@ Each helper accepts builder callbacks so you can reshape payloads without subcla
 - **Mistral server** – Adjust decoding parameters with `max_tokens` and `temperature`, and pass a pre-configured `http_client` for connection pooling or mTLS.
 - **Rasa** – Use a callable target (e.g. a Python SDK dispatcher) for local testing, or an HTTPS URL for production bots. Override `response_key` when your responses embed text under a different field.
 
-See the templates at the end of this guide for end-to-end examples that combine datasets, adapters, and these helpers, and refer to the [Framework Integrations catalog](framework-integrations.md) for deeper walkthroughs and installation notes.
+See the templates at the end of this guide for end-to-end examples that combine datasets, adapters, and these helpers. The [Framework Integrations catalog](framework-integrations.md) provides deeper walkthroughs, while the [No-code quickstart](nocode-quickstart.md) explains how to generate scenarios without writing Python.
 
 ## Organizing suites
 
@@ -196,4 +196,4 @@ project/
 4. **Log tool usage** – metrics like `tool_success` rely on the trace events you emit.
 5. **Generate reports** – combine `--junit` for CI and `--markdown` for human-friendly summaries.
 
-Continue with the [CLI reference](cli.md) to see all runtime options.
+Continue with the [CLI reference](cli.md) to see all runtime options, or return to the [documentation map](../README.md#documentation-map).

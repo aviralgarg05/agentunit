@@ -1,6 +1,6 @@
 # CLI Reference
 
-The `agentunit` command executes one or more evaluation scenarios and exports summaries. This reference documents every flag and shows concrete recipes.
+The `agentunit` command executes one or more evaluation scenarios and exports summaries. Review the [Quickstart](quickstart.md) first for installation and template usage, then use this document as a detailed flag reference.
 
 ## Synopsis
 
@@ -36,7 +36,7 @@ If both `suite` and `create_suite` exist, the CLI prefers `suite`. Use `create_s
 - **Markdown**: readable summary for pull requests and changelogs.
 - **JUnit**: standard CI integration. Failed cases surface as failed tests.
 
-You can supply any combination of export flags during a single run.
+You can supply any combination of export flags during a single run. See [Performance testing](performance-testing.md) for strategies that pair exports with load analysis.
 
 ## Metrics
 
@@ -51,7 +51,7 @@ Specify the subset you care about via `--metrics faithfulness tool_success`.
 
 ## Telemetry
 
-Set `--otel-exporter otlp` to forward spans to your collector. Set the following environment variables to configure the OTLP endpoint before launching the CLI:
+Set `--otel-exporter otlp` to forward spans to your collector. Configure the destination via the following environment variables before launching the CLI:
 
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
 - `OTEL_EXPORTER_OTLP_HEADERS`
@@ -67,7 +67,7 @@ If omitted, the SDK default (localhost gRPC) is used. Use `console` exporter whe
 
 ## Example commands
 
-Run a suite with all metrics and Markdown export:
+Run a suite with all metrics and a Markdown export:
 
 ```bash
 agentunit my_project.evals.qa_suite --markdown reports/qa-suite.md

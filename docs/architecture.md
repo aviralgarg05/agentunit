@@ -1,5 +1,7 @@
 # AgentUnit Architecture Guide
 
+This document supplements the high-level overview in the [AgentUnit README](../README.md#documentation-map). If you are setting up your first evaluation run, start with the [Quickstart](quickstart.md) before diving into architectural internals.
+
 ## Overview
 
 AgentUnit is designed as a modular, extensible framework for testing and monitoring multi-agent AI systems. The architecture follows clean separation of concerns with pluggable adapters, async processing, and production-ready monitoring capabilities.
