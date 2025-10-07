@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agentunit.dev/schemas/scenario.json",
+  "title": "AgentUnit Scenario Schema",
+  "description": "JSON Schema for AgentUnit test scenario configuration files",
+  "type": "object",
+  "required": ["name", "adapter", "dataset"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique name for this scenario"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of what this scenario tests"
+    },
+    "adapter": {
+      "type": "object",
+      "description": "Configuration for the agent adapter",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "openai",
+            "langgraph",
+            "crewai",
+            "autogen",
+            "swarm",
+            "phidata",
+            "promptflow",
+            "custom"
+          ],
+          "description": "Type of adapter to use"
+        },
+        "config": {
+          "type": "object",
+          "description": "Adapter-specific configuration",
+          "properties": {
+            "model": {
+              "type": "string",
+              "description": "LLM model identifier (e.g., 'gpt-4', 'claude-3')"
+            },
+            "temperature": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "description": "Sampling temperature for generation"
+            },
+            "max_tokens": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum tokens to generate"
+            },
+            "timeout": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Timeout in seconds"
+            }
+          }
+        },
+        "path": {
+          "type": "string",
+          "description": "Path to adapter module or file (for langgraph, custom adapters)"
+        }
+      }
+    },
+    "dataset": {
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "Inline dataset definition",
+          "required": ["cases"],
+          "properties": {
+            "cases": {
+              "type": "array",
+              "description": "Array of test cases",
+              "items": {
+                "type": "object",
+                "required": ["input", "expected"],
+                "properties": {
+                  "input": {
+                    "description": "Input to the agent",
+                    "oneOf": [
+                      {"type": "string"},
+                      {"type": "object"},
+                      {"type": "array"}
+                    ]
+                  },
+                  "expected": {
+                    "description": "Expected output from agent",
+                    "oneOf": [
+                      {"type": "string"},
+                      {"type": "object"},
+                      {"type": "array"}
+                    ]
+                  },
+                  "context": {
+                    "type": "object",
+                    "description": "Additional context for the test case"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "description": "Metadata about this test case"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "Dataset from file or generator",
+          "required": ["source"],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": ["file", "generator", "huggingface"],
+              "description": "Source type for the dataset"
+            },
+            "path": {
+              "type": "string",
+              "description": "Path to dataset file or HuggingFace dataset ID"
+            },
+            "generator": {
+              "type": "object",
+              "description": "Generator configuration",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["template", "llm", "synthetic"],
+                  "description": "Type of generator"
+                },
+                "config": {
+                  "type": "object",
+                  "description": "Generator-specific configuration"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "metrics": {
+      "type": "array",
+      "description": "Metrics to evaluate",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "Built-in metric name"
+          },
+          {
+            "type": "object",
+            "description": "Custom metric configuration",
+            "required": ["name"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Metric name"
+              },
+              "type": {
+                "type": "string",
+                "description": "Metric type (for custom metrics)"
+              },
+              "config": {
+                "type": "object",
+                "description": "Metric-specific configuration"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "retries": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "description": "Number of retries on failure"
+    },
+    "timeout": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Scenario-level timeout in seconds"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for organizing scenarios"
+    }
+  }
+}
