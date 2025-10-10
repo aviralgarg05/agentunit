@@ -1,6 +1,3 @@
-def build_dataset() -> DatasetSource:
-dataset = build_dataset()
-def create_suite():
 # AgentUnit
 
 AgentUnit is a framework for evaluating, monitoring, and benchmarking multi-agent systems. It standardises how teams define scenarios, run experiments, and report outcomes across adapters, model providers, and deployment targets.
