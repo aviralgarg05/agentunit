@@ -1,0 +1,172 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agentunit.dev/schemas/metric.json",
+  "title": "AgentUnit Metric Schema",
+  "description": "JSON Schema for AgentUnit custom metric definitions",
+  "type": "object",
+  "required": ["name", "type", "inputs"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique metric identifier",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Human-readable metric name"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this metric measures"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["deterministic", "llm_judged", "statistical", "custom"],
+      "description": "Metric computation type"
+    },
+    "inputs": {
+      "type": "object",
+      "description": "Required inputs for metric computation",
+      "properties": {
+        "requires_actual": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether metric needs agent output"
+        },
+        "requires_expected": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether metric needs expected output"
+        },
+        "requires_input": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether metric needs original input"
+        },
+        "requires_context": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether metric needs additional context"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "description": "Metric output characteristics",
+      "properties": {
+        "range": {
+          "type": "object",
+          "description": "Value range for this metric",
+          "properties": {
+            "min": {
+              "type": "number",
+              "description": "Minimum possible value"
+            },
+            "max": {
+              "type": "number",
+              "description": "Maximum possible value"
+            }
+          }
+        },
+        "higher_is_better": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether higher values indicate better performance"
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "description": "Metric-specific configuration parameters",
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "LLM model for llm_judged metrics"
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2,
+          "description": "Sampling temperature for LLM-based metrics"
+        },
+        "threshold": {
+          "type": "number",
+          "description": "Threshold for pass/fail determination"
+        },
+        "prompt_template": {
+          "type": "string",
+          "description": "Custom prompt template for LLM judges"
+        }
+      }
+    },
+    "implementation": {
+      "type": "object",
+      "description": "Implementation details for custom metrics",
+      "properties": {
+        "module": {
+          "type": "string",
+          "description": "Python module path"
+        },
+        "class": {
+          "type": "string",
+          "description": "Metric class name"
+        },
+        "function": {
+          "type": "string",
+          "description": "Function name for functional metrics"
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorizing metrics (e.g., 'accuracy', 'safety', 'performance')"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Reference title"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference URL"
+          }
+        }
+      },
+      "description": "Academic or industry references for this metric"
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "description": "Example input"
+          },
+          "expected": {
+            "description": "Example expected output"
+          },
+          "actual": {
+            "description": "Example actual output"
+          },
+          "score": {
+            "type": "number",
+            "description": "Expected metric score for this example"
+          },
+          "explanation": {
+            "type": "string",
+            "description": "Why this score was assigned"
+          }
+        }
+      },
+      "description": "Example evaluations for documentation"
+    }
+  }
+}

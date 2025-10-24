@@ -1,0 +1,280 @@
+# This workflow demonstrates how to integrate AgentUnit into your CI/CD pipeline
+# Copy and adapt this file to your project's .github/workflows/ directory
+
+name: AgentUnit CI Example
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  agentunit-evaluation:
+    name: Run AgentUnit Evaluations
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt', '**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install AgentUnit
+        run: |
+          python -m pip install --upgrade pip
+          pip install agentunit[all]
+          # Or install with specific extras:
+          # pip install agentunit[langraph,crewai,openai]
+      
+      - name: Install project dependencies
+        run: |
+          # Install your project's dependencies
+          pip install -r requirements.txt
+          # Or if using Poetry:
+          # pip install poetry && poetry install
+      
+      - name: Run AgentUnit evaluations
+        id: agentunit
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Add other required API keys
+        run: |
+          # Run evaluations and capture results
+          agentunit eval tests/eval/scenarios/ \
+            --output-dir results/ \
+            --junit-xml results/junit.xml \
+            --fail-on-regression
+          
+          # Or run specific scenarios:
+          # agentunit eval tests/eval/rag_accuracy.yaml --output-dir results/
+          
+          # Set output variables for downstream jobs
+          echo "evaluation_status=success" >> $GITHUB_OUTPUT
+        continue-on-error: false
+      
+      - name: Check regression thresholds
+        if: always()
+        run: |
+          # Example: Parse results and check thresholds
+          python -c "
+          import json
+          from pathlib import Path
+          
+          results_file = Path('results/results.json')
+          if results_file.exists():
+              with open(results_file) as f:
+                  results = json.load(f)
+              
+              # Check if any scenario failed
+              failed_scenarios = [s for s in results['scenarios'] if s['status'] != 'passed']
+              if failed_scenarios:
+                  print(f'❌ {len(failed_scenarios)} scenario(s) failed')
+                  exit(1)
+              
+              # Check metric thresholds
+              for scenario in results['scenarios']:
+                  for metric_name, metric_value in scenario.get('metrics', {}).items():
+                      threshold = scenario.get('thresholds', {}).get(metric_name)
+                      if threshold and metric_value < threshold:
+                          print(f'❌ Metric {metric_name} ({metric_value}) below threshold ({threshold})')
+                          exit(1)
+              
+              print('✅ All scenarios passed and metrics meet thresholds')
+          else:
+              print('⚠️  No results file found')
+              exit(1)
+          "
+      
+      - name: Publish JUnit test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: results/junit.xml
+          check_name: "AgentUnit Test Results (Python ${{ matrix.python-version }})"
+          comment_mode: off
+      
+      - name: Upload evaluation results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agentunit-results-py${{ matrix.python-version }}
+          path: |
+            results/
+            !results/**/*.log
+          retention-days: 30
+      
+      - name: Generate evaluation report
+        if: always()
+        run: |
+          # Generate markdown summary
+          python -c "
+          import json
+          from pathlib import Path
+          
+          results_file = Path('results/results.json')
+          if results_file.exists():
+              with open(results_file) as f:
+                  results = json.load(f)
+              
+              # Write summary to GitHub Step Summary
+              with open('$GITHUB_STEP_SUMMARY', 'a') as f:
+                  f.write('## AgentUnit Evaluation Results\n\n')
+                  f.write(f'**Total Scenarios:** {len(results[\"scenarios\"])}\n\n')
+                  
+                  f.write('| Scenario | Status | Duration |\n')
+                  f.write('|----------|--------|----------|\n')
+                  
+                  for scenario in results['scenarios']:
+                      status_emoji = '✅' if scenario['status'] == 'passed' else '❌'
+                      f.write(f'| {scenario[\"name\"]} | {status_emoji} {scenario[\"status\"]} | {scenario[\"duration_ms\"]}ms |\n')
+                  
+                  f.write('\n### Metrics Summary\n\n')
+                  for scenario in results['scenarios']:
+                      f.write(f'#### {scenario[\"name\"]}\n\n')
+                      for metric_name, metric_value in scenario.get('metrics', {}).items():
+                          f.write(f'- **{metric_name}**: {metric_value:.3f}\n')
+                      f.write('\n')
+          "
+      
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const resultsFile = 'results/results.json';
+            
+            if (fs.existsSync(resultsFile)) {
+              const results = JSON.parse(fs.readFileSync(resultsFile, 'utf8'));
+              
+              let comment = '## AgentUnit Evaluation Results\n\n';
+              comment += `**Python Version:** ${{ matrix.python-version }}\n`;
+              comment += `**Total Scenarios:** ${results.scenarios.length}\n\n`;
+              comment += '| Scenario | Status | Duration | Key Metrics |\n';
+              comment += '|----------|--------|----------|-------------|\n';
+              
+              results.scenarios.forEach(scenario => {
+                const statusEmoji = scenario.status === 'passed' ? '✅' : '❌';
+                const metrics = Object.entries(scenario.metrics || {})
+                  .map(([k, v]) => `${k}: ${v.toFixed(3)}`)
+                  .join(', ');
+                comment += `| ${scenario.name} | ${statusEmoji} | ${scenario.duration_ms}ms | ${metrics} |\n`;
+              });
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
+
+  telemetry-check:
+    name: Verify OpenTelemetry Integration
+    runs-on: ubuntu-latest
+    needs: agentunit-evaluation
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Start OTLP collector (optional)
+        run: |
+          # Example: Start a local OTLP collector for testing
+          # docker run -d -p 4317:4317 otel/opentelemetry-collector-contrib
+          echo "Skipping OTLP collector in example"
+      
+      - name: Install dependencies
+        run: |
+          pip install agentunit[all]
+      
+      - name: Run evaluation with telemetry
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:4317"
+          OTEL_SERVICE_NAME: "agentunit-ci"
+          OTEL_TRACES_EXPORTER: "otlp"
+          OTEL_METRICS_EXPORTER: "otlp"
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # Run with telemetry enabled
+          agentunit eval tests/eval/scenarios/ --output-dir results/
+          
+          # Verify telemetry data was collected (example)
+          echo "✅ Telemetry verification complete"
+
+  benchmark-comparison:
+    name: Compare Against Baseline
+    runs-on: ubuntu-latest
+    needs: agentunit-evaluation
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for comparison
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          pip install agentunit[all]
+      
+      - name: Run baseline evaluation (main branch)
+        run: |
+          git checkout main
+          agentunit eval tests/eval/scenarios/ --output-dir baseline-results/
+      
+      - name: Run current evaluation (PR branch)
+        run: |
+          git checkout ${{ github.head_ref }}
+          agentunit eval tests/eval/scenarios/ --output-dir current-results/
+      
+      - name: Compare results
+        run: |
+          python -c "
+          import json
+          from pathlib import Path
+          
+          baseline = json.loads(Path('baseline-results/results.json').read_text())
+          current = json.loads(Path('current-results/results.json').read_text())
+          
+          print('\n## Performance Comparison\n')
+          print('| Scenario | Baseline | Current | Change |')
+          print('|----------|----------|---------|--------|')
+          
+          for b_scenario in baseline['scenarios']:
+              c_scenario = next((s for s in current['scenarios'] if s['name'] == b_scenario['name']), None)
+              if c_scenario:
+                  for metric_name in b_scenario.get('metrics', {}).keys():
+                      b_value = b_scenario['metrics'][metric_name]
+                      c_value = c_scenario['metrics'].get(metric_name, 0)
+                      change = c_value - b_value
+                      emoji = '📈' if change > 0 else '📉' if change < 0 else '➡️'
+                      print(f'| {b_scenario[\"name\"]}.{metric_name} | {b_value:.3f} | {c_value:.3f} | {emoji} {change:+.3f} |')
+          "

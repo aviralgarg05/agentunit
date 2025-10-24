@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerability
+    url: mailto:opensource@agentunit.dev
+    about: Please report security vulnerabilities via email, not GitHub issues
+  - name: Discussion Forum
+    url: https://github.com/aviralgarg05/agentunit/discussions
+    about: Ask questions and discuss ideas with the community

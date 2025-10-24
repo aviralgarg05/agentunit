@@ -1,0 +1,280 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agentunit.dev/schemas/dataset.json",
+  "title": "AgentUnit Dataset Schema",
+  "description": "JSON Schema for AgentUnit dataset files",
+  "type": "object",
+  "required": ["name", "cases"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Dataset name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Dataset description and purpose"
+    },
+    "version": {
+      "type": "string",
+      "description": "Dataset version",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Dataset-level metadata",
+      "properties": {
+        "domain": {
+          "type": "string",
+          "description": "Domain or industry (e.g., 'healthcare', 'finance', 'general')"
+        },
+        "language": {
+          "type": "string",
+          "description": "Natural language (e.g., 'en', 'es', 'multilingual')"
+        },
+        "task": {
+          "type": "string",
+          "description": "Task type (e.g., 'qa', 'summarization', 'classification')"
+        },
+        "source": {
+          "type": "string",
+          "description": "Dataset source or origin"
+        },
+        "license": {
+          "type": "string",
+          "description": "Dataset license"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Dataset creation timestamp"
+        },
+        "authors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Dataset authors"
+        }
+      }
+    },
+    "schema": {
+      "type": "object",
+      "description": "Schema definition for dataset cases",
+      "properties": {
+        "input_type": {
+          "type": "string",
+          "enum": ["text", "structured", "multimodal"],
+          "description": "Type of input data"
+        },
+        "output_type": {
+          "type": "string",
+          "enum": ["text", "structured", "multimodal"],
+          "description": "Type of expected output"
+        },
+        "fields": {
+          "type": "object",
+          "description": "Custom field definitions",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Field data type"
+              },
+              "description": {
+                "type": "string",
+                "description": "Field description"
+              },
+              "required": {
+                "type": "boolean",
+                "description": "Whether field is required"
+              }
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "description": "Test cases in this dataset",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/testCase"
+      }
+    },
+    "splits": {
+      "type": "object",
+      "description": "Dataset split definitions",
+      "properties": {
+        "train": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "Indices for training split"
+        },
+        "validation": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "Indices for validation split"
+        },
+        "test": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "Indices for test split"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "testCase": {
+      "type": "object",
+      "required": ["input", "expected"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique test case identifier"
+        },
+        "input": {
+          "description": "Input to the agent",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Text input"
+            },
+            {
+              "type": "object",
+              "description": "Structured input",
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "description": "Primary query or question"
+                },
+                "context": {
+                  "description": "Additional context documents or information",
+                  "oneOf": [
+                    {"type": "string"},
+                    {"type": "array", "items": {"type": "string"}}
+                  ]
+                },
+                "history": {
+                  "type": "array",
+                  "description": "Conversation history",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "role": {
+                        "type": "string",
+                        "enum": ["user", "assistant", "system"]
+                      },
+                      "content": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "array",
+              "description": "Array input"
+            }
+          ]
+        },
+        "expected": {
+          "description": "Expected output from agent",
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Text output"
+            },
+            {
+              "type": "object",
+              "description": "Structured output"
+            },
+            {
+              "type": "array",
+              "description": "Array output"
+            }
+          ]
+        },
+        "context": {
+          "type": "object",
+          "description": "Additional context for evaluation",
+          "properties": {
+            "documents": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Reference documents for RAG scenarios"
+            },
+            "ground_truth": {
+              "type": "string",
+              "description": "Ground truth for comparison"
+            },
+            "metadata": {
+              "type": "object",
+              "description": "Custom metadata"
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Test case metadata",
+          "properties": {
+            "difficulty": {
+              "type": "string",
+              "enum": ["easy", "medium", "hard"],
+              "description": "Subjective difficulty level"
+            },
+            "category": {
+              "type": "string",
+              "description": "Test case category or topic"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Tags for filtering and organization"
+            },
+            "source": {
+              "type": "string",
+              "description": "Source of this test case"
+            }
+          }
+        },
+        "annotations": {
+          "type": "array",
+          "description": "Human annotations for this case",
+          "items": {
+            "type": "object",
+            "properties": {
+              "annotator": {
+                "type": "string",
+                "description": "Annotator identifier"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "labels": {
+                "type": "object",
+                "description": "Annotation labels"
+              },
+              "notes": {
+                "type": "string",
+                "description": "Annotation notes"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,216 @@
+# GitHub Labels Configuration for AgentUnit
+# This file can be used with github-label-sync or GitHub CLI
+# Usage: gh label create --repo aviralgarg05/agentunit -f .github/labels.yml
+
+# Priority Labels
+- name: "priority:critical"
+  color: "d73a4a"
+  description: "Critical priority - blocks releases or causes data loss"
+  
+- name: "priority:high"
+  color: "d93f0b"
+  description: "High priority - important bugs or features"
+  
+- name: "priority:medium"
+  color: "fbca04"
+  description: "Medium priority - normal workflow"
+  
+- name: "priority:low"
+  color: "0e8a16"
+  description: "Low priority - nice to have"
+
+# Type Labels
+- name: "bug"
+  color: "d73a4a"
+  description: "Something isn't working correctly"
+  
+- name: "enhancement"
+  color: "a2eeef"
+  description: "New feature or request"
+  
+- name: "documentation"
+  color: "0075ca"
+  description: "Improvements or additions to documentation"
+  
+- name: "question"
+  color: "d876e3"
+  description: "Further information is requested"
+  
+- name: "refactor"
+  color: "fbca04"
+  description: "Code refactoring without changing functionality"
+  
+- name: "performance"
+  color: "1d76db"
+  description: "Performance improvements"
+  
+- name: "security"
+  color: "d73a4a"
+  description: "Security-related issues or improvements"
+  
+- name: "test"
+  color: "0e8a16"
+  description: "Test coverage or testing infrastructure"
+  
+- name: "dependencies"
+  color: "0366d6"
+  description: "Dependency updates or issues"
+  
+- name: "ci"
+  color: "e99695"
+  description: "Continuous integration and deployment"
+
+# Status Labels
+- name: "status:needs-triage"
+  color: "ededed"
+  description: "Needs initial review and prioritization"
+  
+- name: "status:confirmed"
+  color: "c2e0c6"
+  description: "Issue confirmed and accepted"
+  
+- name: "status:in-progress"
+  color: "f9d0c4"
+  description: "Work in progress"
+  
+- name: "status:blocked"
+  color: "d73a4a"
+  description: "Blocked by another issue or external dependency"
+  
+- name: "status:needs-info"
+  color: "d876e3"
+  description: "Needs more information from reporter"
+  
+- name: "status:awaiting-review"
+  color: "fbca04"
+  description: "Awaiting code review"
+  
+- name: "status:changes-requested"
+  color: "fc7303"
+  description: "Changes requested during review"
+
+# Component Labels
+- name: "component:cli"
+  color: "5319e7"
+  description: "Command-line interface"
+  
+- name: "component:core"
+  color: "5319e7"
+  description: "Core evaluation engine"
+  
+- name: "component:adapters"
+  color: "5319e7"
+  description: "Framework adapters (LangGraph, CrewAI, etc.)"
+  
+- name: "component:metrics"
+  color: "5319e7"
+  description: "Metrics and scoring"
+  
+- name: "component:generators"
+  color: "5319e7"
+  description: "Dataset generators"
+  
+- name: "component:telemetry"
+  color: "5319e7"
+  description: "OpenTelemetry integration"
+  
+- name: "component:schema"
+  color: "5319e7"
+  description: "YAML schema and validation"
+
+# Difficulty Labels (for contributors)
+- name: "good-first-issue"
+  color: "7057ff"
+  description: "Good for newcomers - easy entry point"
+  
+- name: "help-wanted"
+  color: "008672"
+  description: "Extra attention needed - community help appreciated"
+  
+- name: "difficulty:easy"
+  color: "c2e0c6"
+  description: "Easy difficulty - 1-2 hours"
+  
+- name: "difficulty:medium"
+  color: "fbca04"
+  description: "Medium difficulty - 2-8 hours"
+  
+- name: "difficulty:hard"
+  color: "d73a4a"
+  description: "Hard difficulty - 8+ hours or complex changes"
+
+# Special Labels
+- name: "breaking-change"
+  color: "d73a4a"
+  description: "Introduces breaking API changes"
+  
+- name: "duplicate"
+  color: "cfd3d7"
+  description: "Duplicate of existing issue"
+  
+- name: "wontfix"
+  color: "ffffff"
+  description: "Will not be worked on"
+  
+- name: "invalid"
+  color: "e4e669"
+  description: "Not a valid issue or PR"
+  
+- name: "needs-discussion"
+  color: "d876e3"
+  description: "Needs community discussion before proceeding"
+  
+- name: "hacktoberfest"
+  color: "ff6b6b"
+  description: "Suitable for Hacktoberfest participation"
+  
+- name: "hacktoberfest-accepted"
+  color: "ff6b6b"
+  description: "Accepted Hacktoberfest contribution"
+
+# Version Labels
+- name: "version:0.6.0"
+  color: "0e8a16"
+  description: "Planned for version 0.6.0"
+  
+- name: "version:0.7.0"
+  color: "1d76db"
+  description: "Planned for version 0.7.0"
+  
+- name: "version:future"
+  color: "ededed"
+  description: "Planned for future releases"
+
+# Platform Labels
+- name: "platform:windows"
+  color: "fbca04"
+  description: "Windows-specific issue"
+  
+- name: "platform:macos"
+  color: "fbca04"
+  description: "macOS-specific issue"
+  
+- name: "platform:linux"
+  color: "fbca04"
+  description: "Linux-specific issue"
+
+# Adapter-Specific Labels
+- name: "adapter:langraph"
+  color: "b60205"
+  description: "LangGraph adapter"
+  
+- name: "adapter:crewai"
+  color: "b60205"
+  description: "CrewAI adapter"
+  
+- name: "adapter:promptflow"
+  color: "b60205"
+  description: "PromptFlow adapter"
+  
+- name: "adapter:phidata"
+  color: "b60205"
+  description: "Phidata adapter"
+  
+- name: "adapter:custom"
+  color: "b60205"
+  description: "Custom adapter implementation"

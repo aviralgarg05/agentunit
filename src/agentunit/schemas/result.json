@@ -1,0 +1,278 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agentunit.dev/schemas/result.json",
+  "title": "AgentUnit Result Schema",
+  "description": "JSON Schema for AgentUnit evaluation result artifacts",
+  "type": "object",
+  "required": ["version", "timestamp", "scenarios", "summary"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "AgentUnit version used for evaluation",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when evaluation started"
+    },
+    "duration_ms": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total evaluation duration in milliseconds"
+    },
+    "environment": {
+      "type": "object",
+      "description": "Execution environment metadata",
+      "properties": {
+        "python_version": {
+          "type": "string",
+          "description": "Python version (e.g., '3.10.5')"
+        },
+        "platform": {
+          "type": "string",
+          "description": "Operating system platform (e.g., 'Linux', 'Darwin', 'Windows')"
+        },
+        "hostname": {
+          "type": "string",
+          "description": "Hostname of execution machine"
+        },
+        "ci": {
+          "type": "boolean",
+          "description": "Whether running in CI environment"
+        },
+        "git_commit": {
+          "type": "string",
+          "description": "Git commit SHA if in repository"
+        },
+        "git_branch": {
+          "type": "string",
+          "description": "Git branch name if in repository"
+        }
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "description": "Evaluation configuration",
+      "properties": {
+        "seed": {
+          "type": "integer",
+          "description": "Random seed used for reproducibility"
+        },
+        "otel_exporter": {
+          "type": "string",
+          "enum": ["console", "otlp", "none"],
+          "description": "OpenTelemetry exporter used"
+        },
+        "parallel": {
+          "type": "boolean",
+          "description": "Whether scenarios ran in parallel"
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "description": "Individual scenario results",
+      "items": {
+        "$ref": "#/definitions/scenarioResult"
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "Aggregated summary statistics",
+      "required": ["total", "passed", "failed", "skipped"],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of scenarios"
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of passed scenarios"
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of failed scenarios"
+        },
+        "skipped": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of skipped scenarios"
+        },
+        "pass_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Percentage of scenarios that passed"
+        },
+        "total_duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total execution time in milliseconds"
+        },
+        "average_duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Average scenario duration in milliseconds"
+        }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "description": "OpenTelemetry trace and span information",
+      "properties": {
+        "trace_id": {
+          "type": "string",
+          "description": "Root trace ID for this evaluation"
+        },
+        "service_name": {
+          "type": "string",
+          "description": "OpenTelemetry service name"
+        },
+        "exporter_endpoint": {
+          "type": "string",
+          "description": "OTLP exporter endpoint if used"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "scenarioResult": {
+      "type": "object",
+      "required": ["name", "status", "duration_ms"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Scenario name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Scenario description"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["passed", "failed", "skipped", "error"],
+          "description": "Scenario execution status"
+        },
+        "duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Scenario execution time in milliseconds"
+        },
+        "error": {
+          "type": "object",
+          "description": "Error details if status is 'error' or 'failed'",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "Error message"
+            },
+            "type": {
+              "type": "string",
+              "description": "Exception type"
+            },
+            "traceback": {
+              "type": "string",
+              "description": "Full error traceback"
+            }
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "description": "Computed metrics for this scenario",
+          "additionalProperties": {
+            "type": "number",
+            "description": "Metric value (0.0 to 1.0 typically)"
+          }
+        },
+        "test_cases": {
+          "type": "array",
+          "description": "Individual test case results",
+          "items": {
+            "$ref": "#/definitions/testCaseResult"
+          }
+        },
+        "telemetry": {
+          "type": "object",
+          "description": "Scenario-level telemetry",
+          "properties": {
+            "span_id": {
+              "type": "string",
+              "description": "OpenTelemetry span ID"
+            },
+            "attributes": {
+              "type": "object",
+              "description": "Custom span attributes"
+            }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Scenario tags"
+        }
+      }
+    },
+    "testCaseResult": {
+      "type": "object",
+      "required": ["index", "status"],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Test case index in dataset"
+        },
+        "input": {
+          "description": "Input provided to agent",
+          "oneOf": [
+            {"type": "string"},
+            {"type": "object"},
+            {"type": "array"}
+          ]
+        },
+        "expected": {
+          "description": "Expected output",
+          "oneOf": [
+            {"type": "string"},
+            {"type": "object"},
+            {"type": "array"}
+          ]
+        },
+        "actual": {
+          "description": "Actual output from agent",
+          "oneOf": [
+            {"type": "string"},
+            {"type": "object"},
+            {"type": "array"}
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["passed", "failed", "error"],
+          "description": "Test case execution status"
+        },
+        "duration_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Test case execution time"
+        },
+        "metrics": {
+          "type": "object",
+          "description": "Per-test-case metrics",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "error": {
+          "type": "string",
+          "description": "Error message if status is 'error'"
+        }
+      }
+    }
+  }
+}
