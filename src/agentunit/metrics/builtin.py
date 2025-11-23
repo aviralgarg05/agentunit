@@ -121,3 +121,69 @@ class RetrievalQualityMetric(Metric):
             mentions = sum(1 for ref in references if ref.lower() in answer.lower())
             value = mentions / len(references)
         return MetricResult(name=self.name, value=value, detail={"references": references, "answer": answer})
+
+
+class CostMetric(Metric):
+    name = "cost"
+
+    def evaluate(self, case: DatasetCase, trace: TraceLog, outcome: Any) -> MetricResult:
+        # Try to extract cost from trace metadata or outcome
+        cost = 0.0
+        
+        # Check trace metadata
+        if trace.metadata and "cost" in trace.metadata:
+            cost = float(trace.metadata["cost"])
+        
+        # Check outcome
+        elif hasattr(outcome, "cost"):
+            cost = float(outcome.cost)
+            
+        # Sum up cost from tool calls if available
+        tool_calls = [event.payload for event in trace.events if event.type == "tool_call"]
+        for tool in tool_calls:
+            if "cost" in tool:
+                cost += float(tool["cost"])
+                
+        return MetricResult(name=self.name, value=cost, detail={"cost": cost})
+
+
+class TokenUsageMetric(Metric):
+    name = "token_usage"
+
+    def evaluate(self, case: DatasetCase, trace: TraceLog, outcome: Any) -> MetricResult:
+        prompt_tokens = 0
+        completion_tokens = 0
+        total_tokens = 0
+        
+        # Check trace metadata
+        if trace.metadata and "usage" in trace.metadata:
+            usage = trace.metadata["usage"]
+            prompt_tokens = usage.get("prompt_tokens", 0)
+            completion_tokens = usage.get("completion_tokens", 0)
+            total_tokens = usage.get("total_tokens", 0)
+            
+        # Check outcome
+        elif hasattr(outcome, "usage"):
+            usage = outcome.usage
+            if isinstance(usage, dict):
+                prompt_tokens = usage.get("prompt_tokens", 0)
+                completion_tokens = usage.get("completion_tokens", 0)
+                total_tokens = usage.get("total_tokens", 0)
+            else:
+                # Assume object with attributes
+                prompt_tokens = getattr(usage, "prompt_tokens", 0)
+                completion_tokens = getattr(usage, "completion_tokens", 0)
+                total_tokens = getattr(usage, "total_tokens", 0)
+        
+        if total_tokens == 0 and (prompt_tokens > 0 or completion_tokens > 0):
+            total_tokens = prompt_tokens + completion_tokens
+            
+        return MetricResult(
+            name=self.name, 
+            value=float(total_tokens), 
+            detail={
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "total_tokens": total_tokens
+            }
+        )

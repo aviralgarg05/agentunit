@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "agentunit"
-version = "0.6.0"
-description = "Pytest-style evaluation harness for agentic AI and RAG workflows"
-authors = ["AgentUnit Contributors <opensource@agentunit.dev>"]
+version = "0.7.0"
+description = "A framework for evaluating, monitoring, and benchmarking multi-agent systems"
+authors = ["Aviral Garg <aviralgarg05@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{ include = "agentunit", from = "src" }]

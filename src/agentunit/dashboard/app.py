@@ -359,12 +359,92 @@ class DashboardApp:
                 # TODO: Add charts using plotly or altair
                 
         elif report_type == "Comparison Report":
-            st.info("Select two runs to compare")
-            # TODO: Implement comparison UI
+            self._render_comparison_report()
             
         elif report_type == "Regression Report":
             st.info("Configure regression detection settings")
             # TODO: Implement regression detection UI
+
+    def _render_comparison_report(self):
+        """Render comparison report between two runs."""
+        st.subheader("Run Comparison")
+        
+        runs = self._get_runs()
+        run_ids = [r["id"] for r in runs]
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            run1_id = st.selectbox("Baseline Run", run_ids, key="run1")
+        with col2:
+            run2_id = st.selectbox("Candidate Run", run_ids, key="run2")
+            
+        if run1_id and run2_id:
+            run1 = self._load_run(run1_id)
+            run2 = self._load_run(run2_id)
+            
+            # High-level comparison
+            st.markdown("### Overview")
+            col1, col2, col3 = st.columns(3)
+            
+            # Success Rate Delta
+            sr1 = run1.get("passed", 0) / max(run1.get("total", 1), 1) * 100
+            sr2 = run2.get("passed", 0) / max(run2.get("total", 1), 1) * 100
+            delta_sr = sr2 - sr1
+            
+            with col1:
+                st.metric("Success Rate", f"{sr2:.1f}%", f"{delta_sr:.1f}%")
+                
+            # Latency Delta
+            lat1 = run1.get("avg_latency", 0)
+            lat2 = run2.get("avg_latency", 0)
+            delta_lat = lat2 - lat1
+            
+            with col2:
+                st.metric("Avg Latency", f"{lat2:.2f}s", f"{delta_lat:.2f}s", delta_color="inverse")
+                
+            # Cost Delta
+            cost1 = run1.get("cost", 0)
+            cost2 = run2.get("cost", 0)
+            delta_cost = cost2 - cost1
+            
+            with col3:
+                st.metric("Total Cost", f"${cost2:.4f}", f"${delta_cost:.4f}", delta_color="inverse")
+                
+            # Detailed Comparison
+            st.markdown("### Case-by-Case Comparison")
+            
+            # Create a map of cases
+            cases1 = {t.get("case_id"): t for t in run1.get("traces", [])}
+            cases2 = {t.get("case_id"): t for t in run2.get("traces", [])}
+            
+            all_cases = sorted(set(cases1.keys()) | set(cases2.keys()))
+            
+            # Filter for differences
+            show_diff_only = st.checkbox("Show differences only")
+            
+            for case_id in all_cases:
+                t1 = cases1.get(case_id)
+                t2 = cases2.get(case_id)
+                
+                s1 = t1.get("status") if t1 else "N/A"
+                s2 = t2.get("status") if t2 else "N/A"
+                
+                if show_diff_only and s1 == s2:
+                    continue
+                    
+                with st.expander(f"{case_id}: {s1} → {s2}"):
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.markdown("**Baseline**")
+                        if t1:
+                            st.text(f"Output: {t1.get('output')}")
+                            st.text(f"Latency: {t1.get('duration_ms', 0)/1000:.2f}s")
+                    with c2:
+                        st.markdown("**Candidate**")
+                        if t2:
+                            st.text(f"Output: {t2.get('output')}")
+                            st.text(f"Latency: {t2.get('duration_ms', 0)/1000:.2f}s")
+
     
     def _render_settings(self):
         """Render settings page."""
