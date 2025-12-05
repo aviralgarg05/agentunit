@@ -186,7 +186,7 @@ Programmatic runners are available through `agentunit.core.Runner` for notebook-
 | OpenTelemetry integration | [docs/telemetry.md](docs/telemetry.md) |
 | Performance testing | [docs/performance-testing.md](docs/performance-testing.md) |
 | Comparison to other tools | [docs/comparison.md](docs/comparison.md) |
-| Templates | [docs/templates/](docs/templates/) |
+| Templates | [docs/templates/README.md](docs/templates/README.md) |
 
 Use the table above as the canonical navigation surface; every document cross-links back to related topics for clarity.
 
@@ -221,4 +221,4 @@ AgentUnit is released under the MIT License. See [LICENSE](LICENSE) for the full
 
 ---
 
-Need an overview for stakeholders? Start with [docs/architecture.md](docs/architecture.md). Ready to extend the platform? Explore the templates under [docs/templates/](docs/templates/).
+Need an overview for stakeholders? Start with [docs/architecture.md](docs/architecture.md). Ready to extend the platform? Explore the templates under [docs/templates/README.md](docs/templates/README.md).
