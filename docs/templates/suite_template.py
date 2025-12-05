@@ -7,7 +7,7 @@ how to define a dataset, adapter, and scenario in one place.
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from agentunit.adapters.base import AdapterOutcome, BaseAdapter
 from agentunit.core.scenario import Scenario

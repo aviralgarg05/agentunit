@@ -12,6 +12,7 @@ exclude = [
     "build",
     "dist",
     "*.egg-info",
+    "docs/templates",
 ]
 
 # Same as Black

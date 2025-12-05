@@ -7,7 +7,7 @@ applies ergonomic defaults so you can focus on datasets and evaluation policy.
 from __future__ import annotations
 
 from agentunit.core.scenario import Scenario
-from agentunit.datasets.base import DatasetSource, DatasetCase
+from agentunit.datasets.base import DatasetCase, DatasetSource
 
 
 # ---------------------------------------------------------------------------
@@ -40,6 +40,8 @@ langgraph_scenario = Scenario.load_langgraph("graphs/customer_support.py", datas
 
 # OpenAI Agents flow
 from my_flows import support_flow  # replace with your flow module
+
+
 openai_agents_scenario = Scenario.from_openai_agents(
     flow=support_flow,
     dataset=dataset,
@@ -50,11 +52,15 @@ openai_agents_scenario = Scenario.from_openai_agents(
 
 # CrewAI crew instance
 from my_crewai_setup import crew  # replace with your crew definition
+
+
 crewai_scenario = Scenario.from_crewai(crew, dataset=dataset, name="crewai-support")
 
 
 # Phidata agent callable
 from my_phi_project import marketing_agent  # replace with your agent factory
+
+
 phidata_scenario = Scenario.from_phidata(
     agent=marketing_agent,
     dataset=dataset,
@@ -65,6 +71,8 @@ phidata_scenario = Scenario.from_phidata(
 
 # Microsoft PromptFlow orchestration
 from promptflow import load_flow  # type: ignore import for optional dependency
+
+
 promptflow_scenario = Scenario.from_promptflow(
     flow=load_flow("flows/support.yaml"),
     dataset=dataset,
@@ -75,6 +83,8 @@ promptflow_scenario = Scenario.from_promptflow(
 
 # OpenAI Swarm orchestrator
 from my_swarm import escalation_swarm  # replace with swarm entry point
+
+
 openai_swarm_scenario = Scenario.from_openai_swarm(
     swarm=escalation_swarm,
     dataset=dataset,
@@ -84,6 +94,8 @@ openai_swarm_scenario = Scenario.from_openai_swarm(
 
 # Anthropic Claude deployed on Amazon Bedrock
 from my_bedrock_runtime import bedrock_client  # replace with boto3 client factory
+
+
 anthropic_bedrock_scenario = Scenario.from_anthropic_bedrock(
     client=bedrock_client,
     model_id="anthropic.claude-3-sonnet",
