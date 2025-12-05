@@ -1,6 +1,5 @@
 """Tests for multimodal evaluation support."""
 
-
 import pytest
 
 from agentunit import multimodal
@@ -31,10 +30,7 @@ def test_multimodal_imports():
 
 def test_multimodal_input():
     """Test MultimodalInput dataclass."""
-    input_data = MultimodalInput(
-        text="Describe this image",
-        image_path="/path/to/image.jpg"
-    )
+    input_data = MultimodalInput(text="Describe this image", image_path="/path/to/image.jpg")
 
     assert input_data.text == "Describe this image"
     assert input_data.image_path == "/path/to/image.jpg"
@@ -64,7 +60,7 @@ def test_image_caption_metric():
         id="test_1",
         query="Describe this image",
         expected_output="A cat sitting on a mat",
-        metadata={"image_path": "/fake/path.jpg"}
+        metadata={"image_path": "/fake/path.jpg"},
     )
 
     trace = TraceLog()
@@ -91,8 +87,8 @@ def test_multimodal_coherence_metric():
         metadata={
             "image_path": "/fake/image.jpg",
             "audio_path": "/fake/audio.mp3",
-            "text": "Analyze this content"
-        }
+            "text": "Analyze this content",
+        },
     )
 
     trace = TraceLog()

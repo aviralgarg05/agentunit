@@ -10,19 +10,20 @@ This module provides a Streamlit-based web interface for:
 import sys
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
     from .app import DashboardApp
-    from .components import SuiteEditor, RunMonitor, TraceViewer, ReportExplorer
-    from .server import start_dashboard, DashboardConfig
+    from .components import ReportExplorer, RunMonitor, SuiteEditor, TraceViewer
+    from .server import DashboardConfig, start_dashboard
 
 __all__ = [
     "DashboardApp",
-    "SuiteEditor",
-    "RunMonitor",
-    "TraceViewer",
-    "ReportExplorer",
-    "start_dashboard",
     "DashboardConfig",
+    "ReportExplorer",
+    "RunMonitor",
+    "SuiteEditor",
+    "TraceViewer",
+    "start_dashboard",
 ]
 
 
@@ -30,29 +31,36 @@ def __getattr__(name: str):
     """Lazy load dashboard components."""
     if name == "DashboardApp":
         from .app import DashboardApp
+
         return DashboardApp
-    elif name == "SuiteEditor":
+    if name == "SuiteEditor":
         from .components import SuiteEditor
+
         return SuiteEditor
-    elif name == "RunMonitor":
+    if name == "RunMonitor":
         from .components import RunMonitor
+
         return RunMonitor
-    elif name == "TraceViewer":
+    if name == "TraceViewer":
         from .components import TraceViewer
+
         return TraceViewer
-    elif name == "ReportExplorer":
+    if name == "ReportExplorer":
         from .components import ReportExplorer
+
         return ReportExplorer
-    elif name == "start_dashboard":
+    if name == "start_dashboard":
         from .server import start_dashboard
+
         return start_dashboard
-    elif name == "DashboardConfig":
+    if name == "DashboardConfig":
         from .server import DashboardConfig
+
         return DashboardConfig
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
 
 
 # Register lazy loader
-if sys.version_info >= (3, 7):
-    def __dir__():
-        return __all__
+def __dir__():
+    return __all__

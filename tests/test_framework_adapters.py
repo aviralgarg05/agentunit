@@ -161,13 +161,7 @@ def test_mistral_server_adapter_parses_response() -> None:
 
         def post(self, _: str, json: dict[str, Any]) -> DummyResponse:
             self.captured.append(json)
-            return DummyResponse(
-                {
-                    "choices": [
-                        {"message": {"content": "Mistral reply"}}
-                    ]
-                }
-            )
+            return DummyResponse({"choices": [{"message": {"content": "Mistral reply"}}]})
 
     client = DummyClient()
     adapter = MistralServerAdapter(base_url="http://localhost:8000", http_client=client)  # type: ignore[arg-type]

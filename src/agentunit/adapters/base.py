@@ -1,12 +1,17 @@
 """Abstract base adapter for bridging external agent frameworks."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, Optional
 import abc
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
 
 
 @dataclass(slots=True)
@@ -15,9 +20,9 @@ class AdapterOutcome:
 
     success: bool
     output: Any
-    tool_calls: Iterable[Dict[str, Any]] = field(default_factory=list)
-    metrics: Dict[str, float] | None = None
-    error: Optional[str] = None
+    tool_calls: Iterable[dict[str, Any]] = field(default_factory=list)
+    metrics: dict[str, float] | None = None
+    error: str | None = None
 
 
 class BaseAdapter(abc.ABC):

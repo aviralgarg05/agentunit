@@ -1,14 +1,22 @@
 """Adapter for AutoGen conversational orchestrations."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any
+
+from agentunit.core.exceptions import AgentUnitError
 
 from .base import AdapterOutcome, BaseAdapter
 from .registry import register_adapter
-from ..core.exceptions import AgentUnitError
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
 
@@ -25,17 +33,18 @@ class AutoGenAdapter(BaseAdapter):
         self,
         orchestrator: Any,
         *,
-        task_builder: Optional[Callable[[DatasetCase], str]] = None,
-        message_builder: Optional[Callable[[DatasetCase], list[dict[str, Any]]]] = None,
-        extra_kwargs: Optional[Dict[str, Any]] = None,
+        task_builder: Callable[[DatasetCase], str] | None = None,
+        message_builder: Callable[[DatasetCase], list[dict[str, Any]]] | None = None,
+        extra_kwargs: dict[str, Any] | None = None,
     ) -> None:
         if orchestrator is None:
-            raise AgentUnitError("AutoGenAdapter requires an orchestrator or conversation callable")
+            msg = "AutoGenAdapter requires an orchestrator or conversation callable"
+            raise AgentUnitError(msg)
         self._orchestrator = orchestrator
         self._task_builder = task_builder or (lambda case: case.query)
         self._message_builder = message_builder or self._default_message_builder
         self._extra_kwargs = extra_kwargs or {}
-        self._runner: Optional[Callable[[Dict[str, Any]], Any]] = None
+        self._runner: Callable[[dict[str, Any]], Any] | None = None
 
     def prepare(self) -> None:
         if self._runner is not None:
@@ -65,7 +74,7 @@ class AutoGenAdapter(BaseAdapter):
             return AdapterOutcome(success=False, output=None, error=str(exc))
 
     # Helpers -----------------------------------------------------------------
-    def _resolve_runner(self, candidate: Any) -> Callable[[Dict[str, Any]], Any]:
+    def _resolve_runner(self, candidate: Any) -> Callable[[dict[str, Any]], Any]:
         if callable(candidate):  # plain function or lambda
             return candidate
         for attr in ("run", "invoke", "chat", "__call__"):
@@ -73,9 +82,12 @@ class AutoGenAdapter(BaseAdapter):
                 method = getattr(candidate, attr)
                 if callable(method):
                     return method
-        raise AgentUnitError("Unsupported AutoGen orchestrator; expected callable or object with run/chat method")
+        msg = "Unsupported AutoGen orchestrator; expected callable or object with run/chat method"
+        raise AgentUnitError(msg)
 
-    def _invoke_runner(self, runner: Callable[[Dict[str, Any]], Any], payload: Dict[str, Any]) -> Any:
+    def _invoke_runner(
+        self, runner: Callable[[dict[str, Any]], Any], payload: dict[str, Any]
+    ) -> Any:
         try:
             return runner(payload, **self._extra_kwargs)
         except TypeError:

@@ -1,19 +1,27 @@
 """Adapter for LangGraph v1.x graphs."""
+
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, Callable, Dict, Optional
 import importlib
 import importlib.util
 import logging
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
-from .base import BaseAdapter, AdapterOutcome
+from agentunit.core.exceptions import AdapterNotAvailableError, AgentUnitError
+
+from .base import AdapterOutcome, BaseAdapter
 from .registry import register_adapter
-from ..core.exceptions import AdapterNotAvailableError, AgentUnitError
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +34,15 @@ except Exception:  # pragma: no cover
 class LangGraphAdapter(BaseAdapter):
     name = "langgraph"
 
-    def __init__(self, source: Any, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, source: Any, config: dict[str, Any] | None = None) -> None:
         self._source = source
         self._config = config or {}
-        self._graph_callable: Optional[Callable[[Dict[str, Any]], Any]] = None
+        self._graph_callable: Callable[[dict[str, Any]], Any] | None = None
 
     @classmethod
-    def from_source(cls, source: str | Path | Callable[..., Any] | Any, **config: Any) -> "LangGraphAdapter":
+    def from_source(
+        cls, source: str | Path | Callable[..., Any] | Any, **config: Any
+    ) -> LangGraphAdapter:
         return cls(source=source, config=config)
 
     def prepare(self) -> None:
@@ -42,8 +52,9 @@ class LangGraphAdapter(BaseAdapter):
             self._graph_callable = self._wrap_callable(self._source)
             return
         if langgraph is None:
-            raise AdapterNotAvailableError("langgraph>=1.0.0a4 is required for LangGraphAdapter")
-        elif isinstance(self._source, (str, Path)):
+            msg = "langgraph>=1.0.0a4 is required for LangGraphAdapter"
+            raise AdapterNotAvailableError(msg)
+        if isinstance(self._source, (str, Path)):
             self._graph_callable = self._load_from_path(Path(self._source))
         else:
             self._graph_callable = self._wrap_callable(self._source)
@@ -76,22 +87,24 @@ class LangGraphAdapter(BaseAdapter):
             return AdapterOutcome(success=False, output=None, error=str(exc))
 
     # Helpers -----------------------------------------------------------------
-    def _wrap_callable(self, candidate: Any) -> Callable[[Dict[str, Any]], Any]:
+    def _wrap_callable(self, candidate: Any) -> Callable[[dict[str, Any]], Any]:
         if hasattr(candidate, "invoke"):
-            method = getattr(candidate, "invoke")
+            method = candidate.invoke
             if callable(method):
                 return method
         if hasattr(candidate, "run"):
-            method = getattr(candidate, "run")
+            method = candidate.run
             if callable(method):
                 return method
         if callable(candidate):
             return candidate
-        raise AgentUnitError("Unsupported LangGraph source; expected callable or graph instance")
+        msg = "Unsupported LangGraph source; expected callable or graph instance"
+        raise AgentUnitError(msg)
 
-    def _load_from_path(self, path: Path) -> Callable[[Dict[str, Any]], Any]:
+    def _load_from_path(self, path: Path) -> Callable[[dict[str, Any]], Any]:
         if not path.exists():
-            raise AgentUnitError(f"LangGraph file does not exist: {path}")
+            msg = f"LangGraph file does not exist: {path}"
+            raise AgentUnitError(msg)
         if path.suffix in {".yaml", ".yml"}:
             config = yaml.safe_load(path.read_text())
             return self._load_from_config(config)
@@ -100,27 +113,31 @@ class LangGraphAdapter(BaseAdapter):
             return self._load_from_config(config)
         if path.suffix == ".py":
             return self._load_callable_from_python(path)
-        raise AgentUnitError(f"Unsupported LangGraph file type: {path.suffix}")
+        msg = f"Unsupported LangGraph file type: {path.suffix}"
+        raise AgentUnitError(msg)
 
-    def _load_from_config(self, config: Dict[str, Any]) -> Callable[[Dict[str, Any]], Any]:
+    def _load_from_config(self, config: dict[str, Any]) -> Callable[[dict[str, Any]], Any]:
         module_name = config.get("module")
         attr = config.get("object") or config.get("callable")
         if not module_name or not attr:
-            raise AgentUnitError("LangGraph config must define 'module' and 'object' keys")
+            msg = "LangGraph config must define 'module' and 'object' keys"
+            raise AgentUnitError(msg)
         module = importlib.import_module(module_name)
         candidate = getattr(module, attr)
         return self._wrap_callable(candidate)
 
-    def _load_callable_from_python(self, path: Path) -> Callable[[Dict[str, Any]], Any]:
+    def _load_callable_from_python(self, path: Path) -> Callable[[dict[str, Any]], Any]:
         module_name = path.stem
         spec = importlib.util.spec_from_file_location(module_name, path)
         if spec is None or spec.loader is None:
-            raise AgentUnitError(f"Unable to load module from {path}")
+            msg = f"Unable to load module from {path}"
+            raise AgentUnitError(msg)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         target_name = self._config.get("callable", "graph")
         if not hasattr(module, target_name):
-            raise AgentUnitError(f"Module {module_name} does not expose attribute '{target_name}'")
+            msg = f"Module {module_name} does not expose attribute '{target_name}'"
+            raise AgentUnitError(msg)
         candidate = getattr(module, target_name)
         return self._wrap_callable(candidate)
 

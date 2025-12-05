@@ -82,6 +82,7 @@ def template_library():
 
 # Validation Tests
 
+
 def test_validate_valid_config(validator, sample_config):
     """Test validation of valid configuration."""
     result = validator.validate(sample_config)
@@ -138,6 +139,7 @@ def test_validate_from_file(validator, temp_dir, sample_config):
 
 # Code Generation Tests
 
+
 def test_generate_code_from_dict(sample_config):
     """Test Python code generation from dict."""
     generator = CodeGenerator()
@@ -191,6 +193,7 @@ def test_generated_code_has_main_block(sample_config):
 
 
 # Format Conversion Tests
+
 
 def test_convert_yaml_to_json(converter, temp_dir, sample_config):
     """Test conversion from YAML to JSON."""
@@ -246,6 +249,7 @@ def test_round_trip_yaml_json(converter, temp_dir, sample_config):
 
 
 # Template Library Tests
+
 
 def test_list_templates(template_library):
     """Test listing available templates."""
@@ -329,6 +333,7 @@ def test_add_custom_template(template_library):
 
 # Scenario Builder Tests
 
+
 def test_builder_from_yaml(builder, temp_dir, sample_config):
     """Test building scenario from YAML file."""
     yaml_path = temp_dir / "scenario.yaml"
@@ -392,6 +397,7 @@ def test_builder_from_directory(builder, temp_dir, sample_config):
 
 
 # Integration Tests
+
 
 def test_full_workflow_yaml_to_python(temp_dir, sample_config):
     """Test complete workflow: YAML -> validate -> generate Python."""

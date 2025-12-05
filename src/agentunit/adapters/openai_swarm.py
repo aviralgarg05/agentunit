@@ -1,14 +1,22 @@
 """Adapter for OpenAI Swarm orchestrations."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any
+
+from agentunit.core.exceptions import AgentUnitError
 
 from .base import AdapterOutcome, BaseAdapter
 from .registry import register_adapter
-from ..core.exceptions import AgentUnitError
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,17 +35,18 @@ class OpenAISwarmAdapter(BaseAdapter):
         self,
         swarm: Any,
         *,
-        message_builder: Optional[Callable[[DatasetCase], list[Dict[str, Any]]]] = None,
-        metadata_builder: Optional[Callable[[DatasetCase], Dict[str, Any]]] = None,
-        run_kwargs: Optional[Dict[str, Any]] = None,
+        message_builder: Callable[[DatasetCase], list[dict[str, Any]]] | None = None,
+        metadata_builder: Callable[[DatasetCase], dict[str, Any]] | None = None,
+        run_kwargs: dict[str, Any] | None = None,
     ) -> None:
         if swarm is None:
-            raise AgentUnitError("OpenAISwarmAdapter requires a swarm or callable")
+            msg = "OpenAISwarmAdapter requires a swarm or callable"
+            raise AgentUnitError(msg)
         self._swarm = swarm
         self._message_builder = message_builder or self._default_message_builder
         self._metadata_builder = metadata_builder or (lambda case: case.metadata or {})
         self._run_kwargs = run_kwargs or {}
-        self._runner: Optional[Callable[[list[Dict[str, Any]]], Any]] = None
+        self._runner: Callable[[list[dict[str, Any]]], Any] | None = None
 
     def prepare(self) -> None:
         if self._runner is not None:
@@ -63,7 +72,7 @@ class OpenAISwarmAdapter(BaseAdapter):
             trace.record("error", message=str(exc))
             return AdapterOutcome(success=False, output=None, error=str(exc))
 
-    def _resolve_runner(self, swarm: Any) -> Callable[[list[Dict[str, Any]]], Any]:
+    def _resolve_runner(self, swarm: Any) -> Callable[[list[dict[str, Any]]], Any]:
         if callable(swarm):
             return swarm
         for attr in ("run", "execute", "invoke", "__call__"):
@@ -71,21 +80,22 @@ class OpenAISwarmAdapter(BaseAdapter):
                 candidate = getattr(swarm, attr)
                 if callable(candidate):
                     return candidate
-        raise AgentUnitError("Unsupported OpenAI Swarm object; expected callable or object with run/invoke")
+        msg = "Unsupported OpenAI Swarm object; expected callable or object with run/invoke"
+        raise AgentUnitError(msg)
 
     def _invoke_runner(
         self,
-        runner: Callable[[list[Dict[str, Any]]], Any],
-        messages: list[Dict[str, Any]],
-        kwargs: Dict[str, Any],
+        runner: Callable[[list[dict[str, Any]]], Any],
+        messages: list[dict[str, Any]],
+        kwargs: dict[str, Any],
     ) -> Any:
         try:
             return runner(messages=messages, **kwargs)
         except TypeError:
             return runner(messages)
 
-    def _default_message_builder(self, case: DatasetCase) -> list[Dict[str, Any]]:
-        messages: list[Dict[str, Any]] = []
+    def _default_message_builder(self, case: DatasetCase) -> list[dict[str, Any]]:
+        messages: list[dict[str, Any]] = []
         if case.context:
             messages.append({"role": "system", "content": "\n".join(case.context)})
         messages.append({"role": "user", "content": case.query})

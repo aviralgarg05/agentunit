@@ -22,6 +22,7 @@ from agentunit.collaboration.tracking import Change
 
 # Test Fixtures
 
+
 @pytest.fixture
 def temp_repo():
     """Create a temporary repository for testing."""
@@ -70,6 +71,7 @@ def sample_cases():
 @pytest.fixture
 def mock_scenario():
     """Create mock scenario objects."""
+
     class MockAdapter:
         name = "MockAdapter"
 
@@ -95,6 +97,7 @@ def mock_scenario():
 
 
 # Version Control Tests
+
 
 def test_version_manager_initialization(version_manager, temp_repo):
     """Test VersionManager creates proper directory structure."""
@@ -200,6 +203,7 @@ def test_create_tag(version_manager, mock_scenario, sample_cases):
 
 # Branch Management Tests
 
+
 def test_create_branch(branch_manager, version_manager, mock_scenario, sample_cases):
     """Test creating a new branch."""
     scenarios = [mock_scenario("test1", sample_cases)]
@@ -257,6 +261,7 @@ def test_branch_status(branch_manager, version_manager, mock_scenario, sample_ca
 
 
 # Merge and Conflict Resolution Tests
+
 
 def test_merge_no_conflicts(mock_scenario, sample_cases):
     """Test merging without conflicts."""
@@ -373,6 +378,7 @@ def test_merge_strategy_ours():
 
 # Change Tracking Tests
 
+
 def test_change_tracker_diff_scenarios():
     """Test tracking scenario changes."""
     old = SuiteVersion(
@@ -422,6 +428,7 @@ def test_change_statistics():
 
 
 # Collaboration Hub Tests
+
 
 def test_acquire_lock(temp_repo):
     """Test acquiring a lock on a resource."""

@@ -6,32 +6,33 @@ regressions, and conducting statistical analysis with confidence intervals.
 
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
     from .comparator import (
-        VersionComparator,
-        ConfigurationComparator,
         ABTestRunner,
+        ConfigurationComparator,
         RegressionDetector,
-    )
-    from .statistics import (
-        BootstrapCI,
-        StatisticalTest,
-        MetricAggregator,
-        SignificanceAnalyzer,
+        VersionComparator,
     )
     from .reports import ComparisonReport, RegressionReport
+    from .statistics import (
+        BootstrapCI,
+        MetricAggregator,
+        SignificanceAnalyzer,
+        StatisticalTest,
+    )
 
 __all__ = [
-    "VersionComparator",
-    "ConfigurationComparator",
     "ABTestRunner",
-    "RegressionDetector",
     "BootstrapCI",
-    "StatisticalTest",
-    "MetricAggregator",
-    "SignificanceAnalyzer",
     "ComparisonReport",
+    "ConfigurationComparator",
+    "MetricAggregator",
+    "RegressionDetector",
     "RegressionReport",
+    "SignificanceAnalyzer",
+    "StatisticalTest",
+    "VersionComparator",
 ]
 
 _COMPARISON_IMPORTS = {
@@ -52,10 +53,12 @@ def __getattr__(name: str):
     """Lazy loading for comparison components."""
     if name in _COMPARISON_IMPORTS:
         import importlib
+
         module_path = _COMPARISON_IMPORTS[name]
         module = importlib.import_module(module_path)
         return getattr(module, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
 
 
 def __dir__():

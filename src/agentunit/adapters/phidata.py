@@ -1,14 +1,22 @@
 """Adapter for Phidata data-centric agents."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any
+
+from agentunit.core.exceptions import AgentUnitError
 
 from .base import AdapterOutcome, BaseAdapter
 from .registry import register_adapter
-from ..core.exceptions import AgentUnitError
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,15 +35,16 @@ class PhidataAdapter(BaseAdapter):
         self,
         agent: Any,
         *,
-        input_builder: Optional[Callable[[DatasetCase], Dict[str, Any]]] = None,
-        extra: Optional[Dict[str, Any]] = None,
+        input_builder: Callable[[DatasetCase], dict[str, Any]] | None = None,
+        extra: dict[str, Any] | None = None,
     ) -> None:
         if agent is None:
-            raise AgentUnitError("PhidataAdapter requires an agent or callable")
+            msg = "PhidataAdapter requires an agent or callable"
+            raise AgentUnitError(msg)
         self._agent = agent
         self._input_builder = input_builder or self._default_input_builder
         self._extra = extra or {}
-        self._callable: Optional[Callable[[Dict[str, Any]], Any]] = None
+        self._callable: Callable[[dict[str, Any]], Any] | None = None
 
     def prepare(self) -> None:
         if self._callable is not None:
@@ -60,7 +69,7 @@ class PhidataAdapter(BaseAdapter):
             trace.record("error", message=str(exc))
             return AdapterOutcome(success=False, output=None, error=str(exc))
 
-    def _resolve_runner(self, agent: Any) -> Callable[[Dict[str, Any]], Any]:
+    def _resolve_runner(self, agent: Any) -> Callable[[dict[str, Any]], Any]:
         if callable(agent):
             return agent
         for attr in ("run", "execute", "__call__"):
@@ -68,9 +77,10 @@ class PhidataAdapter(BaseAdapter):
                 candidate = getattr(agent, attr)
                 if callable(candidate):
                     return candidate
-        raise AgentUnitError("Unsupported Phidata agent; expected callable or object with run/execute")
+        msg = "Unsupported Phidata agent; expected callable or object with run/execute"
+        raise AgentUnitError(msg)
 
-    def _default_input_builder(self, case: DatasetCase) -> Dict[str, Any]:
+    def _default_input_builder(self, case: DatasetCase) -> dict[str, Any]:
         return {
             "query": case.query,
             "context": case.context,
@@ -86,7 +96,7 @@ class PhidataAdapter(BaseAdapter):
                 if key in result:
                     return result[key]
         if hasattr(result, "result"):
-            return getattr(result, "result")
+            return result.result
         if hasattr(result, "content"):
             return result.content
         return result

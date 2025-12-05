@@ -1,16 +1,25 @@
 """Adapter for LlamaIndex query engines."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any
+
+from agentunit.core.exceptions import AgentUnitError
 
 from .base import AdapterOutcome, BaseAdapter
 from .registry import register_adapter
-from ..core.exceptions import AgentUnitError
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
+
 
 class LlamaIndexAdapter(BaseAdapter):
     name = "llama_index"
@@ -19,15 +28,16 @@ class LlamaIndexAdapter(BaseAdapter):
         self,
         engine: Any,
         *,
-        prompt_builder: Optional[Callable[[DatasetCase], str]] = None,
+        prompt_builder: Callable[[DatasetCase], str] | None = None,
         response_attribute: str = "response",
     ) -> None:
         if engine is None:
-            raise AgentUnitError("LlamaIndexAdapter requires a query engine or callable")
+            msg = "LlamaIndexAdapter requires a query engine or callable"
+            raise AgentUnitError(msg)
         self._engine = engine
         self._prompt_builder = prompt_builder or (lambda case: case.query)
         self._response_attribute = response_attribute
-        self._callable: Optional[Callable[[str], Any]] = None
+        self._callable: Callable[[str], Any] | None = None
 
     def prepare(self) -> None:
         if self._callable is not None:
@@ -61,7 +71,8 @@ class LlamaIndexAdapter(BaseAdapter):
                 method = getattr(engine, attr)
                 if callable(method):
                     return method
-        raise AgentUnitError("Unsupported LlamaIndex engine; expected callable or object with query method")
+        msg = "Unsupported LlamaIndex engine; expected callable or object with query method"
+        raise AgentUnitError(msg)
 
     def _extract_output(self, result: Any) -> Any:
         if result is None:

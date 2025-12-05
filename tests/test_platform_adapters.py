@@ -33,6 +33,7 @@ def test_platform_imports():
     # Test Wandb adapter
     assert WandbAdapter is not None
 
+
 def test_adapter_initialization():
     """Test that adapters are properly defined (cannot instantiate abstract classes)"""
 
@@ -48,6 +49,7 @@ def test_adapter_initialization():
         assert hasattr(adapter_class, "__init__")
         assert hasattr(adapter_class, "__name__")
 
+
 def test_scenario_integration():
     """Test that scenario can be created with basic components"""
     # Create a basic dataset case
@@ -55,7 +57,7 @@ def test_scenario_integration():
         id="test_case_1",
         query="Hello world",
         expected_output="Hi there!",
-        metadata={"type": "greeting"}
+        metadata={"type": "greeting"},
     )
 
     # Create a dataset source
@@ -73,28 +75,19 @@ def test_scenario_integration():
         def execute(self, case: DatasetCase, trace: TraceLog) -> AdapterOutcome:
             """Run the agent flow on a single dataset case."""
             return AdapterOutcome(
-                success=True,
-                output="mock response",
-                tool_calls=[],
-                metrics={"test_metric": 1.0}
+                success=True, output="mock response", tool_calls=[], metrics={"test_metric": 1.0}
             )
 
     # Create adapter
-    adapter = MockAdapter({
-        "model": "gpt-3.5-turbo",
-        "timeout": 30
-    })
+    adapter = MockAdapter({"model": "gpt-3.5-turbo", "timeout": 30})
 
     # Create scenario
-    scenario = Scenario(
-        name="test_scenario",
-        adapter=adapter,
-        dataset=dataset
-    )
+    scenario = Scenario(name="test_scenario", adapter=adapter, dataset=dataset)
 
     assert scenario.name == "test_scenario"
     assert type(adapter).__name__ == "MockAdapter"
     assert dataset.name == "test_dataset"
+
 
 def test_cli_integration():
     """Test CLI integration with adapters"""
@@ -104,6 +97,7 @@ def test_cli_integration():
 
     # Test that core CLI functionality is accessible
     assert callable(entrypoint)
+
 
 def test_reporting_integration():
     """Test reporting system integration"""
@@ -118,7 +112,7 @@ def test_reporting_integration():
         success=True,
         metrics={"accuracy": 0.95},
         duration_ms=1500.0,
-        trace=trace
+        trace=trace,
     )
 
     # Add run to result

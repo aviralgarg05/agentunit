@@ -1,5 +1,7 @@
 """Metric utilities."""
-from .base import Metric, MetricResult
-from .registry import resolve_metrics, DEFAULT_METRICS
 
-__all__ = ["Metric", "MetricResult", "resolve_metrics", "DEFAULT_METRICS"]
+from .base import Metric, MetricResult
+from .registry import DEFAULT_METRICS, resolve_metrics
+
+
+__all__ = ["DEFAULT_METRICS", "Metric", "MetricResult", "resolve_metrics"]

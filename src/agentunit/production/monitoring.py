@@ -4,11 +4,12 @@ Core monitoring components for production integration.
 Includes metrics collection, drift detection, and alerting.
 """
 
-from enum import Enum
-from typing import Dict, List, Any, Optional, Protocol
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-import logging
+from enum import Enum
+from typing import Any, Protocol
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -26,14 +27,14 @@ class ProductionMetrics:
     evaluation_id: EvaluationID
     timestamp: datetime
     scenario_name: str
-    performance: Dict[str, float] = field(default_factory=dict)
-    quality: Dict[str, float] = field(default_factory=dict)
-    reliability: Dict[str, float] = field(default_factory=dict)
-    efficiency: Dict[str, float] = field(default_factory=dict)
-    custom_metrics: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    performance: dict[str, float] = field(default_factory=dict)
+    quality: dict[str, float] = field(default_factory=dict)
+    reliability: dict[str, float] = field(default_factory=dict)
+    efficiency: dict[str, float] = field(default_factory=dict)
+    custom_metrics: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def get_metric_value(self, metric_name: str) -> Optional[float]:
+    def get_metric_value(self, metric_name: str) -> float | None:
         """Get a metric value from any category."""
         for category in [self.performance, self.quality, self.reliability, self.efficiency]:
             if metric_name in category:
@@ -54,19 +55,19 @@ class BaselineMetrics:
     scenario_name: str
     created_at: datetime
     run_count: int
-    performance_baseline: Dict[str, Dict[str, float]] = field(default_factory=dict)
-    quality_baseline: Dict[str, Dict[str, float]] = field(default_factory=dict)
-    reliability_baseline: Dict[str, Dict[str, float]] = field(default_factory=dict)
-    efficiency_baseline: Dict[str, Dict[str, float]] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    performance_baseline: dict[str, dict[str, float]] = field(default_factory=dict)
+    quality_baseline: dict[str, dict[str, float]] = field(default_factory=dict)
+    reliability_baseline: dict[str, dict[str, float]] = field(default_factory=dict)
+    efficiency_baseline: dict[str, dict[str, float]] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def get_baseline_stats(self, metric_name: str) -> Optional[Dict[str, float]]:
+    def get_baseline_stats(self, metric_name: str) -> dict[str, float] | None:
         """Get baseline statistics for a metric."""
         for baseline in [
             self.performance_baseline,
             self.quality_baseline,
             self.reliability_baseline,
-            self.efficiency_baseline
+            self.efficiency_baseline,
         ]:
             if metric_name in baseline:
                 return baseline[metric_name]
@@ -122,21 +123,17 @@ class DriftDetection:
     threshold: float
     confidence: float
     description: str
-    affected_scenarios: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    affected_scenarios: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class MetricsCollector(Protocol):
     """Protocol for metrics collection."""
 
-    def collect_metrics(
-        self,
-        scenario: Any,
-        result: Any,
-        **kwargs
-    ) -> Optional[ProductionMetrics]:
+    def collect_metrics(self, scenario: Any, result: Any, **kwargs) -> ProductionMetrics | None:
         """Collect metrics from a scenario run."""
-        raise NotImplementedError("Subclasses must implement collect_metrics")
+        msg = "Subclasses must implement collect_metrics"
+        raise NotImplementedError(msg)
 
 
 class DriftDetector(Protocol):
@@ -146,28 +143,24 @@ class DriftDetector(Protocol):
         self,
         current_metrics: ProductionMetrics,
         baseline: BaselineMetrics,
-        thresholds: Dict[str, float]
-    ) -> List[DriftDetection]:
+        thresholds: dict[str, float],
+    ) -> list[DriftDetection]:
         """Detect drift between current metrics and baseline."""
-        raise NotImplementedError("Subclasses must implement detect_drift")
+        msg = "Subclasses must implement detect_drift"
+        raise NotImplementedError(msg)
 
 
 class AlertManager(Protocol):
     """Protocol for alert management."""
 
     def send_alert(
-        self,
-        alert_id: AlertID,
-        severity: AlertSeverity,
-        message: str,
-        metadata: Dict[str, Any]
+        self, alert_id: AlertID, severity: AlertSeverity, message: str, metadata: dict[str, Any]
     ) -> bool:
         """Send an alert."""
-        raise NotImplementedError("Subclasses must implement send_alert")
+        msg = "Subclasses must implement send_alert"
+        raise NotImplementedError(msg)
 
-    def check_alert_rules(
-        self,
-        metrics: ProductionMetrics
-    ) -> List[Dict[str, Any]]:
+    def check_alert_rules(self, metrics: ProductionMetrics) -> list[dict[str, Any]]:
         """Check if any alert rules are triggered."""
-        raise NotImplementedError("Subclasses must implement check_alert_rules")
+        msg = "Subclasses must implement check_alert_rules"
+        raise NotImplementedError(msg)

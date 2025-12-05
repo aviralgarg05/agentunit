@@ -1,16 +1,16 @@
 """Leaderboard submission support."""
 
-from dataclasses import dataclass
-from typing import Dict, Any, Optional, List
-from pathlib import Path
 import json
+from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 
 @dataclass
 class LeaderboardConfig:
     """Configuration for leaderboard submissions.
-    
+
     Attributes:
         leaderboard_name: Name of the leaderboard
         api_url: API endpoint for submissions
@@ -20,14 +20,15 @@ class LeaderboardConfig:
         contact_email: Contact email
         metadata: Additional metadata
     """
+
     leaderboard_name: str
     api_url: str
-    api_key: Optional[str] = None
+    api_key: str | None = None
     model_name: str = "custom_model"
-    organization: Optional[str] = None
-    contact_email: Optional[str] = None
-    metadata: Dict[str, Any] = None
-    
+    organization: str | None = None
+    contact_email: str | None = None
+    metadata: dict[str, Any] = None
+
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}
@@ -35,21 +36,17 @@ class LeaderboardConfig:
 
 class LeaderboardSubmitter:
     """Submit results to benchmark leaderboards.
-    
+
     Supports:
     - GAIA leaderboard
     - AgentArena leaderboard
     - Custom leaderboards
     - Local leaderboard tracking
     """
-    
-    def __init__(
-        self,
-        config: LeaderboardConfig,
-        output_dir: Optional[Path] = None
-    ):
+
+    def __init__(self, config: LeaderboardConfig, output_dir: Path | None = None):
         """Initialize leaderboard submitter.
-        
+
         Args:
             config: Leaderboard configuration
             output_dir: Directory to save submissions
@@ -57,57 +54,52 @@ class LeaderboardSubmitter:
         self.config = config
         self.output_dir = output_dir or Path("./leaderboard_submissions")
         self.output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     def submit(
-        self,
-        results: List[Dict[str, Any]],
-        benchmark_name: str,
-        dry_run: bool = False
-    ) -> Dict[str, Any]:
+        self, results: list[dict[str, Any]], benchmark_name: str, dry_run: bool = False
+    ) -> dict[str, Any]:
         """Submit results to leaderboard.
-        
+
         Args:
             results: Evaluation results
             benchmark_name: Name of benchmark (gaia, arena, etc.)
             dry_run: If True, save locally without submitting
-        
+
         Returns:
             Submission response
         """
         # Format submission
         submission = self._format_submission(results, benchmark_name)
-        
+
         # Save locally
         submission_file = self._save_submission(submission, benchmark_name)
-        
+
         if dry_run:
             return {
                 "status": "saved",
                 "file": str(submission_file),
-                "message": "Submission saved locally (dry run)"
+                "message": "Submission saved locally (dry run)",
             }
-        
+
         # Submit to API (if configured)
         if self.config.api_url and self.config.api_key:
             return self._submit_to_api(submission)
-        
+
         return {
             "status": "saved",
             "file": str(submission_file),
-            "message": "API not configured, saved locally"
+            "message": "API not configured, saved locally",
         }
-    
+
     def _format_submission(
-        self,
-        results: List[Dict[str, Any]],
-        benchmark_name: str
-    ) -> Dict[str, Any]:
+        self, results: list[dict[str, Any]], benchmark_name: str
+    ) -> dict[str, Any]:
         """Format results for submission.
-        
+
         Args:
             results: Evaluation results
             benchmark_name: Benchmark name
-        
+
         Returns:
             Formatted submission
         """
@@ -117,64 +109,59 @@ class LeaderboardSubmitter:
             "organization": self.config.organization,
             "contact": self.config.contact_email,
             "timestamp": datetime.utcnow().isoformat(),
-            "results": []
+            "results": [],
         }
-        
+
         # Add metadata
         submission.update(self.config.metadata)
-        
+
         # Format results
         for result in results:
-            submission["results"].append({
-                "task_id": result.get("id", result.get("task_id")),
-                "model_answer": result.get("output", result.get("model_answer", "")),
-                "correct": result.get("passed", False),
-                "latency": result.get("latency"),
-                "tokens": result.get("tokens"),
-                "cost": result.get("cost")
-            })
-        
+            submission["results"].append(
+                {
+                    "task_id": result.get("id", result.get("task_id")),
+                    "model_answer": result.get("output", result.get("model_answer", "")),
+                    "correct": result.get("passed", False),
+                    "latency": result.get("latency"),
+                    "tokens": result.get("tokens"),
+                    "cost": result.get("cost"),
+                }
+            )
+
         return submission
-    
-    def _save_submission(
-        self,
-        submission: Dict[str, Any],
-        benchmark_name: str
-    ) -> Path:
+
+    def _save_submission(self, submission: dict[str, Any], benchmark_name: str) -> Path:
         """Save submission to local file.
-        
+
         Args:
             submission: Formatted submission
             benchmark_name: Benchmark name
-        
+
         Returns:
             Path to saved file
         """
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         filename = f"{benchmark_name}_{self.config.model_name}_{timestamp}.json"
         filepath = self.output_dir / filename
-        
-        with open(filepath, 'w') as f:
+
+        with open(filepath, "w") as f:
             json.dump(submission, f, indent=2)
-        
+
         return filepath
-    
-    def _submit_to_api(
-        self,
-        submission: Dict[str, Any]
-    ) -> Dict[str, Any]:
+
+    def _submit_to_api(self, submission: dict[str, Any]) -> dict[str, Any]:
         """Submit to leaderboard API.
-        
+
         Args:
             submission: Formatted submission
-        
+
         Returns:
             API response
         """
         # Placeholder for actual API submission
         # In a real implementation, this would use requests/httpx
         # to POST to the leaderboard API
-        
+
         # import requests
         # headers = {
         #     "Authorization": f"Bearer {self.config.api_key}",
@@ -186,62 +173,48 @@ class LeaderboardSubmitter:
         #     headers=headers
         # )
         # return response.json()
-        
+
         return {
             "status": "submitted",
             "message": "Submission successful (simulated)",
-            "leaderboard_url": f"{self.config.api_url}/submissions/{submission['timestamp']}"
+            "leaderboard_url": f"{self.config.api_url}/submissions/{submission['timestamp']}",
         }
-    
+
     def get_leaderboard(
-        self,
-        benchmark_name: Optional[str] = None,
-        top_k: int = 10
-    ) -> List[Dict[str, Any]]:
+        self, benchmark_name: str | None = None, top_k: int = 10
+    ) -> list[dict[str, Any]]:
         """Get leaderboard rankings.
-        
+
         Args:
             benchmark_name: Specific benchmark (None for all)
             top_k: Number of top entries to return
-        
+
         Returns:
             List of leaderboard entries
         """
         # Placeholder for fetching leaderboard
         # In a real implementation, this would query the API
-        
+
         return [
-            {
-                "rank": 1,
-                "model_name": "gpt-4-turbo",
-                "score": 92.5,
-                "organization": "OpenAI"
-            },
-            {
-                "rank": 2,
-                "model_name": "claude-3-opus",
-                "score": 91.2,
-                "organization": "Anthropic"
-            },
+            {"rank": 1, "model_name": "gpt-4-turbo", "score": 92.5, "organization": "OpenAI"},
+            {"rank": 2, "model_name": "claude-3-opus", "score": 91.2, "organization": "Anthropic"},
             {
                 "rank": 3,
                 "model_name": self.config.model_name,
                 "score": 88.7,
-                "organization": self.config.organization
-            }
+                "organization": self.config.organization,
+            },
         ][:top_k]
-    
+
     def compare_with_baseline(
-        self,
-        results: List[Dict[str, Any]],
-        baseline_model: str = "gpt-4o-mini"
-    ) -> Dict[str, Any]:
+        self, results: list[dict[str, Any]], baseline_model: str = "gpt-4o-mini"
+    ) -> dict[str, Any]:
         """Compare results with baseline model.
-        
+
         Args:
             results: Current model results
             baseline_model: Baseline model name
-        
+
         Returns:
             Comparison metrics
         """
@@ -249,21 +222,19 @@ class LeaderboardSubmitter:
         total = len(results)
         passed = sum(1 for r in results if r.get("passed", False))
         current_score = (passed / total * 100) if total > 0 else 0.0
-        
+
         # Placeholder baseline scores
-        baseline_scores = {
-            "gpt-4o-mini": 75.0,
-            "gpt-4": 90.0,
-            "claude-3-opus": 91.0
-        }
-        
+        baseline_scores = {"gpt-4o-mini": 75.0, "gpt-4": 90.0, "claude-3-opus": 91.0}
+
         baseline_score = baseline_scores.get(baseline_model, 70.0)
-        
+
         return {
             "current_model": self.config.model_name,
             "current_score": current_score,
             "baseline_model": baseline_model,
             "baseline_score": baseline_score,
             "improvement": current_score - baseline_score,
-            "improvement_percentage": ((current_score - baseline_score) / baseline_score * 100) if baseline_score > 0 else 0.0
+            "improvement_percentage": ((current_score - baseline_score) / baseline_score * 100)
+            if baseline_score > 0
+            else 0.0,
         }

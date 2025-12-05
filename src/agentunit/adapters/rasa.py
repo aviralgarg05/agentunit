@@ -1,16 +1,24 @@
 """Adapter for Rasa conversational agents."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
+from agentunit.core.exceptions import AgentUnitError
+
 from .base import AdapterOutcome, BaseAdapter
 from .registry import register_adapter
-from ..core.exceptions import AgentUnitError
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,31 +30,31 @@ class RasaAdapter(BaseAdapter):
 
     def __init__(
         self,
-        target: str | Callable[[Dict[str, Any]], Any],
+        target: str | Callable[[dict[str, Any]], Any],
         *,
         sender_id: str = "agentunit",
-        session_params: Optional[Dict[str, Any]] = None,
+        session_params: dict[str, Any] | None = None,
         timeout: float = 10.0,
-        headers: Optional[Dict[str, str]] = None,
+        headers: dict[str, str] | None = None,
         response_key: str = "text",
     ) -> None:
         if not target:
-            raise AgentUnitError("RasaAdapter requires an endpoint URL or callable handler")
+            msg = "RasaAdapter requires an endpoint URL or callable handler"
+            raise AgentUnitError(msg)
         self._target = target
         self._sender_id = sender_id
         self._session_params = session_params or {}
         self._timeout = timeout
         self._headers = headers or {"Content-Type": "application/json"}
         self._response_key = response_key
-        self._callable: Optional[Callable[[Dict[str, Any]], Any]] = None
-        self._client: Optional[httpx.Client] = None
+        self._callable: Callable[[dict[str, Any]], Any] | None = None
+        self._client: httpx.Client | None = None
 
     def prepare(self) -> None:
         if callable(self._target):
             self._callable = self._target  # type: ignore[assignment]
-        else:
-            if self._client is None:
-                self._client = httpx.Client(timeout=self._timeout)
+        elif self._client is None:
+            self._client = httpx.Client(timeout=self._timeout)
 
     def cleanup(self) -> None:  # pragma: no cover - cleanup path
         if self._client is not None:

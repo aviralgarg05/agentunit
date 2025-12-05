@@ -11,26 +11,23 @@ This module provides comprehensive production monitoring capabilities including:
 """
 
 # Core monitoring components
+# Platform integrations
+from .integrations import MonitoringPlatform, ProductionIntegration
 from .monitoring import (
-    ProductionMetrics,
+    AlertID,
+    AlertManager,
+    AlertSeverity,
+    BaselineID,
     BaselineMetrics,
     DriftDetection,
-    EvaluationTrigger,
-    DriftType,
-    AlertSeverity,
-    EvaluationID,
-    BaselineID,
-    AlertID,
-    MetricsCollector,
     DriftDetector,
-    AlertManager
+    DriftType,
+    EvaluationID,
+    EvaluationTrigger,
+    MetricsCollector,
+    ProductionMetrics,
 )
 
-# Platform integrations
-from .integrations import (
-    MonitoringPlatform,
-    ProductionIntegration
-)
 
 # Version and metadata
 __version__ = "0.4.0"
@@ -38,32 +35,27 @@ __author__ = "AgentUnit Team"
 __description__ = "Production integration and monitoring framework"
 
 __all__ = [
-    # Core metrics and data structures
-    "ProductionMetrics",
-    "BaselineMetrics", 
-    "DriftDetection",
-    
-    # Enums
-    "EvaluationTrigger",
-    "DriftType",
+    "AlertID",
+    "AlertManager",
     "AlertSeverity",
-    "MonitoringPlatform",
-    
+    "BaselineID",
+    "BaselineMetrics",
+    "DriftDetection",
+    "DriftDetector",
+    "DriftType",
     # Type aliases
     "EvaluationID",
-    "BaselineID", 
-    "AlertID",
-    
+    # Enums
+    "EvaluationTrigger",
     # Protocols
     "MetricsCollector",
-    "DriftDetector",
-    "AlertManager",
-    
+    "MonitoringPlatform",
     # Base classes
     "ProductionIntegration",
-    
+    # Core metrics and data structures
+    "ProductionMetrics",
+    "__author__",
+    "__description__",
     # Metadata
     "__version__",
-    "__author__",
-    "__description__"
 ]

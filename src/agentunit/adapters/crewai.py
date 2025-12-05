@@ -1,14 +1,22 @@
 """Adapter for CrewAI workflows."""
+
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
 import logging
+from typing import TYPE_CHECKING, Any
 
-from .base import BaseAdapter, AdapterOutcome
+from agentunit.core.exceptions import AgentUnitError
+
+from .base import AdapterOutcome, BaseAdapter
 from .registry import register_adapter
-from ..core.exceptions import AgentUnitError
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,27 +29,34 @@ except Exception:  # pragma: no cover
 class CrewAIAdapter(BaseAdapter):
     name = "crewai"
 
-    def __init__(self, crew: Any, task_builder: Optional[Callable[[DatasetCase], Any]] = None, **options: Any) -> None:
+    def __init__(
+        self, crew: Any, task_builder: Callable[[DatasetCase], Any] | None = None, **options: Any
+    ) -> None:
         self._crew = crew
         self._task_builder = task_builder
         self._options = options
 
     @classmethod
-    def from_crew(cls, crew: Any, **options: Any) -> "CrewAIAdapter":
+    def from_crew(cls, crew: Any, **options: Any) -> CrewAIAdapter:
         return cls(crew=crew, **options)
 
     def prepare(self) -> None:
         if self._crew is None:
-            raise AgentUnitError("CrewAI crew is not defined")
+            msg = "CrewAI crew is not defined"
+            raise AgentUnitError(msg)
         if Crew is None:
             logger.warning("CrewAI not installed; running in mock mode")
 
     def execute(self, case: DatasetCase, trace: TraceLog) -> AdapterOutcome:
         self.prepare()
         if Crew is not None and not isinstance(self._crew, Crew):
-            raise AgentUnitError("CrewAIAdapter expects a Crew instance when CrewAI is installed")
+            msg = "CrewAIAdapter expects a Crew instance when CrewAI is installed"
+            raise AgentUnitError(msg)
 
-        trace.record("agent_prompt", input={"query": case.query, "context": case.context, "tools": case.tools})
+        trace.record(
+            "agent_prompt",
+            input={"query": case.query, "context": case.context, "tools": case.tools},
+        )
 
         try:
             if self._task_builder is not None:
@@ -59,7 +74,8 @@ class CrewAIAdapter(BaseAdapter):
             elif callable(self._crew):
                 response = self._crew(case)
             else:
-                raise AgentUnitError("Cannot execute CrewAI scenario - unsupported crew object")
+                msg = "Cannot execute CrewAI scenario - unsupported crew object"
+                raise AgentUnitError(msg)
 
             trace.record("agent_response", content=response)
             return AdapterOutcome(success=True, output=response)

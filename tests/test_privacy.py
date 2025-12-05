@@ -33,10 +33,7 @@ def test_pii_leakage_metric():
     metric = PIILeakageMetric()
 
     # Case with PII in output
-    case = DatasetCase(
-        id="test_pii",
-        query="What is the customer email?"
-    )
+    case = DatasetCase(id="test_pii", query="What is the customer email?")
 
     trace = TraceLog()
     trace.record("agent_response", content="The customer email is john.doe@example.com")
@@ -53,10 +50,7 @@ def test_pii_leakage_no_leakage():
     """Test PII metric with no leakage."""
     metric = PIILeakageMetric()
 
-    case = DatasetCase(
-        id="test_no_pii",
-        query="What is the weather?"
-    )
+    case = DatasetCase(id="test_no_pii", query="What is the weather?")
 
     trace = TraceLog()
     trace.record("agent_response", content="The weather is sunny today.")
@@ -74,12 +68,12 @@ def test_private_dataset_wrapper():
         DatasetCase(
             id="case1",
             query="Email john.doe@example.com for info",
-            metadata={"phone": "555-123-4567"}
+            metadata={"phone": "555-123-4567"},
         ),
         DatasetCase(
             id="case2",
             query="Call 555-987-6543",
-        )
+        ),
     ]
 
     wrapper = PrivateDatasetWrapper(dataset, enable_pii_masking=True)
@@ -93,10 +87,7 @@ def test_private_dataset_wrapper():
 def test_privacy_config():
     """Test privacy configuration."""
     config = PrivacyConfig(
-        epsilon=0.5,
-        delta=1e-6,
-        noise_mechanism="gaussian",
-        enable_pii_masking=True
+        epsilon=0.5, delta=1e-6, noise_mechanism="gaussian", enable_pii_masking=True
     )
 
     assert abs(config.epsilon - 0.5) < 0.01
@@ -126,11 +117,7 @@ def test_privacy_budget_metric():
 
 def test_privacy_guard():
     """Test privacy guard constraints."""
-    guard = PrivacyGuard(
-        min_batch_size=5,
-        max_queries_per_hour=100,
-        total_epsilon_budget=10.0
-    )
+    guard = PrivacyGuard(min_batch_size=5, max_queries_per_hour=100, total_epsilon_budget=10.0)
 
     # Check batch size
     assert guard.check_batch_size(10) is True
@@ -171,9 +158,7 @@ def test_data_minimization_metric():
 
     # Case with exposed context
     case = DatasetCase(
-        id="test",
-        query="Get user info",
-        metadata={"user_id": "12345", "email": "user@test.com"}
+        id="test", query="Get user info", metadata={"user_id": "12345", "email": "user@test.com"}
     )
 
     trace = TraceLog()
@@ -193,12 +178,7 @@ def test_consent_compliance_metric():
     case = DatasetCase(
         id="test",
         query="What is my location?",
-        metadata={
-            "consent": {
-                "location": False,
-                "email": True
-            }
-        }
+        metadata={"consent": {"location": False, "email": True}},
     )
 
     trace = TraceLog()

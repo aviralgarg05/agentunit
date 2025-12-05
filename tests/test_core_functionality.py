@@ -12,7 +12,7 @@ def test_basic_scenario():
     scenario = Scenario(
         name="test_basic_scenario",
         adapter=None,  # We'll skip the adapter for this basic test
-        dataset=None   # We'll skip the dataset for this basic test
+        dataset=None,  # We'll skip the dataset for this basic test
     )
 
     # Verify scenario creation
@@ -31,7 +31,7 @@ def test_imports():
         success=True,
         metrics={"test_metric": 0.95},
         duration_ms=1000.0,
-        trace=None
+        trace=None,
     )
     result.add_run(run)
 

@@ -1,20 +1,26 @@
 """Built-in metrics leveraging RAGAS when available."""
+
 from __future__ import annotations
 
-from typing import Any
 import logging
+from typing import TYPE_CHECKING, Any
 
 from .base import Metric, MetricResult
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - heavy optional dependency
-    from ragas.metrics import faithfulness as ragas_faithfulness
     from ragas.metrics import answer_correctness as ragas_answer_correctness
     from ragas.metrics import context_precision as ragas_context_precision
+    from ragas.metrics import faithfulness as ragas_faithfulness
     from ragas.metrics import hallucination as ragas_hallucination
+
     RAGAS_AVAILABLE = True
 except Exception:  # pragma: no cover
     RAGAS_AVAILABLE = False
@@ -46,7 +52,9 @@ class FaithfulnessMetric(Metric):
             value = matches / len(references)
         else:
             value = None
-        return MetricResult(name=self.name, value=value, detail={"answer": answer, "references": references})
+        return MetricResult(
+            name=self.name, value=value, detail={"answer": answer, "references": references}
+        )
 
 
 class ToolSuccessMetric(Metric):
@@ -80,7 +88,9 @@ class AnswerCorrectnessMetric(Metric):
                 value = 0.0
         else:
             value = 0.0
-        return MetricResult(name=self.name, value=value, detail={"expected": expected, "answer": answer})
+        return MetricResult(
+            name=self.name, value=value, detail={"expected": expected, "answer": answer}
+        )
 
 
 class HallucinationRateMetric(Metric):
@@ -120,7 +130,9 @@ class RetrievalQualityMetric(Metric):
         else:
             mentions = sum(1 for ref in references if ref.lower() in answer.lower())
             value = mentions / len(references)
-        return MetricResult(name=self.name, value=value, detail={"references": references, "answer": answer})
+        return MetricResult(
+            name=self.name, value=value, detail={"references": references, "answer": answer}
+        )
 
 
 class CostMetric(Metric):
@@ -129,21 +141,21 @@ class CostMetric(Metric):
     def evaluate(self, case: DatasetCase, trace: TraceLog, outcome: Any) -> MetricResult:
         # Try to extract cost from trace metadata or outcome
         cost = 0.0
-        
+
         # Check trace metadata
         if trace.metadata and "cost" in trace.metadata:
             cost = float(trace.metadata["cost"])
-        
+
         # Check outcome
         elif hasattr(outcome, "cost"):
             cost = float(outcome.cost)
-            
+
         # Sum up cost from tool calls if available
         tool_calls = [event.payload for event in trace.events if event.type == "tool_call"]
         for tool in tool_calls:
             if "cost" in tool:
                 cost += float(tool["cost"])
-                
+
         return MetricResult(name=self.name, value=cost, detail={"cost": cost})
 
 
@@ -154,14 +166,14 @@ class TokenUsageMetric(Metric):
         prompt_tokens = 0
         completion_tokens = 0
         total_tokens = 0
-        
+
         # Check trace metadata
         if trace.metadata and "usage" in trace.metadata:
             usage = trace.metadata["usage"]
             prompt_tokens = usage.get("prompt_tokens", 0)
             completion_tokens = usage.get("completion_tokens", 0)
             total_tokens = usage.get("total_tokens", 0)
-            
+
         # Check outcome
         elif hasattr(outcome, "usage"):
             usage = outcome.usage
@@ -174,16 +186,16 @@ class TokenUsageMetric(Metric):
                 prompt_tokens = getattr(usage, "prompt_tokens", 0)
                 completion_tokens = getattr(usage, "completion_tokens", 0)
                 total_tokens = getattr(usage, "total_tokens", 0)
-        
+
         if total_tokens == 0 and (prompt_tokens > 0 or completion_tokens > 0):
             total_tokens = prompt_tokens + completion_tokens
-            
+
         return MetricResult(
-            name=self.name, 
-            value=float(total_tokens), 
+            name=self.name,
+            value=float(total_tokens),
             detail={
                 "prompt_tokens": prompt_tokens,
                 "completion_tokens": completion_tokens,
-                "total_tokens": total_tokens
-            }
+                "total_tokens": total_tokens,
+            },
         )

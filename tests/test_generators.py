@@ -33,7 +33,7 @@ def test_adversarial_augmenter():
     case = DatasetCase(
         id="test_1",
         query="What is the weather today?",
-        expected_output="I'll check the weather for you."
+        expected_output="I'll check the weather for you.",
     )
 
     adversarial_cases = augmenter.augment(case)
@@ -48,9 +48,7 @@ def test_noise_augmenter():
     augmenter = NoiseAugmenter(typo_rate=0.1, char_swap_rate=0.05)
 
     case = DatasetCase(
-        id="test_2",
-        query="This is a test query with multiple words",
-        expected_output="Response"
+        id="test_2", query="This is a test query with multiple words", expected_output="Response"
     )
 
     noisy_cases = augmenter.augment(case, num_variants=3)
@@ -64,11 +62,7 @@ def test_edge_case_generator():
     """Test EdgeCaseGenerator."""
     generator = EdgeCaseGenerator()
 
-    case = DatasetCase(
-        id="test_3",
-        query="Normal query",
-        expected_output="Normal response"
-    )
+    case = DatasetCase(id="test_3", query="Normal query", expected_output="Normal response")
 
     edge_cases = generator.generate_edge_cases(case)
 
@@ -84,7 +78,7 @@ def test_distribution_shifter():
 
     cases = [
         DatasetCase(id="case_1", query="What is AI?", expected_output="AI is..."),
-        DatasetCase(id="case_2", query="Explain ML", expected_output="ML is...")
+        DatasetCase(id="case_2", query="Explain ML", expected_output="ML is..."),
     ]
 
     # Test temporal shift
@@ -103,7 +97,7 @@ def test_prompt_template():
     template = PromptTemplate(
         name="test_template",
         template="Hello {name}, your task is {task}",
-        variables=["name", "task"]
+        variables=["name", "task"],
     )
 
     rendered = template.render(name="Alice", task="coding")
@@ -136,11 +130,7 @@ def test_dataset_template():
 
 def test_generator_config():
     """Test GeneratorConfig."""
-    config = GeneratorConfig(
-        num_cases=20,
-        temperature=0.9,
-        edge_case_ratio=0.4
-    )
+    config = GeneratorConfig(num_cases=20, temperature=0.9, edge_case_ratio=0.4)
 
     assert config.num_cases == 20
     assert config.temperature == pytest.approx(0.9)

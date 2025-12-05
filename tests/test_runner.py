@@ -33,7 +33,9 @@ class FakeAdapter(BaseAdapter):
         trace.record("tool_call", name="search", status="success")
         content = f"Answer for {case.query}"
         trace.record("agent_response", content=content)
-        return AdapterOutcome(success=True, output=content, tool_calls=[{"name": "search", "status": "success"}])
+        return AdapterOutcome(
+            success=True, output=content, tool_calls=[{"name": "search", "status": "success"}]
+        )
 
     def cleanup(self) -> None:
         self.cleanup_called = True
@@ -58,7 +60,13 @@ def test_run_suite_with_fake_adapter(tmp_path: Path) -> None:
 
     result = run_suite(
         [scenario],
-        metrics=["faithfulness", "tool_success", "answer_correctness", "hallucination_rate", "retrieval_quality"],
+        metrics=[
+            "faithfulness",
+            "tool_success",
+            "answer_correctness",
+            "hallucination_rate",
+            "retrieval_quality",
+        ],
         otel_exporter="console",
         seed=123,
     )

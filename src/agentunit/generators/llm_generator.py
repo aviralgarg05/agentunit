@@ -5,18 +5,21 @@ from __future__ import annotations
 import asyncio
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
-from ..datasets.base import DatasetCase, DatasetSource
+from agentunit.datasets.base import DatasetCase, DatasetSource
+
 
 try:
     import openai
+
     HAS_OPENAI = True
 except ImportError:
     HAS_OPENAI = False
 
 try:
     from huggingface_hub import InferenceClient
+
     HAS_HF_HUB = True
 except ImportError:
     HAS_HF_HUB = False
@@ -25,7 +28,7 @@ except ImportError:
 @dataclass
 class GeneratorConfig:
     """Configuration for dataset generation."""
-    
+
     num_cases: int = 10
     temperature: float = 0.8
     max_tokens: int = 2048
@@ -36,30 +39,31 @@ class GeneratorConfig:
 
 class LlamaDatasetGenerator:
     """Generate synthetic datasets using Llama models via HuggingFace Inference API."""
-    
+
     def __init__(
-        self, 
+        self,
         model: str = "meta-llama/Meta-Llama-3.1-70B-Instruct",
-        api_token: Optional[str] = None,
-        config: Optional[GeneratorConfig] = None
+        api_token: str | None = None,
+        config: GeneratorConfig | None = None,
     ):
         """Initialize Llama dataset generator.
-        
+
         Args:
             model: Llama model name on HuggingFace
             api_token: HuggingFace API token
             config: Generation configuration
         """
         if not HAS_HF_HUB:
-            raise ImportError(
+            msg = (
                 "huggingface_hub required for LlamaDatasetGenerator. "
                 "Install with: pip install huggingface_hub"
             )
-        
+            raise ImportError(msg)
+
         self.model = model
         self.client = InferenceClient(token=api_token)
         self.config = config or GeneratorConfig()
-    
+
     def _create_generation_prompt(self, domain: str, task_description: str) -> str:
         """Create a prompt for synthetic dataset generation."""
         return f"""You are an expert test case generator for AI agent evaluation.
@@ -91,28 +95,25 @@ Make sure to include:
 - {int(self.config.num_cases * self.config.edge_case_ratio)} edge cases (boundary conditions, ambiguous inputs, adversarial examples)
 
 Ensure diversity in query formulation and complexity."""
-    
+
     async def generate(
-        self, 
-        domain: str, 
-        task_description: str,
-        constraints: Optional[List[str]] = None
+        self, domain: str, task_description: str, constraints: list[str] | None = None
     ) -> DatasetSource:
         """Generate synthetic dataset.
-        
+
         Args:
             domain: Domain of the task (e.g., "customer service", "code review")
             task_description: Detailed description of what the agent should do
             constraints: Optional list of constraints or requirements
-        
+
         Returns:
             DatasetSource with generated cases
         """
         prompt = self._create_generation_prompt(domain, task_description)
-        
+
         if constraints:
-            prompt += f"\n\nAdditional constraints:\n" + "\n".join(f"- {c}" for c in constraints)
-        
+            prompt += "\n\nAdditional constraints:\n" + "\n".join(f"- {c}" for c in constraints)
+
         # Generate with Llama
         response = await asyncio.to_thread(
             self.client.text_generation,
@@ -120,9 +121,9 @@ Ensure diversity in query formulation and complexity."""
             model=self.model,
             max_new_tokens=self.config.max_tokens,
             temperature=self.config.temperature,
-            return_full_text=False
+            return_full_text=False,
         )
-        
+
         # Parse JSON response
         try:
             # Extract JSON from response (handle markdown code blocks)
@@ -131,9 +132,9 @@ Ensure diversity in query formulation and complexity."""
                 response_text = response_text.split("```")[1]
                 if response_text.startswith("json"):
                     response_text = response_text[4:]
-            
+
             cases_data = json.loads(response_text)
-            
+
             cases = []
             for case_data in cases_data:
                 case = DatasetCase(
@@ -144,24 +145,21 @@ Ensure diversity in query formulation and complexity."""
                         "difficulty": case_data.get("difficulty", "medium"),
                         "generated": True,
                         "domain": domain,
-                        **case_data.get("metadata", {})
-                    }
+                        **case_data.get("metadata", {}),
+                    },
                 )
                 cases.append(case)
-            
+
             return DatasetSource.from_list(
-                cases, 
-                name=f"llama_generated_{domain.replace(' ', '_')}"
+                cases, name=f"llama_generated_{domain.replace(' ', '_')}"
             )
-        
+
         except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse generated dataset: {e}\nResponse: {response}")
-    
+            msg = f"Failed to parse generated dataset: {e}\nResponse: {response}"
+            raise ValueError(msg)
+
     def generate_sync(
-        self, 
-        domain: str, 
-        task_description: str,
-        constraints: Optional[List[str]] = None
+        self, domain: str, task_description: str, constraints: list[str] | None = None
     ) -> DatasetSource:
         """Synchronous version of generate."""
         return asyncio.run(self.generate(domain, task_description, constraints))
@@ -169,30 +167,28 @@ Ensure diversity in query formulation and complexity."""
 
 class OpenAIDatasetGenerator:
     """Generate synthetic datasets using OpenAI models (GPT-4, etc.)."""
-    
+
     def __init__(
-        self, 
+        self,
         model: str = "gpt-4o",
-        api_key: Optional[str] = None,
-        config: Optional[GeneratorConfig] = None
+        api_key: str | None = None,
+        config: GeneratorConfig | None = None,
     ):
         """Initialize OpenAI dataset generator.
-        
+
         Args:
             model: OpenAI model name
             api_key: OpenAI API key
             config: Generation configuration
         """
         if not HAS_OPENAI:
-            raise ImportError(
-                "openai required for OpenAIDatasetGenerator. "
-                "Install with: pip install openai"
-            )
-        
+            msg = "openai required for OpenAIDatasetGenerator. Install with: pip install openai"
+            raise ImportError(msg)
+
         self.model = model
         self.client = openai.AsyncOpenAI(api_key=api_key)
         self.config = config or GeneratorConfig()
-    
+
     def _create_generation_prompt(self, domain: str, task_description: str) -> str:
         """Create a prompt for synthetic dataset generation."""
         return f"""You are an expert test case generator for AI agent evaluation.
@@ -223,59 +219,62 @@ Distribution:
 - {int(self.config.num_cases * self.config.edge_case_ratio)} edge cases (boundary conditions, ambiguous inputs, adversarial examples)
 
 Ensure diversity in query formulation and complexity."""
-    
+
     async def generate(
-        self, 
-        domain: str, 
+        self,
+        domain: str,
         task_description: str,
-        constraints: Optional[List[str]] = None,
-        seed_examples: Optional[List[Dict[str, Any]]] = None
+        constraints: list[str] | None = None,
+        seed_examples: list[dict[str, Any]] | None = None,
     ) -> DatasetSource:
         """Generate synthetic dataset.
-        
+
         Args:
             domain: Domain of the task
             task_description: Detailed description of what the agent should do
             constraints: Optional list of constraints
             seed_examples: Optional seed examples to guide generation
-        
+
         Returns:
             DatasetSource with generated cases
         """
         messages = [
             {"role": "system", "content": "You are an expert test case generator."},
-            {"role": "user", "content": self._create_generation_prompt(domain, task_description)}
+            {"role": "user", "content": self._create_generation_prompt(domain, task_description)},
         ]
-        
+
         if constraints:
-            messages[1]["content"] += f"\n\nAdditional constraints:\n" + "\n".join(f"- {c}" for c in constraints)
-        
+            messages[1]["content"] += "\n\nAdditional constraints:\n" + "\n".join(
+                f"- {c}" for c in constraints
+            )
+
         if seed_examples:
             messages[1]["content"] += f"\n\nSeed examples:\n{json.dumps(seed_examples, indent=2)}"
-        
+
         # Generate with GPT
         response = await self.client.chat.completions.create(
             model=self.model,
             messages=messages,
             temperature=self.config.temperature,
             max_tokens=self.config.max_tokens,
-            response_format={"type": "json_object"} if "gpt-4" in self.model else None
+            response_format={"type": "json_object"} if "gpt-4" in self.model else None,
         )
-        
+
         response_text = response.choices[0].message.content
-        
+
         # Parse JSON response
         try:
             # Handle potential wrapping
             if not response_text.strip().startswith("["):
                 # Try to extract JSON array
                 import re
-                json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
+
+                json_match = re.search(r"\[.*\]", response_text, re.DOTALL)
                 if json_match:
                     response_text = json_match.group(0)
-            
+
             cases_data = json.loads(response_text)
-            
+
             cases = []
             for case_data in cases_data:
                 case = DatasetCase(
@@ -286,25 +285,25 @@ Ensure diversity in query formulation and complexity."""
                         "difficulty": case_data.get("difficulty", "medium"),
                         "generated": True,
                         "domain": domain,
-                        **case_data.get("metadata", {})
-                    }
+                        **case_data.get("metadata", {}),
+                    },
                 )
                 cases.append(case)
-            
+
             return DatasetSource.from_list(
-                cases, 
-                name=f"openai_generated_{domain.replace(' ', '_')}"
+                cases, name=f"openai_generated_{domain.replace(' ', '_')}"
             )
-        
+
         except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse generated dataset: {e}\nResponse: {response_text}")
-    
+            msg = f"Failed to parse generated dataset: {e}\nResponse: {response_text}"
+            raise ValueError(msg)
+
     def generate_sync(
-        self, 
-        domain: str, 
+        self,
+        domain: str,
         task_description: str,
-        constraints: Optional[List[str]] = None,
-        seed_examples: Optional[List[Dict[str, Any]]] = None
+        constraints: list[str] | None = None,
+        seed_examples: list[dict[str, Any]] | None = None,
     ) -> DatasetSource:
         """Synchronous version of generate."""
         return asyncio.run(self.generate(domain, task_description, constraints, seed_examples))

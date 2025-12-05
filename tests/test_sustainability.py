@@ -20,6 +20,7 @@ HAS_TRACKER = False
 if HAS_PSUTIL:
     try:
         from agentunit.sustainability import CarbonTracker, ResourceTracker
+
         HAS_TRACKER = True
     except ImportError:
         pass
@@ -252,16 +253,14 @@ def test_carbon_metric_equivalents():
     result = metric.evaluate(case=None, trace=trace, outcome=None)
 
     assert result.detail["equivalents"]["km_driven"] == 4.6
-    assert abs(result.detail["equivalents"]["trees_needed"] - 1.0/21) < 0.001
+    assert abs(result.detail["equivalents"]["trees_needed"] - 1.0 / 21) < 0.001
 
 
 # ResourceUtilizationMetric Tests
 def test_resource_utilization_metric_initialization():
     """Test ResourceUtilizationMetric initialization."""
     metric = ResourceUtilizationMetric(
-        target_cpu_percent=70.0,
-        target_memory_gb=2.0,
-        target_gpu_percent=75.0
+        target_cpu_percent=70.0, target_memory_gb=2.0, target_gpu_percent=75.0
     )
 
     assert metric.name == "resource_utilization"
@@ -273,16 +272,10 @@ def test_resource_utilization_metric_initialization():
 def test_resource_utilization_metric_optimal():
     """Test resource utilization when in optimal range."""
     metric = ResourceUtilizationMetric(
-        target_cpu_percent=80.0,
-        target_memory_gb=4.0,
-        target_gpu_percent=80.0
+        target_cpu_percent=80.0, target_memory_gb=4.0, target_gpu_percent=80.0
     )
 
-    trace = {
-        "cpu_percent": 80.0,
-        "memory_mb": 4096.0,
-        "gpu_percent": 80.0
-    }
+    trace = {"cpu_percent": 80.0, "memory_mb": 4096.0, "gpu_percent": 80.0}
 
     result = metric.evaluate(case=None, trace=trace, outcome=None)
 
@@ -295,16 +288,10 @@ def test_resource_utilization_metric_optimal():
 def test_resource_utilization_metric_over():
     """Test resource utilization when over target."""
     metric = ResourceUtilizationMetric(
-        target_cpu_percent=50.0,
-        target_memory_gb=2.0,
-        target_gpu_percent=50.0
+        target_cpu_percent=50.0, target_memory_gb=2.0, target_gpu_percent=50.0
     )
 
-    trace = {
-        "cpu_percent": 100.0,
-        "memory_mb": 4096.0,
-        "gpu_percent": 100.0
-    }
+    trace = {"cpu_percent": 100.0, "memory_mb": 4096.0, "gpu_percent": 100.0}
 
     result = metric.evaluate(case=None, trace=trace, outcome=None)
 
@@ -314,16 +301,10 @@ def test_resource_utilization_metric_over():
 def test_resource_utilization_metric_under():
     """Test resource utilization when under target."""
     metric = ResourceUtilizationMetric(
-        target_cpu_percent=80.0,
-        target_memory_gb=4.0,
-        target_gpu_percent=80.0
+        target_cpu_percent=80.0, target_memory_gb=4.0, target_gpu_percent=80.0
     )
 
-    trace = {
-        "cpu_percent": 20.0,
-        "memory_mb": 1024.0,
-        "gpu_percent": 20.0
-    }
+    trace = {"cpu_percent": 20.0, "memory_mb": 1024.0, "gpu_percent": 20.0}
 
     result = metric.evaluate(case=None, trace=trace, outcome=None)
 
@@ -336,11 +317,7 @@ def test_resource_utilization_metric_with_trace_object():
 
     class Trace:
         def __init__(self):
-            self.metadata = {
-                "cpu_percent": 80.0,
-                "memory_mb": 4096.0,
-                "gpu_percent": 80.0
-            }
+            self.metadata = {"cpu_percent": 80.0, "memory_mb": 4096.0, "gpu_percent": 80.0}
 
     trace = Trace()
     result = metric.evaluate(case=None, trace=trace, outcome=None)

@@ -7,25 +7,26 @@ other multimodal models.
 
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
-    from .adapters import MultimodalAdapter, VisionAdapter, AudioAdapter
+    from .adapters import AudioAdapter, MultimodalAdapter, VisionAdapter
     from .metrics import (
+        AudioTranscriptionMetric,
         CrossModalGroundingMetric,
         ImageCaptionAccuracyMetric,
-        VideoResponseRelevanceMetric,
-        AudioTranscriptionMetric,
         MultimodalCoherenceMetric,
+        VideoResponseRelevanceMetric,
     )
 
 __all__ = [
-    "MultimodalAdapter",
-    "VisionAdapter", 
     "AudioAdapter",
+    "AudioTranscriptionMetric",
     "CrossModalGroundingMetric",
     "ImageCaptionAccuracyMetric",
-    "VideoResponseRelevanceMetric",
-    "AudioTranscriptionMetric",
+    "MultimodalAdapter",
     "MultimodalCoherenceMetric",
+    "VideoResponseRelevanceMetric",
+    "VisionAdapter",
 ]
 
 _MULTIMODAL_IMPORTS = {
@@ -44,10 +45,12 @@ def __getattr__(name: str):
     """Lazy loading for multimodal components."""
     if name in _MULTIMODAL_IMPORTS:
         import importlib
+
         module_path = _MULTIMODAL_IMPORTS[name]
         module = importlib.import_module(module_path)
         return getattr(module, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
 
 
 def __dir__():

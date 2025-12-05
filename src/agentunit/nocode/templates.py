@@ -3,40 +3,40 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
 class ScenarioTemplate:
     """A reusable scenario template.
-    
+
     Templates provide pre-configured scenarios for common testing patterns,
     reducing boilerplate and ensuring best practices.
     """
-    
+
     name: str
     description: str
-    config: Dict[str, Any]
-    tags: List[str]
+    config: dict[str, Any]
+    tags: list[str]
 
 
 class TemplateLibrary:
     """Library of pre-built scenario templates.
-    
+
     Provides templates for common agent testing patterns like Q&A,
     RAG evaluation, agent interactions, and benchmarks.
-    
+
     Examples:
         >>> library = TemplateLibrary()
-        >>> 
+        >>>
         >>> # List available templates
         >>> templates = library.list_templates()
         >>> for template in templates:
         ...     print(f"{template.name}: {template.description}")
-        >>> 
+        >>>
         >>> # Get a specific template
         >>> template = library.get_template("basic_qa")
-        >>> 
+        >>>
         >>> # Apply template with customizations
         >>> config = library.apply_template(
         ...     "basic_qa",
@@ -44,73 +44,74 @@ class TemplateLibrary:
         ...     adapter={"type": "openai", "config": {"model": "gpt-4"}},
         ... )
     """
-    
+
     def __init__(self):
         """Initialize template library."""
         self._templates = self._load_builtin_templates()
-    
-    def list_templates(self, tag: Optional[str] = None) -> List[ScenarioTemplate]:
+
+    def list_templates(self, tag: str | None = None) -> list[ScenarioTemplate]:
         """List all available templates.
-        
+
         Args:
             tag: Optional tag to filter templates
-        
+
         Returns:
             List of scenario templates
         """
         if tag:
             return [t for t in self._templates.values() if tag in t.tags]
         return list(self._templates.values())
-    
+
     def get_template(self, name: str) -> ScenarioTemplate:
         """Get a template by name.
-        
+
         Args:
             name: Template name
-        
+
         Returns:
             ScenarioTemplate
-        
+
         Raises:
             KeyError: If template not found
         """
         if name not in self._templates:
             available = ", ".join(self._templates.keys())
-            raise KeyError(f"Template '{name}' not found. Available: {available}")
-        
+            msg = f"Template '{name}' not found. Available: {available}"
+            raise KeyError(msg)
+
         return self._templates[name]
-    
+
     def apply_template(
         self,
         template_name: str,
         **customizations: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Apply a template with customizations.
-        
+
         Args:
             template_name: Template name
             **customizations: Fields to override in the template
-        
+
         Returns:
             Customized configuration dictionary
         """
         template = self.get_template(template_name)
         config = template.config.copy()
-        
+
         # Deep merge customizations
         self._deep_merge(config, customizations)
-        
+
         return config
-    
+
     def add_template(self, template: ScenarioTemplate) -> None:
         """Add a custom template to the library.
-        
+
         Args:
             template: Template to add
         """
         self._templates[template.name] = template
-    
-    def _load_builtin_templates(self) -> Dict[str, ScenarioTemplate]:
+
+    def _load_builtin_templates(self) -> dict[str, ScenarioTemplate]:
         """Load built-in templates."""
         return {
             "basic_qa": ScenarioTemplate(
@@ -138,7 +139,6 @@ class TemplateLibrary:
                     "timeout": 30,
                 },
             ),
-            
             "rag_evaluation": ScenarioTemplate(
                 name="rag_evaluation",
                 description="Retrieval-Augmented Generation evaluation",
@@ -170,7 +170,6 @@ class TemplateLibrary:
                     "timeout": 60,
                 },
             ),
-            
             "agent_interaction": ScenarioTemplate(
                 name="agent_interaction",
                 description="Multi-turn agent conversation testing",
@@ -204,7 +203,6 @@ class TemplateLibrary:
                     "timeout": 120,
                 },
             ),
-            
             "benchmark_test": ScenarioTemplate(
                 name="benchmark_test",
                 description="Standardized benchmark evaluation",
@@ -229,7 +227,6 @@ class TemplateLibrary:
                     "timeout": 60,
                 },
             ),
-            
             "cost_optimization": ScenarioTemplate(
                 name="cost_optimization",
                 description="Cost-optimized scenario with fallback models",
@@ -261,7 +258,6 @@ class TemplateLibrary:
                     "timeout": 30,
                 },
             ),
-            
             "privacy_test": ScenarioTemplate(
                 name="privacy_test",
                 description="Privacy and PII detection testing",
@@ -295,10 +291,10 @@ class TemplateLibrary:
                 },
             ),
         }
-    
-    def _deep_merge(self, base: Dict[str, Any], update: Dict[str, Any]) -> None:
+
+    def _deep_merge(self, base: dict[str, Any], update: dict[str, Any]) -> None:
         """Deep merge update dictionary into base.
-        
+
         Args:
             base: Base dictionary to merge into (modified in place)
             update: Update dictionary with new values

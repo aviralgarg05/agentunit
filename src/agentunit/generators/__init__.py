@@ -6,24 +6,25 @@ with edge case augmentation, adversarial queries, and noisy contexts.
 
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
-    from .llm_generator import LlamaDatasetGenerator, OpenAIDatasetGenerator
     from .augmentation import (
         AdversarialAugmenter,
-        NoiseAugmenter,
-        EdgeCaseGenerator,
         DistributionShifter,
+        EdgeCaseGenerator,
+        NoiseAugmenter,
     )
+    from .llm_generator import LlamaDatasetGenerator, OpenAIDatasetGenerator
     from .templates import DatasetTemplate, PromptTemplate
 
 __all__ = [
-    "LlamaDatasetGenerator",
-    "OpenAIDatasetGenerator",
     "AdversarialAugmenter",
-    "NoiseAugmenter",
-    "EdgeCaseGenerator",
-    "DistributionShifter",
     "DatasetTemplate",
+    "DistributionShifter",
+    "EdgeCaseGenerator",
+    "LlamaDatasetGenerator",
+    "NoiseAugmenter",
+    "OpenAIDatasetGenerator",
     "PromptTemplate",
 ]
 
@@ -43,10 +44,12 @@ def __getattr__(name: str):
     """Lazy loading for generator components."""
     if name in _GENERATOR_IMPORTS:
         import importlib
+
         module_path = _GENERATOR_IMPORTS[name]
         module = importlib.import_module(module_path)
         return getattr(module, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
 
 
 def __dir__():

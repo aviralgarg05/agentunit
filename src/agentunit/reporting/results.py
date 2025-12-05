@@ -1,15 +1,20 @@
 """Result containers and exporters."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Optional
-from pathlib import Path
 import json
 import statistics
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import TYPE_CHECKING
 
-from ..core.trace import TraceLog
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from datetime import datetime
+
+    from agentunit.core.trace import TraceLog
 
 
 @dataclass(slots=True)
@@ -17,16 +22,16 @@ class ScenarioRun:
     scenario_name: str
     case_id: str
     success: bool
-    metrics: Dict[str, float | None]
+    metrics: dict[str, float | None]
     duration_ms: float
     trace: TraceLog
-    error: Optional[str] = None
+    error: str | None = None
 
 
 @dataclass(slots=True)
 class ScenarioResult:
     name: str
-    runs: List[ScenarioRun] = field(default_factory=list)
+    runs: list[ScenarioRun] = field(default_factory=list)
 
     def add_run(self, run: ScenarioRun) -> None:
         self.runs.append(run)
@@ -43,7 +48,7 @@ class ScenarioResult:
             return None
         return float(statistics.fmean(values))
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "name": self.name,
             "success_rate": self.success_rate,
@@ -63,11 +68,11 @@ class ScenarioResult:
 
 @dataclass(slots=True)
 class SuiteResult:
-    scenarios: List[ScenarioResult]
+    scenarios: list[ScenarioResult]
     started_at: datetime
     finished_at: datetime
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "started_at": self.started_at.isoformat(),
             "finished_at": self.finished_at.isoformat(),
@@ -92,12 +97,15 @@ class SuiteResult:
     def to_junit(self, path: str | Path) -> Path:
         target = Path(path)
         target.parent.mkdir(parents=True, exist_ok=True)
-        testsuites = ET.Element("testsuite", attrib={
-            "name": "agentunit",
-            "tests": str(sum(len(s.runs) for s in self.scenarios)),
-            "failures": str(sum(1 for s in self.scenarios for r in s.runs if not r.success)),
-            "time": f"{(self.finished_at - self.started_at).total_seconds():.4f}",
-        })
+        testsuites = ET.Element(
+            "testsuite",
+            attrib={
+                "name": "agentunit",
+                "tests": str(sum(len(s.runs) for s in self.scenarios)),
+                "failures": str(sum(1 for s in self.scenarios for r in s.runs if not r.success)),
+                "time": f"{(self.finished_at - self.started_at).total_seconds():.4f}",
+            },
+        )
         for scenario in self.scenarios:
             for run in scenario.runs:
                 testcase = ET.SubElement(
@@ -123,7 +131,7 @@ class SuiteResult:
 
 def merge_results(results: Iterable[SuiteResult]) -> SuiteResult:
     results = list(results)
-    scenarios: Dict[str, ScenarioResult] = {}
+    scenarios: dict[str, ScenarioResult] = {}
     for result in results:
         for scenario in result.scenarios:
             existing = scenarios.setdefault(scenario.name, ScenarioResult(name=scenario.name))
@@ -134,7 +142,7 @@ def merge_results(results: Iterable[SuiteResult]) -> SuiteResult:
     return SuiteResult(scenarios=list(scenarios.values()), started_at=started, finished_at=finished)
 
 
-def _render_markdown_scenario(scenario: ScenarioResult) -> List[str]:
+def _render_markdown_scenario(scenario: ScenarioResult) -> list[str]:
     lines = [f"## {scenario.name}", f"Success rate: {scenario.success_rate:.2%}", ""]
     for run in scenario.runs:
         lines.append(f"- **{run.case_id}**: {'✅' if run.success else '❌'}")

@@ -1,16 +1,27 @@
 """OpenTelemetry helpers."""
+
 from __future__ import annotations
 
-from contextlib import contextmanager
-from typing import Iterator
 import logging
+from contextlib import contextmanager
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
 
 # Optional OpenTelemetry imports
 try:
     from opentelemetry import trace
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter, SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export import (
+        BatchSpanProcessor,
+        ConsoleSpanExporter,
+        SimpleSpanProcessor,
+    )
+
     HAS_OPENTELEMETRY = True
 except ImportError:
     HAS_OPENTELEMETRY = False
@@ -27,7 +38,9 @@ if HAS_OPENTELEMETRY:
         from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
     except ImportError:  # pragma: no cover - fallback for older distributions
         try:
-            from opentelemetry.sdk.trace.export import OTLPSpanExporter  # type: ignore[attr-defined]
+            from opentelemetry.sdk.trace.export import (
+                OTLPSpanExporter,  # type: ignore[attr-defined]
+            )
         except ImportError:
             OTLPSpanExporter = None
 else:
@@ -41,7 +54,7 @@ def configure_tracer(exporter: str | None = None) -> None:
     if not HAS_OPENTELEMETRY:
         logger.debug("OpenTelemetry not available, skipping tracer configuration")
         return
-        
+
     current_provider = trace.get_tracer_provider()
     if isinstance(current_provider, TracerProvider):
         provider = current_provider
@@ -49,13 +62,18 @@ def configure_tracer(exporter: str | None = None) -> None:
         provider = TracerProvider(resource=Resource.create({"service.name": "agentunit"}))
         try:
             trace.set_tracer_provider(provider)
-        except Exception as exc:  # pragma: no cover - only triggered when another SDK initialized first
+        except (
+            Exception
+        ) as exc:  # pragma: no cover - only triggered when another SDK initialized first
             logger.debug("Tracer provider already configured: %s", exc)
             updated_provider = trace.get_tracer_provider()
             if isinstance(updated_provider, TracerProvider):
                 provider = updated_provider
             else:
-                logger.warning("Tracer provider configuration skipped; existing provider is %s", type(updated_provider))
+                logger.warning(
+                    "Tracer provider configuration skipped; existing provider is %s",
+                    type(updated_provider),
+                )
                 return
 
     processor_key = f"_agentunit_processor_{exporter or 'console'}"
@@ -85,9 +103,10 @@ def span(name: str, **attributes: object) -> Iterator[object]:
         class NoOpSpan:
             def set_attribute(self, key: str, value: object) -> None:
                 pass
+
         yield NoOpSpan()
         return
-        
+
     tracer = trace.get_tracer("agentunit")
     with tracer.start_as_current_span(name) as current_span:
         for key, value in attributes.items():

@@ -126,7 +126,7 @@ def test_arena_success_evaluation():
         task_id="test1",
         task_type=ArenaTaskType.CODE_EXECUTION,
         instruction="Calculate 10!",
-        success_criteria={"type": "equals", "value": 3628800}
+        success_criteria={"type": "equals", "value": 3628800},
     )
     assert arena.evaluate_success(task_equals, 3628800, []) is True
     assert arena.evaluate_success(task_equals, 123, []) is False
@@ -136,7 +136,7 @@ def test_arena_success_evaluation():
         task_id="test2",
         task_type=ArenaTaskType.WEB_BROWSING,
         instruction="Find BTC price",
-        success_criteria={"type": "contains", "value": "BTC"}
+        success_criteria={"type": "contains", "value": "BTC"},
     )
     assert arena.evaluate_success(task_contains, "BTC: $50000", []) is True
     assert arena.evaluate_success(task_contains, "ETH: $3000", []) is False
@@ -167,7 +167,7 @@ def test_leaderboard_config():
         api_url="https://api.gaia-benchmark.com",
         api_key="test_key",
         model_name="test_model",
-        organization="test_org"
+        organization="test_org",
     )
 
     assert config.leaderboard_name == "gaia"
@@ -178,9 +178,7 @@ def test_leaderboard_config():
 def test_leaderboard_submission(tmp_path):
     """Test leaderboard submission."""
     config = LeaderboardConfig(
-        leaderboard_name="test",
-        api_url="https://example.com",
-        model_name="test_model"
+        leaderboard_name="test", api_url="https://example.com", model_name="test_model"
     )
 
     submitter = LeaderboardSubmitter(config, output_dir=tmp_path)
@@ -200,9 +198,7 @@ def test_leaderboard_submission(tmp_path):
 def test_leaderboard_comparison():
     """Test leaderboard comparison with baseline."""
     config = LeaderboardConfig(
-        leaderboard_name="test",
-        api_url="https://example.com",
-        model_name="custom_model"
+        leaderboard_name="test", api_url="https://example.com", model_name="custom_model"
     )
 
     submitter = LeaderboardSubmitter(config)
@@ -224,9 +220,7 @@ def test_leaderboard_comparison():
 def test_benchmark_runner_gaia():
     """Test benchmark runner with GAIA."""
     config = LeaderboardConfig(
-        leaderboard_name="gaia",
-        api_url="https://example.com",
-        model_name="test_model"
+        leaderboard_name="gaia", api_url="https://example.com", model_name="test_model"
     )
 
     runner = BenchmarkRunner(leaderboard_config=config)

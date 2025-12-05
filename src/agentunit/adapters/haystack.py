@@ -1,16 +1,25 @@
 """Adapter for Haystack pipelines."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any
+
+from agentunit.core.exceptions import AgentUnitError
 
 from .base import AdapterOutcome, BaseAdapter
 from .registry import register_adapter
-from ..core.exceptions import AgentUnitError
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
+
 
 class HaystackAdapter(BaseAdapter):
     name = "haystack"
@@ -20,16 +29,17 @@ class HaystackAdapter(BaseAdapter):
         pipeline: Any,
         *,
         input_key: str = "query",
-        params: Optional[Dict[str, Any]] = None,
-        run_kwargs: Optional[Dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
+        run_kwargs: dict[str, Any] | None = None,
     ) -> None:
         if pipeline is None:
-            raise AgentUnitError("HaystackAdapter requires a pipeline or callable")
+            msg = "HaystackAdapter requires a pipeline or callable"
+            raise AgentUnitError(msg)
         self._pipeline = pipeline
         self._input_key = input_key
         self._params = params or {}
         self._run_kwargs = run_kwargs or {}
-        self._callable: Optional[Callable[[Dict[str, Any]], Any]] = None
+        self._callable: Callable[[dict[str, Any]], Any] | None = None
 
     def prepare(self) -> None:
         if self._callable is not None:
@@ -58,7 +68,7 @@ class HaystackAdapter(BaseAdapter):
             trace.record("error", message=str(exc))
             return AdapterOutcome(success=False, output=None, error=str(exc))
 
-    def _resolve_runner(self, pipeline: Any) -> Callable[[Dict[str, Any]], Any]:
+    def _resolve_runner(self, pipeline: Any) -> Callable[[dict[str, Any]], Any]:
         if callable(pipeline):
             return pipeline
         for attr in ("run", "__call__", "invoke"):
@@ -66,9 +76,12 @@ class HaystackAdapter(BaseAdapter):
                 method = getattr(pipeline, attr)
                 if callable(method):
                     return method
-        raise AgentUnitError("Unsupported Haystack pipeline; expected callable or object with run method")
+        msg = "Unsupported Haystack pipeline; expected callable or object with run method"
+        raise AgentUnitError(msg)
 
-    def _invoke_runner(self, runner: Callable[[Dict[str, Any]], Any], payload: Dict[str, Any]) -> Any:
+    def _invoke_runner(
+        self, runner: Callable[[dict[str, Any]], Any], payload: dict[str, Any]
+    ) -> Any:
         try:
             return runner(payload, params=self._params, **self._run_kwargs)
         except TypeError:

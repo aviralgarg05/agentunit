@@ -1,19 +1,27 @@
 """Scenario runner orchestration."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Iterable, List, Sequence
-from time import perf_counter
-from datetime import datetime, timezone
 import logging
 import random
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from time import perf_counter
+from typing import TYPE_CHECKING
 
-from .scenario import Scenario
-from ..metrics.registry import resolve_metrics
-from ..metrics.base import Metric, MetricResult
-from ..reporting.results import ScenarioResult, ScenarioRun, SuiteResult
-from ..core.trace import TraceLog
-from ..telemetry.tracing import configure_tracer, span
+from agentunit.core.trace import TraceLog
+from agentunit.metrics.registry import resolve_metrics
+from agentunit.reporting.results import ScenarioResult, ScenarioRun, SuiteResult
+from agentunit.telemetry.tracing import configure_tracer, span
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+    from agentunit.metrics.base import Metric, MetricResult
+
+    from .scenario import Scenario
+
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +44,7 @@ class Runner:
         configure_tracer(self._config.otel_exporter)
         metrics = resolve_metrics(self._config.metrics)
         started = datetime.now(timezone.utc)
-        scenario_results: List[ScenarioResult] = []
+        scenario_results: list[ScenarioResult] = []
         for scenario in self._scenarios:
             scenario_result = self._run_scenario(scenario, metrics)
             scenario_results.append(scenario_result)
@@ -53,7 +61,9 @@ class Runner:
             error = None
             start = perf_counter()
             for attempt in range(attempts):
-                with span("agentunit.scenario", scenario=scenario.name, case=case.id, attempt=attempt):
+                with span(
+                    "agentunit.scenario", scenario=scenario.name, case=case.id, attempt=attempt
+                ):
                     final_outcome = scenario.adapter.execute(case, trace_log)
                 if final_outcome.success:
                     break
@@ -92,5 +102,8 @@ def run_suite(
     otel_exporter: str | None = None,
     seed: int | None = None,
 ) -> SuiteResult:
-    runner = Runner(scenarios=suite, config=RunnerConfig(metrics=metrics, otel_exporter=otel_exporter, seed=seed))
+    runner = Runner(
+        scenarios=suite,
+        config=RunnerConfig(metrics=metrics, otel_exporter=otel_exporter, seed=seed),
+    )
     return runner.run()

@@ -1,13 +1,18 @@
 """Dataset abstraction for AgentUnit scenarios."""
+
 from __future__ import annotations
 
+import csv
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Iterator, Callable, Optional, Dict, List
-import json
-import csv
+from typing import TYPE_CHECKING
 
-from ..core.exceptions import AgentUnitError
+from agentunit.core.exceptions import AgentUnitError
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Iterator
 
 
 @dataclass(slots=True)
@@ -16,10 +21,10 @@ class DatasetCase:
 
     id: str
     query: str
-    expected_output: Optional[str] = None
-    tools: Optional[List[str]] = None
-    context: Optional[List[str]] = None
-    metadata: Dict[str, object] = field(default_factory=dict)
+    expected_output: str | None = None
+    tools: list[str] | None = None
+    context: list[str] | None = None
+    metadata: dict[str, object] = field(default_factory=dict)
 
 
 class DatasetSource:
@@ -34,20 +39,19 @@ class DatasetSource:
         return self._name
 
     def iter_cases(self) -> Iterator[DatasetCase]:
-        for case in self._loader():
-            yield case
+        yield from self._loader()
 
     @classmethod
-    def single(cls, case: DatasetCase) -> "DatasetSource":
+    def single(cls, case: DatasetCase) -> DatasetSource:
         return cls(name=f"single:{case.id}", loader=lambda: [case])
 
     @classmethod
-    def from_list(cls, cases: List[DatasetCase], name: str = "from_list") -> "DatasetSource":
+    def from_list(cls, cases: list[DatasetCase], name: str = "from_list") -> DatasetSource:
         return cls(name=name, loader=lambda: cases)
 
     @classmethod
-    def empty(cls, name: str = "empty") -> "DatasetSource":
-        return cls(name=name, loader=lambda: [])
+    def empty(cls, name: str = "empty") -> DatasetSource:
+        return cls(name=name, loader=list)
 
     def __repr__(self) -> str:  # pragma: no cover - debug only
         return f"DatasetSource(name={self._name!r})"
@@ -56,14 +60,12 @@ class DatasetSource:
 def load_local_json(path: str | Path) -> DatasetSource:
     file_path = Path(path)
     if not file_path.exists():
-        raise AgentUnitError(f"Dataset file not found: {file_path}")
+        msg = f"Dataset file not found: {file_path}"
+        raise AgentUnitError(msg)
 
     def _loader() -> Iterable[DatasetCase]:
         content = json.loads(file_path.read_text())
-        if isinstance(content, dict):
-            items = content.get("items", [])
-        else:
-            items = content
+        items = content.get("items", []) if isinstance(content, dict) else content
         for idx, row in enumerate(items):
             yield DatasetCase(
                 id=row.get("id") or f"case-{idx}",
@@ -80,7 +82,8 @@ def load_local_json(path: str | Path) -> DatasetSource:
 def load_local_csv(path: str | Path) -> DatasetSource:
     file_path = Path(path)
     if not file_path.exists():
-        raise AgentUnitError(f"Dataset file not found: {file_path}")
+        msg = f"Dataset file not found: {file_path}"
+        raise AgentUnitError(msg)
 
     def _loader() -> Iterable[DatasetCase]:
         with file_path.open(newline="", encoding="utf-8") as fh:
@@ -92,7 +95,11 @@ def load_local_csv(path: str | Path) -> DatasetSource:
                     expected_output=row.get("expected_output"),
                     tools=row.get("tools", "").split(";") if row.get("tools") else None,
                     context=row.get("context", "").split("||") if row.get("context") else None,
-                    metadata={k: v for k, v in row.items() if k not in {"id", "query", "expected_output", "tools", "context"}},
+                    metadata={
+                        k: v
+                        for k, v in row.items()
+                        if k not in {"id", "query", "expected_output", "tools", "context"}
+                    },
                 )
 
     return DatasetSource(name=str(file_path.stem), loader=_loader)

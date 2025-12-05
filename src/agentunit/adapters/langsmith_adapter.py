@@ -6,26 +6,29 @@ evaluation, and production deployment tracking.
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
-if TYPE_CHECKING:
-    from ..core.scenario import Scenario
-    from ..reporting.results import ScenarioResult
 
-from ..multiagent import (
-    MultiAgentAdapter,
-    AgentRole,
-    AgentMetadata,
+if TYPE_CHECKING:
+    from agentunit.core.scenario import Scenario
+
+from agentunit.multiagent import (
     AgentInteraction,
+    AgentMetadata,
+    AgentRole,
+    CommunicationMode,
+    MultiAgentAdapter,
     OrchestrationPattern,
-    CommunicationMode
 )
-from ..production.monitoring import ProductionMetrics, BaselineMetrics
-from ..production.integrations import ProductionIntegration, MonitoringPlatform
+from agentunit.production.integrations import MonitoringPlatform, ProductionIntegration
+from agentunit.production.monitoring import BaselineMetrics, ProductionMetrics
+from agentunit.reporting.results import ScenarioResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +49,9 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
         self,
         api_key: str,
         project_name: str = "agentunit-testing",
-        endpoint: Optional[str] = None,
+        endpoint: str | None = None,
         enable_tracing: bool = True,
-        enable_feedback: bool = True
+        enable_feedback: bool = True,
     ):
         """
         Initialize LangSmith adapter.
@@ -70,10 +73,10 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
         self._init_langsmith_client()
 
         # Session tracking
-        self.current_session_id: Optional[str] = None
-        self.session_agents: Dict[str, AgentMetadata] = {}
-        self.session_interactions: List[AgentInteraction] = []
-        self.session_traces: List[str] = []
+        self.current_session_id: str | None = None
+        self.session_agents: dict[str, AgentMetadata] = {}
+        self.session_interactions: list[AgentInteraction] = []
+        self.session_traces: list[str] = []
 
         logger.info(f"LangSmith adapter initialized for project: {project_name}")
 
@@ -83,10 +86,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             # Import LangSmith SDK
             from langsmith import Client
 
-            self.client = Client(
-                api_url=self.endpoint,
-                api_key=self.api_key
-            )
+            self.client = Client(api_url=self.endpoint, api_key=self.api_key)
 
             # Verify connection
             self.client.list_projects(limit=1)
@@ -94,7 +94,8 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
 
         except ImportError:
             logger.error("LangSmith SDK not installed. Install with: pip install langsmith")
-            raise ImportError("LangSmith SDK required for LangSmithAdapter")
+            msg = "LangSmith SDK required for LangSmithAdapter"
+            raise ImportError(msg)
         except Exception as e:
             logger.error(f"Failed to connect to LangSmith: {e}")
             raise
@@ -104,12 +105,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
         """Return the monitoring platform type."""
         return MonitoringPlatform.LANGSMITH
 
-    def create_agent(
-        self,
-        role: AgentRole,
-        agent_id: Optional[str] = None,
-        **kwargs
-    ) -> AgentMetadata:
+    def create_agent(self, role: AgentRole, agent_id: str | None = None, **kwargs) -> AgentMetadata:
         """
         Create an agent for LangSmith monitoring.
 
@@ -133,8 +129,8 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                 "project_name": self.project_name,
                 "enable_tracing": self.enable_tracing,
                 "enable_feedback": self.enable_feedback,
-                **kwargs
-            }
+                **kwargs,
+            },
         )
 
         # Register agent in current session if active
@@ -149,7 +145,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
         session_id: str,
         pattern: OrchestrationPattern,
         communication_mode: CommunicationMode,
-        **kwargs
+        **kwargs,
     ) -> str:
         """
         Start a new multi-agent session with LangSmith tracing.
@@ -174,7 +170,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             "orchestration_pattern": pattern.value,
             "communication_mode": communication_mode.value,
             "start_time": datetime.now(timezone.utc).isoformat(),
-            **kwargs
+            **kwargs,
         }
 
         try:
@@ -184,7 +180,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                 run_type="chain",
                 project_name=self.project_name,
                 inputs={"session_metadata": session_metadata},
-                tags=["agentunit", "multi-agent", pattern.value, communication_mode.value]
+                tags=["agentunit", "multi-agent", pattern.value, communication_mode.value],
             )
 
             langsmith_session_id = str(run.id)
@@ -199,8 +195,8 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
         self,
         message: str,
         from_agent: str,
-        to_agent: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        to_agent: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> AgentInteraction:
         """
         Send a message between agents with LangSmith tracing.
@@ -224,7 +220,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             to_agent=to_agent,
             content=message,
             timestamp=timestamp,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         # Record in session
@@ -242,11 +238,11 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                         "message": message,
                         "from_agent": from_agent,
                         "to_agent": to_agent,
-                        "metadata": metadata
+                        "metadata": metadata,
                     },
                     outputs={"interaction_id": interaction_id},
                     tags=["agentunit", "agent-message"],
-                    parent_run_id=self.current_session_id if self.current_session_id else None
+                    parent_run_id=self.current_session_id if self.current_session_id else None,
                 )
 
                 self.session_traces.append(str(run.id))
@@ -257,7 +253,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
         logger.debug(f"Agent message sent: {from_agent} → {to_agent}: {message[:100]}...")
         return interaction
 
-    def end_session(self, session_id: str, final_state: Dict[str, Any]) -> Dict[str, Any]:
+    def end_session(self, session_id: str, final_state: dict[str, Any]) -> dict[str, Any]:
         """
         End the current session and finalize LangSmith tracing.
 
@@ -282,7 +278,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             "traces_count": len(self.session_traces),
             "metrics": metrics,
             "final_state": final_state,
-            "end_time": datetime.now(timezone.utc).isoformat()
+            "end_time": datetime.now(timezone.utc).isoformat(),
         }
 
         if self.enable_tracing and self.current_session_id:
@@ -290,7 +286,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                 self.client.update_run(
                     run_id=self.current_session_id,
                     outputs=session_summary,
-                    end_time=datetime.now(timezone.utc)
+                    end_time=datetime.now(timezone.utc),
                 )
             except Exception as e:
                 logger.warning(f"Failed to finalize LangSmith session: {e}")
@@ -304,7 +300,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
         logger.info(f"LangSmith session ended: {session_id}")
         return session_summary
 
-    def calculate_coordination_metrics(self) -> Dict[str, float]:
+    def calculate_coordination_metrics(self) -> dict[str, float]:
         """
         Calculate coordination metrics for the current session.
 
@@ -351,7 +347,9 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             "agent_participation": float(agent_participation),
             "coordination_efficiency": coordination_efficiency,
             "temporal_density": temporal_density,
-            "avg_messages_per_agent": sum(agent_counts.values()) / len(agent_counts) if agent_counts else 0.0
+            "avg_messages_per_agent": sum(agent_counts.values()) / len(agent_counts)
+            if agent_counts
+            else 0.0,
         }
 
     def run_scenario(self, scenario: Scenario) -> ScenarioResult:
@@ -375,7 +373,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                     run_type="chain",
                     project_name=self.project_name,
                     inputs={"scenario": scenario.name, "description": scenario.description},
-                    tags=["agentunit", "scenario"]
+                    tags=["agentunit", "scenario"],
                 )
                 scenario_run_id = str(run.id)
             except Exception as e:
@@ -392,7 +390,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             self.start_session(
                 session_id=session_id,
                 pattern=OrchestrationPattern.HIERARCHICAL,
-                communication_mode=CommunicationMode.DIRECT_MESSAGE
+                communication_mode=CommunicationMode.DIRECT_MESSAGE,
             )
 
             # Create test agents
@@ -401,7 +399,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                     name="coordinator",
                     description="Coordinates tasks and monitors progress",
                     responsibilities=["coordinate tasks", "monitor progress"],
-                    capabilities=["task_distribution", "progress_tracking"]
+                    capabilities=["task_distribution", "progress_tracking"],
                 )
             )
 
@@ -410,7 +408,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                     name="worker",
                     description="Executes tasks and reports results",
                     responsibilities=["execute tasks", "report results"],
-                    capabilities=["task_execution", "result_reporting"]
+                    capabilities=["task_execution", "result_reporting"],
                 )
             )
 
@@ -419,14 +417,14 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                 "Start task execution",
                 coordinator.agent_id,
                 worker.agent_id,
-                {"task_type": "test_execution"}
+                {"task_type": "test_execution"},
             )
 
             self.send_message(
                 "Task completed successfully",
                 worker.agent_id,
                 coordinator.agent_id,
-                {"status": "completed", "result": "success"}
+                {"status": "completed", "result": "success"},
             )
 
             # End session
@@ -437,19 +435,23 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             execution_time = time.time() - start_time
 
             # Create trace log
-            from ..core.trace import TraceLog
+            from agentunit.core.trace import TraceLog
+
             trace = TraceLog()
-            trace.record('scenario_complete', run_id=scenario_run_id, session_summary=session_summary)
+            trace.record(
+                "scenario_complete", run_id=scenario_run_id, session_summary=session_summary
+            )
 
             # Create scenario run
-            from ..reporting.results import ScenarioRun
+            from agentunit.reporting.results import ScenarioRun
+
             scenario_run = ScenarioRun(
                 scenario_name=scenario.name,
                 case_id=str(scenario_run_id),
                 success=True,
                 metrics=session_summary.get("metrics", {}),
                 duration_ms=execution_time * 1000,
-                trace=trace
+                trace=trace,
             )
 
             # Create result
@@ -464,9 +466,9 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                         outputs={
                             "result": result.passed,
                             "execution_time": execution_time,
-                            "details": result.details
+                            "details": result.details,
                         },
-                        end_time=datetime.now(timezone.utc)
+                        end_time=datetime.now(timezone.utc),
                     )
                 except Exception as e:
                     logger.warning(f"Failed to update scenario run: {e}")
@@ -478,12 +480,14 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             logger.error(f"Scenario execution failed: {e}")
 
             # Create trace log
-            from ..core.trace import TraceLog
+            from agentunit.core.trace import TraceLog
+
             trace = TraceLog()
-            trace.record('scenario_error', error=str(e), run_id=scenario_run_id)
+            trace.record("scenario_error", error=str(e), run_id=scenario_run_id)
 
             # Create scenario run
-            from ..reporting.results import ScenarioRun
+            from agentunit.reporting.results import ScenarioRun
+
             scenario_run = ScenarioRun(
                 scenario_name=scenario.name,
                 case_id=str(scenario_run_id),
@@ -491,7 +495,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                 metrics={},
                 duration_ms=(time.time() - start_time) * 1000,
                 trace=trace,
-                error=str(e)
+                error=str(e),
             )
 
             # Create result
@@ -504,7 +508,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                     self.client.update_run(
                         run_id=scenario_run_id,
                         outputs={"error": str(e)},
-                        end_time=datetime.now(timezone.utc)
+                        end_time=datetime.now(timezone.utc),
                     )
                 except Exception as e:
                     logger.warning(f"Failed to update failed scenario run: {e}")
@@ -525,21 +529,18 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
         """
         try:
             # Query recent runs from LangSmith
-            runs = list(self.client.list_runs(
-                project_name=self.project_name,
-                limit=100
-            ))
+            runs = list(self.client.list_runs(project_name=self.project_name, limit=100))
 
             if not runs:
                 return ProductionMetrics(
                     evaluation_id=f"eval_{uuid4().hex[:8]}",
                     timestamp=datetime.now(timezone.utc),
-                    scenario_name=kwargs.get('scenario_name', 'langsmith_collection'),
+                    scenario_name=kwargs.get("scenario_name", "langsmith_collection"),
                     performance={},
                     quality={},
                     reliability={},
                     efficiency={},
-                    custom_metrics={}
+                    custom_metrics={},
                 )
 
             # Calculate metrics from recent runs
@@ -557,27 +558,27 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             # Calculate token usage if available
             total_tokens = 0
             for run in runs:
-                if hasattr(run, 'outputs') and run.outputs:
-                    usage = run.outputs.get('usage', {})
-                    total_tokens += usage.get('total_tokens', 0)
+                if hasattr(run, "outputs") and run.outputs:
+                    usage = run.outputs.get("usage", {})
+                    total_tokens += usage.get("total_tokens", 0)
 
             return ProductionMetrics(
                 evaluation_id=f"eval_{uuid4().hex[:8]}",
                 timestamp=datetime.now(timezone.utc),
-                scenario_name=kwargs.get('scenario_name', 'langsmith_collection'),
+                scenario_name=kwargs.get("scenario_name", "langsmith_collection"),
                 performance={
                     "avg_duration": avg_duration,
-                    "success_rate": successful_runs / total_runs if total_runs > 0 else 0.0
+                    "success_rate": successful_runs / total_runs if total_runs > 0 else 0.0,
                 },
                 quality={
                     "total_runs": total_runs,
                     "successful_runs": successful_runs,
-                    "failed_runs": failed_runs
+                    "failed_runs": failed_runs,
                 },
                 efficiency={
                     "total_tokens": total_tokens,
-                    "avg_tokens_per_run": total_tokens / total_runs if total_runs > 0 else 0.0
-                }
+                    "avg_tokens_per_run": total_tokens / total_runs if total_runs > 0 else 0.0,
+                },
             )
 
         except Exception as e:
@@ -585,11 +586,13 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             return ProductionMetrics(
                 evaluation_id=f"eval_error_{uuid4().hex[:8]}",
                 timestamp=datetime.now(timezone.utc),
-                scenario_name=kwargs.get('scenario_name', 'langsmith_error'),
-                metadata={"error": str(e)}
+                scenario_name=kwargs.get("scenario_name", "langsmith_error"),
+                metadata={"error": str(e)},
             )
 
-    def establish_baseline(self, historical_data: List[Dict[str, Any]], metrics: List[str], **kwargs) -> BaselineMetrics:
+    def establish_baseline(
+        self, historical_data: list[dict[str, Any]], metrics: list[str], **kwargs
+    ) -> BaselineMetrics:
         """
         Establish baseline metrics from historical LangSmith data.
 
@@ -601,7 +604,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
         Returns:
             BaselineMetrics: Calculated baseline metrics
         """
-        days = kwargs.get('days', 7)
+        days = kwargs.get("days", 7)
         try:
             from datetime import timedelta
 
@@ -610,19 +613,19 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             start_date = end_date - timedelta(days=days)
 
             # Query historical runs
-            runs = list(self.client.list_runs(
-                project_name=self.project_name,
-                start_time=start_date,
-                end_time=end_date
-            ))
+            runs = list(
+                self.client.list_runs(
+                    project_name=self.project_name, start_time=start_date, end_time=end_date
+                )
+            )
 
             if not runs:
                 logger.warning("No historical data found for baseline calculation")
                 return BaselineMetrics(
                     id=f"baseline_{uuid4().hex[:8]}",
-                    scenario_name=kwargs.get('scenario_name', 'langsmith_baseline'),
+                    scenario_name=kwargs.get("scenario_name", "langsmith_baseline"),
                     created_at=datetime.now(timezone.utc),
-                    run_count=0
+                    run_count=0,
                 )
 
             # Extract metrics from runs
@@ -635,23 +638,23 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
 
             return BaselineMetrics(
                 id=f"baseline_{uuid4().hex[:8]}",
-                scenario_name=kwargs.get('scenario_name', 'langsmith_baseline'),
+                scenario_name=kwargs.get("scenario_name", "langsmith_baseline"),
                 created_at=datetime.now(timezone.utc),
                 run_count=len(runs),
-                performance_baseline=baseline_metrics.get('performance', {}),
-                quality_baseline=baseline_metrics.get('quality', {}),
-                reliability_baseline=baseline_metrics.get('reliability', {}),
-                efficiency_baseline=baseline_metrics.get('efficiency', {})
+                performance_baseline=baseline_metrics.get("performance", {}),
+                quality_baseline=baseline_metrics.get("quality", {}),
+                reliability_baseline=baseline_metrics.get("reliability", {}),
+                efficiency_baseline=baseline_metrics.get("efficiency", {}),
             )
 
         except Exception as e:
             logger.error(f"Failed to establish LangSmith baseline: {e}")
             return BaselineMetrics(
                 id=f"baseline_error_{uuid4().hex[:8]}",
-                scenario_name=kwargs.get('scenario_name', 'langsmith_error'),
+                scenario_name=kwargs.get("scenario_name", "langsmith_error"),
                 created_at=datetime.now(timezone.utc),
                 run_count=0,
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
     def _extract_run_metrics(self, runs):
@@ -668,9 +671,9 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             if not run.error:
                 success_count += 1
 
-            if hasattr(run, 'outputs') and run.outputs:
-                usage = run.outputs.get('usage', {})
-                token_counts.append(usage.get('total_tokens', 0))
+            if hasattr(run, "outputs") and run.outputs:
+                usage = run.outputs.get("usage", {})
+                token_counts.append(usage.get("total_tokens", 0))
 
         return durations, token_counts, success_count
 
@@ -685,14 +688,11 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             "success_rate": success_count / total_runs,
             "avg_tokens": statistics.mean(token_counts) if token_counts else 0.0,
             "median_tokens": statistics.median(token_counts) if token_counts else 0.0,
-            "total_runs": total_runs
+            "total_runs": total_runs,
         }
 
     def create_evaluation_dataset(
-        self,
-        name: str,
-        examples: List[Dict[str, Any]],
-        description: Optional[str] = None
+        self, name: str, examples: list[dict[str, Any]], description: str | None = None
     ) -> str:
         """
         Create an evaluation dataset in LangSmith.
@@ -708,7 +708,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
         try:
             dataset = self.client.create_dataset(
                 dataset_name=name,
-                description=description or f"AgentUnit evaluation dataset: {name}"
+                description=description or f"AgentUnit evaluation dataset: {name}",
             )
 
             # Add examples to dataset
@@ -717,7 +717,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                     dataset_id=dataset.id,
                     inputs=example.get("inputs", {}),
                     outputs=example.get("outputs", {}),
-                    metadata=example.get("metadata", {})
+                    metadata=example.get("metadata", {}),
                 )
 
             logger.info(f"Created LangSmith dataset: {name} with {len(examples)} examples")
@@ -727,12 +727,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
             logger.error(f"Failed to create LangSmith dataset: {e}")
             raise
 
-    def run_evaluation(
-        self,
-        dataset_id: str,
-        evaluator_function: Any,
-        **kwargs
-    ) -> Dict[str, Any]:
+    def run_evaluation(self, dataset_id: str, evaluator_function: Any, **kwargs) -> dict[str, Any]:
         """
         Run evaluation on a LangSmith dataset.
 
@@ -751,7 +746,7 @@ class LangSmithAdapter(MultiAgentAdapter, ProductionIntegration):
                 evaluator_function,
                 data=dataset_id,
                 project_name=f"{self.project_name}-evaluation",
-                **kwargs
+                **kwargs,
             )
 
             logger.info(f"Completed LangSmith evaluation on dataset: {dataset_id}")

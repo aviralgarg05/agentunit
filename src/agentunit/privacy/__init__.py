@@ -9,20 +9,26 @@ This module provides:
 import sys
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
-    from .wrappers import PrivateDatasetWrapper, PrivacyConfig
-    from .metrics import PIILeakageMetric, PrivacyBudgetMetric, DataMinimizationMetric, ConsentComplianceMetric
     from .federation import FederatedEvaluator, PrivacyGuard
+    from .metrics import (
+        ConsentComplianceMetric,
+        DataMinimizationMetric,
+        PIILeakageMetric,
+        PrivacyBudgetMetric,
+    )
+    from .wrappers import PrivacyConfig, PrivateDatasetWrapper
 
 __all__ = [
-    "PrivateDatasetWrapper",
-    "PrivacyConfig",
+    "ConsentComplianceMetric",
+    "DataMinimizationMetric",
+    "FederatedEvaluator",
     "PIILeakageMetric",
     "PrivacyBudgetMetric",
-    "DataMinimizationMetric",
-    "ConsentComplianceMetric",
-    "FederatedEvaluator",
+    "PrivacyConfig",
     "PrivacyGuard",
+    "PrivateDatasetWrapper",
 ]
 
 
@@ -30,32 +36,40 @@ def __getattr__(name: str):
     """Lazy load privacy components."""
     if name == "PrivateDatasetWrapper":
         from .wrappers import PrivateDatasetWrapper
+
         return PrivateDatasetWrapper
-    elif name == "PrivacyConfig":
+    if name == "PrivacyConfig":
         from .wrappers import PrivacyConfig
+
         return PrivacyConfig
-    elif name == "PIILeakageMetric":
+    if name == "PIILeakageMetric":
         from .metrics import PIILeakageMetric
+
         return PIILeakageMetric
-    elif name == "PrivacyBudgetMetric":
+    if name == "PrivacyBudgetMetric":
         from .metrics import PrivacyBudgetMetric
+
         return PrivacyBudgetMetric
-    elif name == "DataMinimizationMetric":
+    if name == "DataMinimizationMetric":
         from .metrics import DataMinimizationMetric
+
         return DataMinimizationMetric
-    elif name == "ConsentComplianceMetric":
+    if name == "ConsentComplianceMetric":
         from .metrics import ConsentComplianceMetric
+
         return ConsentComplianceMetric
-    elif name == "FederatedEvaluator":
+    if name == "FederatedEvaluator":
         from .federation import FederatedEvaluator
+
         return FederatedEvaluator
-    elif name == "PrivacyGuard":
+    if name == "PrivacyGuard":
         from .federation import PrivacyGuard
+
         return PrivacyGuard
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
 
 
 # Register lazy loader
-if sys.version_info >= (3, 7):
-    def __dir__():
-        return __all__
+def __dir__():
+    return __all__

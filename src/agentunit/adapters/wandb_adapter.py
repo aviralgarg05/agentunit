@@ -6,28 +6,30 @@ experiment tracking, and production deployment analytics.
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
+
 if TYPE_CHECKING:
-    from ..core.scenario import Scenario
-    from ..reporting.results import ScenarioResult
+    from agentunit.core.scenario import Scenario
 
-from ..reporting.results import ScenarioRun, TraceLog
-
-from ..multiagent import (
-    MultiAgentAdapter,
-    AgentRole,
-    AgentMetadata,
+from agentunit.core.trace import TraceLog
+from agentunit.multiagent import (
     AgentInteraction,
+    AgentMetadata,
+    AgentRole,
+    CommunicationMode,
+    MultiAgentAdapter,
     OrchestrationPattern,
-    CommunicationMode
 )
-from ..production.monitoring import ProductionMetrics, BaselineMetrics
-from ..production.integrations import ProductionIntegration, MonitoringPlatform
+from agentunit.production.integrations import MonitoringPlatform, ProductionIntegration
+from agentunit.production.monitoring import BaselineMetrics, ProductionMetrics
+from agentunit.reporting.results import ScenarioResult, ScenarioRun
+
 
 logger = logging.getLogger(__name__)
 
@@ -52,11 +54,11 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
     def __init__(
         self,
         project: str,
-        entity: Optional[str] = None,
-        api_key: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        group: Optional[str] = None,
-        job_type: str = "agentunit-testing"
+        entity: str | None = None,
+        api_key: str | None = None,
+        tags: list[str] | None = None,
+        group: str | None = None,
+        job_type: str = "agentunit-testing",
     ):
         """
         Initialize Wandb adapter.
@@ -80,11 +82,11 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
         self._init_wandb_client()
 
         # Session tracking
-        self.current_session_id: Optional[str] = None
+        self.current_session_id: str | None = None
         self.current_run = None
-        self.session_agents: Dict[str, AgentMetadata] = {}
-        self.session_interactions: List[AgentInteraction] = []
-        self.session_metrics: Dict[str, Any] = {}
+        self.session_agents: dict[str, AgentMetadata] = {}
+        self.session_interactions: list[AgentInteraction] = []
+        self.session_metrics: dict[str, Any] = {}
 
         logger.info(f"Wandb adapter initialized for project: {project}")
 
@@ -94,10 +96,12 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             # Import Wandb SDK
             try:
                 import wandb
+
                 self.wandb = wandb
             except ImportError:
                 logger.error("Wandb SDK not installed. Install with: pip install wandb")
-                raise ImportError("Wandb SDK required for WandbAdapter")
+                msg = "Wandb SDK required for WandbAdapter"
+                raise ImportError(msg)
 
             # Login if API key provided
             if self.api_key:
@@ -114,12 +118,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
         """Return the monitoring platform type."""
         return MonitoringPlatform.WANDB
 
-    def create_agent(
-        self,
-        role: AgentRole,
-        agent_id: Optional[str] = None,
-        **kwargs
-    ) -> AgentMetadata:
+    def create_agent(self, role: AgentRole, agent_id: str | None = None, **kwargs) -> AgentMetadata:
         """
         Create an agent for Wandb monitoring.
 
@@ -143,8 +142,8 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                 "project": self.project,
                 "entity": self.entity,
                 "tags": self.default_tags,
-                **kwargs
-            }
+                **kwargs,
+            },
         )
 
         # Register agent in current session if active
@@ -153,14 +152,16 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
 
             # Log agent creation to Wandb
             if self.current_run:
-                self.current_run.log({
-                    f"agent_created/{agent_id}": {
-                        "role": role.name,
-                        "responsibilities": role.responsibilities,
-                        "capabilities": role.capabilities,
-                        "created_at": datetime.now(timezone.utc).isoformat()
+                self.current_run.log(
+                    {
+                        f"agent_created/{agent_id}": {
+                            "role": role.name,
+                            "responsibilities": role.responsibilities,
+                            "capabilities": role.capabilities,
+                            "created_at": datetime.now(timezone.utc).isoformat(),
+                        }
                     }
-                })
+                )
 
         logger.info(f"Created Wandb agent: {agent_id} with role: {role.name}")
         return agent_metadata
@@ -170,7 +171,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
         session_id: str,
         pattern: OrchestrationPattern,
         communication_mode: CommunicationMode,
-        **kwargs
+        **kwargs,
     ) -> str:
         """
         Start a new multi-agent session with Wandb tracking.
@@ -196,26 +197,28 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                 "orchestration_pattern": pattern.value,
                 "communication_mode": communication_mode.value,
                 "start_time": datetime.now(timezone.utc).isoformat(),
-                **kwargs
+                **kwargs,
             }
 
             self.current_run = self.wandb.init(
                 project=self.project,
                 entity=self.entity,
                 name=f"AgentUnit-{session_id}",
-                tags=self.default_tags + [pattern.value, communication_mode.value],
+                tags=[*self.default_tags, pattern.value, communication_mode.value],
                 group=self.group,
                 job_type=self.job_type,
                 config=config,
-                reinit=True
+                reinit=True,
             )
 
             # Log initial session metrics
-            self.current_run.log({
-                "session/started": 1,
-                "session/pattern": pattern.value,
-                "session/communication_mode": communication_mode.value
-            })
+            self.current_run.log(
+                {
+                    "session/started": 1,
+                    "session/pattern": pattern.value,
+                    "session/communication_mode": communication_mode.value,
+                }
+            )
 
             wandb_run_id = self.current_run.id
             logger.info(f"Started Wandb session: {wandb_run_id}")
@@ -229,8 +232,8 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
         self,
         message: str,
         from_agent: str,
-        to_agent: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        to_agent: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> AgentInteraction:
         """
         Send a message between agents with Wandb tracking.
@@ -254,7 +257,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             to_agent=to_agent,
             content=message,
             timestamp=timestamp,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         # Record in session
@@ -267,16 +270,26 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                 "interactions/count": len(self.session_interactions),
                 "interactions/message_length": len(message),
                 f"agents/{from_agent}/messages_sent": self._get_agent_message_count(from_agent),
-                "interactions/timestamp": timestamp.timestamp()
+                "interactions/timestamp": timestamp.timestamp(),
             }
 
             if to_agent:
-                message_data[f"agents/{to_agent}/messages_received"] = self._get_agent_received_count(to_agent)
+                message_data[f"agents/{to_agent}/messages_received"] = (
+                    self._get_agent_received_count(to_agent)
+                )
 
             # Create interaction table entry
             interaction_table = self.wandb.Table(
                 columns=["interaction_id", "from_agent", "to_agent", "message_length", "timestamp"],
-                data=[[interaction_id, from_agent, to_agent or "broadcast", len(message), timestamp.isoformat()]]
+                data=[
+                    [
+                        interaction_id,
+                        from_agent,
+                        to_agent or "broadcast",
+                        len(message),
+                        timestamp.isoformat(),
+                    ]
+                ],
             )
 
             message_data["interactions/latest"] = interaction_table
@@ -285,7 +298,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
         logger.debug(f"Agent message sent: {from_agent} → {to_agent}: {message[:100]}...")
         return interaction
 
-    def end_session(self, session_id: str, final_state: Dict[str, Any]) -> Dict[str, Any]:
+    def end_session(self, session_id: str, final_state: dict[str, Any]) -> dict[str, Any]:
         """
         End the current session and finalize Wandb tracking.
 
@@ -308,9 +321,11 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                 "session/ended": 1,
                 "session/agents_count": len(self.session_agents),
                 "session/interactions_count": len(self.session_interactions),
-                "session/duration": (datetime.now(timezone.utc) - self.current_run.start_time).total_seconds(),
+                "session/duration": (
+                    datetime.now(timezone.utc) - self.current_run.start_time
+                ).total_seconds(),
                 "session/final_state": final_state.get("status", "unknown"),
-                **{f"coordination/{k}": v for k, v in metrics.items()}
+                **{f"coordination/{k}": v for k, v in metrics.items()},
             }
 
             self.current_run.log(final_metrics)
@@ -319,17 +334,25 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             if self.session_agents:
                 agent_table_data = []
                 for agent_id, agent_metadata in self.session_agents.items():
-                    agent_table_data.append([
-                        agent_id,
-                        agent_metadata.role.name,
-                        len(agent_metadata.role.responsibilities),
-                        len(agent_metadata.role.capabilities),
-                        self._get_agent_message_count(agent_id)
-                    ])
+                    agent_table_data.append(
+                        [
+                            agent_id,
+                            agent_metadata.role.name,
+                            len(agent_metadata.role.responsibilities),
+                            len(agent_metadata.role.capabilities),
+                            self._get_agent_message_count(agent_id),
+                        ]
+                    )
 
                 agent_table = self.wandb.Table(
-                    columns=["agent_id", "role", "responsibilities_count", "capabilities_count", "messages_sent"],
-                    data=agent_table_data
+                    columns=[
+                        "agent_id",
+                        "role",
+                        "responsibilities_count",
+                        "capabilities_count",
+                        "messages_sent",
+                    ],
+                    data=agent_table_data,
                 )
 
                 self.current_run.log({"session/agents_summary": agent_table})
@@ -344,7 +367,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             "interactions_count": len(self.session_interactions),
             "metrics": metrics,
             "final_state": final_state,
-            "end_time": datetime.now(timezone.utc).isoformat()
+            "end_time": datetime.now(timezone.utc).isoformat(),
         }
 
         # Reset session state
@@ -357,7 +380,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
         logger.info(f"Wandb session ended: {session_id}")
         return session_summary
 
-    def calculate_coordination_metrics(self) -> Dict[str, float]:
+    def calculate_coordination_metrics(self) -> dict[str, float]:
         """
         Calculate coordination metrics for the current session.
 
@@ -419,9 +442,11 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             "agent_participation": float(agent_participation),
             "coordination_efficiency": coordination_efficiency,
             "temporal_density": temporal_density,
-            "avg_messages_per_agent": sum(agent_counts.values()) / len(agent_counts) if agent_counts else 0.0,
+            "avg_messages_per_agent": sum(agent_counts.values()) / len(agent_counts)
+            if agent_counts
+            else 0.0,
             "avg_message_length": avg_message_length,
-            "distribution_balance": distribution_balance
+            "distribution_balance": distribution_balance,
         }
 
     def run_scenario(self, scenario: Scenario) -> ScenarioResult:
@@ -444,21 +469,18 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                 project=self.project,
                 entity=self.entity,
                 name=f"Scenario-{scenario.name}",
-                tags=self.default_tags + ["scenario", scenario.name],
+                tags=[*self.default_tags, "scenario", scenario.name],
                 group=self.group,
                 job_type="scenario-execution",
                 config={
                     "scenario_name": scenario.name,
-                    "scenario_description": scenario.description
+                    "scenario_description": scenario.description,
                 },
-                reinit=True
+                reinit=True,
             )
 
             # Log scenario start
-            scenario_run.log({
-                "scenario/started": 1,
-                "scenario/name": scenario.name
-            })
+            scenario_run.log({"scenario/started": 1, "scenario/name": scenario.name})
 
             # Simulate scenario execution with multi-agent coordination
             session_id = f"scenario_{scenario.name}_{uuid4().hex[:8]}"
@@ -469,7 +491,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             self.start_session(
                 session_id=session_id,
                 pattern=OrchestrationPattern.HIERARCHICAL,
-                communication_mode=CommunicationMode.DIRECT_MESSAGE
+                communication_mode=CommunicationMode.DIRECT_MESSAGE,
             )
 
             # Create test agents
@@ -478,7 +500,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                     name="coordinator",
                     description="Coordinates tasks and monitors progress in the test scenario",
                     responsibilities=["coordinate tasks", "monitor progress"],
-                    capabilities=["task_distribution", "progress_tracking"]
+                    capabilities=["task_distribution", "progress_tracking"],
                 )
             )
 
@@ -487,7 +509,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                     name="worker",
                     description="Executes tasks and reports results in the test scenario",
                     responsibilities=["execute tasks", "report results"],
-                    capabilities=["task_execution", "result_reporting"]
+                    capabilities=["task_execution", "result_reporting"],
                 )
             )
 
@@ -496,14 +518,14 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                 "Start task execution",
                 coordinator.agent_id,
                 worker.agent_id,
-                {"task_type": "test_execution"}
+                {"task_type": "test_execution"},
             )
 
             self.send_message(
                 "Task completed successfully",
                 worker.agent_id,
                 coordinator.agent_id,
-                {"status": "completed", "result": "success"}
+                {"status": "completed", "result": "success"},
             )
 
             # End session
@@ -514,31 +536,44 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             execution_time = time.time() - start_time
 
             # Log scenario completion to scenario run
-            scenario_run.log({
-                "scenario/completed": 1,
-                "scenario/execution_time": execution_time,
-                "scenario/passed": True,
-                "scenario/agents_count": 2,
-                "scenario/interactions_count": 2
-            })
+            scenario_run.log(
+                {
+                    "scenario/completed": 1,
+                    "scenario/execution_time": execution_time,
+                    "scenario/passed": True,
+                    "scenario/agents_count": 2,
+                    "scenario/interactions_count": 2,
+                }
+            )
 
             # Create trace log
             trace_log = TraceLog()
             trace_log.record("session_start", session_id=session_id)
-            trace_log.record("agent_interaction", 
-                           from_agent="coordinator", to_agent="worker", 
-                           message="Start task execution")
-            trace_log.record("agent_interaction", 
-                           from_agent="worker", to_agent="coordinator", 
-                           message="Task completed successfully")
-            trace_log.record("performance_metrics", 
-                           agents_count=2, interactions_count=2, 
-                           execution_time=execution_time)
-            trace_log.record("session_metadata",
-                           wandb_scenario_run_id=scenario_run.id,
-                           wandb_session_run_id=session_summary.get("wandb_run_id"),
-                           session_summary=session_summary,
-                           coordination_metrics=session_summary.get("metrics", {}))
+            trace_log.record(
+                "agent_interaction",
+                from_agent="coordinator",
+                to_agent="worker",
+                message="Start task execution",
+            )
+            trace_log.record(
+                "agent_interaction",
+                from_agent="worker",
+                to_agent="coordinator",
+                message="Task completed successfully",
+            )
+            trace_log.record(
+                "performance_metrics",
+                agents_count=2,
+                interactions_count=2,
+                execution_time=execution_time,
+            )
+            trace_log.record(
+                "session_metadata",
+                wandb_scenario_run_id=scenario_run.id,
+                wandb_session_run_id=session_summary.get("wandb_run_id"),
+                session_summary=session_summary,
+                coordination_metrics=session_summary.get("metrics", {}),
+            )
 
             # Create scenario run
             scenario_run_obj = ScenarioRun(
@@ -548,10 +583,10 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                 metrics={
                     "execution_time": execution_time,
                     "agents_count": 2,
-                    "interactions_count": 2
+                    "interactions_count": 2,
                 },
                 duration_ms=int(execution_time * 1000),
-                trace=trace_log
+                trace=trace_log,
             )
 
             # Create result and add run
@@ -571,34 +606,35 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             logger.error(f"Scenario execution failed: {e}")
 
             # Log scenario failure
-            if 'scenario_run' in locals():
-                scenario_run.log({
-                    "scenario/failed": 1,
-                    "scenario/error": str(e),
-                    "scenario/execution_time": time.time() - start_time
-                })
+            if "scenario_run" in locals():
+                scenario_run.log(
+                    {
+                        "scenario/failed": 1,
+                        "scenario/error": str(e),
+                        "scenario/execution_time": time.time() - start_time,
+                    }
+                )
                 scenario_run.finish()
 
             # Create trace log for error case
             error_execution_time = time.time() - start_time
             trace_log = TraceLog()
-            trace_log.record("scenario_error", 
-                           error=str(e), execution_time=error_execution_time)
-            trace_log.record("error_metadata",
-                           wandb_scenario_run_id=scenario_run.id if 'scenario_run' in locals() else None,
-                           error_details=str(e))
+            trace_log.record("scenario_error", error=str(e), execution_time=error_execution_time)
+            trace_log.record(
+                "error_metadata",
+                wandb_scenario_run_id=scenario_run.id if "scenario_run" in locals() else None,
+                error_details=str(e),
+            )
 
             # Create scenario run for error case
             scenario_run_obj = ScenarioRun(
                 scenario_name=scenario.name,
                 case_id=f"error_{uuid4().hex[:8]}",
                 success=False,
-                metrics={
-                    "execution_time": error_execution_time
-                },
+                metrics={"execution_time": error_execution_time},
                 duration_ms=int(error_execution_time * 1000),
                 trace=trace_log,
-                error=str(e)
+                error=str(e),
             )
 
             # Create result and add run
@@ -624,7 +660,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                     evaluation_id=str(uuid4()),
                     timestamp=datetime.now(timezone.utc),
                     scenario_name="wandb_metrics_empty",
-                    custom_metrics={}
+                    custom_metrics={},
                 )
 
             # Analyze recent runs (last 100)
@@ -638,7 +674,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             # Calculate duration statistics
             durations = []
             for run in recent_runs:
-                if hasattr(run, 'summary') and METRIC_SESSION_DURATION in run.summary:
+                if hasattr(run, "summary") and METRIC_SESSION_DURATION in run.summary:
                     durations.append(run.summary[METRIC_SESSION_DURATION])
 
             avg_duration = sum(durations) / len(durations) if durations else 0.0
@@ -646,10 +682,12 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             # Calculate interaction statistics
             interaction_counts = []
             for run in recent_runs:
-                if hasattr(run, 'summary') and METRIC_SESSION_INTERACTIONS in run.summary:
+                if hasattr(run, "summary") and METRIC_SESSION_INTERACTIONS in run.summary:
                     interaction_counts.append(run.summary[METRIC_SESSION_INTERACTIONS])
 
-            avg_interactions = sum(interaction_counts) / len(interaction_counts) if interaction_counts else 0.0
+            avg_interactions = (
+                sum(interaction_counts) / len(interaction_counts) if interaction_counts else 0.0
+            )
 
             metrics = {
                 "total_runs": total_runs,
@@ -658,14 +696,14 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                 "running_runs": running_runs,
                 "success_rate": successful_runs / total_runs if total_runs > 0 else 0.0,
                 "avg_duration": avg_duration,
-                "avg_interactions": avg_interactions
+                "avg_interactions": avg_interactions,
             }
 
             return ProductionMetrics(
                 evaluation_id=str(uuid4()),
                 timestamp=datetime.now(timezone.utc),
                 scenario_name="wandb_metrics_collected",
-                custom_metrics=metrics
+                custom_metrics=metrics,
             )
 
         except Exception as e:
@@ -674,10 +712,12 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                 evaluation_id=str(uuid4()),
                 timestamp=datetime.now(timezone.utc),
                 scenario_name="wandb_metrics_error",
-                custom_metrics={"error": str(e)}
+                custom_metrics={"error": str(e)},
             )
 
-    def establish_baseline(self, historical_data: List[Dict[str, Any]], metrics: List[str], **kwargs) -> BaselineMetrics:
+    def establish_baseline(
+        self, historical_data: list[dict[str, Any]], metrics: list[str], **kwargs
+    ) -> BaselineMetrics:
         """
         Establish baseline metrics from historical Wandb data.
 
@@ -690,13 +730,10 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             BaselineMetrics: Calculated baseline metrics
         """
         try:
-            days = kwargs.get('days', 7)  # Default to 7 days if not specified
+            days = kwargs.get("days", 7)  # Default to 7 days if not specified
 
             # If no historical data provided, get from Wandb
-            if not historical_data:
-                runs_list = self._get_historical_runs(days)
-            else:
-                runs_list = historical_data
+            runs_list = historical_data if historical_data else self._get_historical_runs(days)
 
             if not runs_list:
                 logger.warning("No historical data found for baseline calculation")
@@ -705,7 +742,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                     scenario_name="wandb_baseline_empty",
                     created_at=datetime.now(timezone.utc),
                     run_count=0,
-                    metadata={"period_days": days, "platform": self.platform, "metrics": metrics}
+                    metadata={"period_days": days, "platform": self.platform, "metrics": metrics},
                 )
 
             # Extract and calculate baseline metrics
@@ -716,18 +753,27 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
                 scenario_name="wandb_baseline_calculated",
                 created_at=datetime.now(timezone.utc),
                 run_count=len(runs_list),
-                metadata={"period_days": days, "platform": self.platform, "metrics": baseline_metrics}
+                metadata={
+                    "period_days": days,
+                    "platform": self.platform,
+                    "metrics": baseline_metrics,
+                },
             )
 
         except Exception as e:
             logger.error(f"Failed to establish Wandb baseline: {e}")
-            days = kwargs.get('days', 7)
+            days = kwargs.get("days", 7)
             return BaselineMetrics(
                 id=str(uuid4()),
                 scenario_name="wandb_baseline_error",
                 created_at=datetime.now(timezone.utc),
                 run_count=0,
-                metadata={"period_days": days, "platform": self.platform, "error": str(e), "metrics": metrics}
+                metadata={
+                    "period_days": days,
+                    "platform": self.platform,
+                    "error": str(e),
+                    "metrics": metrics,
+                },
             )
 
     def _get_historical_runs(self, days: int):
@@ -743,9 +789,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
         # Query runs in date range
         runs = api.runs(
             f"{self.entity}/{self.project}" if self.entity else self.project,
-            filters={
-                "created_at": {"$gte": start_date.isoformat(), "$lte": end_date.isoformat()}
-            }
+            filters={"created_at": {"$gte": start_date.isoformat(), "$lte": end_date.isoformat()}},
         )
 
         return list(runs)
@@ -762,15 +806,19 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             if run.state == "finished":
                 success_count += 1
 
-            if hasattr(run, 'summary') and run.summary:
-                self._extract_run_metrics(run.summary, durations, interaction_counts, coordination_efficiencies)
+            if hasattr(run, "summary") and run.summary:
+                self._extract_run_metrics(
+                    run.summary, durations, interaction_counts, coordination_efficiencies
+                )
 
         # Calculate baseline statistics
         return self._compute_baseline_statistics(
             durations, interaction_counts, coordination_efficiencies, success_count, len(runs_list)
         )
 
-    def _extract_run_metrics(self, summary, durations, interaction_counts, coordination_efficiencies):
+    def _extract_run_metrics(
+        self, summary, durations, interaction_counts, coordination_efficiencies
+    ):
         """Extract metrics from a single run summary."""
         if METRIC_SESSION_DURATION in summary:
             durations.append(summary[METRIC_SESSION_DURATION])
@@ -781,7 +829,9 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
         if METRIC_COORDINATION_EFFICIENCY in summary:
             coordination_efficiencies.append(summary[METRIC_COORDINATION_EFFICIENCY])
 
-    def _compute_baseline_statistics(self, durations, interaction_counts, coordination_efficiencies, success_count, total_runs):
+    def _compute_baseline_statistics(
+        self, durations, interaction_counts, coordination_efficiencies, success_count, total_runs
+    ):
         """Compute baseline statistics from extracted metrics."""
         import statistics
 
@@ -791,20 +841,28 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             "duration_std": statistics.stdev(durations) if len(durations) > 1 else 0.0,
             "success_rate": success_count / total_runs,
             "avg_interactions": statistics.mean(interaction_counts) if interaction_counts else 0.0,
-            "median_interactions": statistics.median(interaction_counts) if interaction_counts else 0.0,
-            "avg_coordination_efficiency": statistics.mean(coordination_efficiencies) if coordination_efficiencies else 0.0,
-            "total_runs": total_runs
+            "median_interactions": statistics.median(interaction_counts)
+            if interaction_counts
+            else 0.0,
+            "avg_coordination_efficiency": statistics.mean(coordination_efficiencies)
+            if coordination_efficiencies
+            else 0.0,
+            "total_runs": total_runs,
         }
 
     def _get_agent_message_count(self, agent_id: str) -> int:
         """Get the number of messages sent by an agent."""
-        return sum(1 for interaction in self.session_interactions if interaction.from_agent == agent_id)
+        return sum(
+            1 for interaction in self.session_interactions if interaction.from_agent == agent_id
+        )
 
     def _get_agent_received_count(self, agent_id: str) -> int:
         """Get the number of messages received by an agent."""
-        return sum(1 for interaction in self.session_interactions if interaction.to_agent == agent_id)
+        return sum(
+            1 for interaction in self.session_interactions if interaction.to_agent == agent_id
+        )
 
-    def create_artifact(self, name: str, artifact_type: str, description: Optional[str] = None) -> Any:
+    def create_artifact(self, name: str, artifact_type: str, description: str | None = None) -> Any:
         """
         Create a Wandb artifact.
 
@@ -817,17 +875,12 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             Wandb artifact object
         """
         if not self.current_run:
-            raise ValueError("No active Wandb run. Start a session first.")
+            msg = "No active Wandb run. Start a session first."
+            raise ValueError(msg)
 
-        artifact = self.wandb.Artifact(
-            name=name,
-            type=artifact_type,
-            description=description
-        )
+        return self.wandb.Artifact(name=name, type=artifact_type, description=description)
 
-        return artifact
-
-    def log_artifact(self, artifact: Any, aliases: Optional[List[str]] = None):
+    def log_artifact(self, artifact: Any, aliases: list[str] | None = None):
         """
         Log an artifact to the current run.
 
@@ -836,12 +889,13 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
             aliases: Optional aliases for the artifact
         """
         if not self.current_run:
-            raise ValueError("No active Wandb run. Start a session first.")
+            msg = "No active Wandb run. Start a session first."
+            raise ValueError(msg)
 
         self.current_run.log_artifact(artifact, aliases=aliases)
         logger.info(f"Logged artifact: {artifact.name}")
 
-    def create_sweep(self, sweep_config: Dict[str, Any]) -> str:
+    def create_sweep(self, sweep_config: dict[str, Any]) -> str:
         """
         Create a Wandb sweep for hyperparameter optimization.
 
@@ -851,11 +905,7 @@ class WandbAdapter(MultiAgentAdapter, ProductionIntegration):
         Returns:
             str: Sweep ID
         """
-        sweep_id = self.wandb.sweep(
-            sweep=sweep_config,
-            project=self.project,
-            entity=self.entity
-        )
+        sweep_id = self.wandb.sweep(sweep=sweep_config, project=self.project, entity=self.entity)
 
         logger.info(f"Created Wandb sweep: {sweep_id}")
         return sweep_id

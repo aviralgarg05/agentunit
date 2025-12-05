@@ -1,16 +1,24 @@
 """Adapter for the Mistral open-source server deployment."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
+from agentunit.core.exceptions import AgentUnitError
+
 from .base import AdapterOutcome, BaseAdapter
 from .registry import register_adapter
-from ..core.exceptions import AgentUnitError
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,16 +32,17 @@ class MistralServerAdapter(BaseAdapter):
         self,
         base_url: str,
         *,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         model: str = "mistral-large-latest",
         max_tokens: int = 512,
         temperature: float = 0.2,
-        extra_headers: Optional[Dict[str, str]] = None,
-    message_builder: Optional[Callable[[DatasetCase], Iterable[Dict[str, Any]]]] = None,
-        http_client: Optional[httpx.Client] = None,
+        extra_headers: dict[str, str] | None = None,
+        message_builder: Callable[[DatasetCase], Iterable[dict[str, Any]]] | None = None,
+        http_client: httpx.Client | None = None,
     ) -> None:
         if not base_url:
-            raise AgentUnitError("MistralServerAdapter requires a base_url")
+            msg = "MistralServerAdapter requires a base_url"
+            raise AgentUnitError(msg)
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
         self._model = model
@@ -81,14 +90,14 @@ class MistralServerAdapter(BaseAdapter):
             trace.record("error", message=str(exc))
             return AdapterOutcome(success=False, output=None, error=str(exc))
 
-    def _default_message_builder(self, case: DatasetCase) -> Iterable[Dict[str, Any]]:
-        messages: list[Dict[str, Any]] = []
+    def _default_message_builder(self, case: DatasetCase) -> Iterable[dict[str, Any]]:
+        messages: list[dict[str, Any]] = []
         if case.context:
             messages.append({"role": "system", "content": "\n".join(case.context)})
         messages.append({"role": "user", "content": case.query})
         return messages
 
-    def _extract_output(self, data: Dict[str, Any]) -> Any:
+    def _extract_output(self, data: dict[str, Any]) -> Any:
         if not data:
             return None
         choices = data.get("choices")

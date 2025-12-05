@@ -6,19 +6,20 @@ and generate actionable recommendations for improving agent performance.
 
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
-    from .analyzer import RunAnalyzer, AnalysisResult
-    from .recommender import Recommender, Recommendation, RecommendationType
+    from .analyzer import AnalysisResult, RunAnalyzer
     from .optimizer import AutoOptimizer, OptimizationStrategy
+    from .recommender import Recommendation, RecommendationType, Recommender
 
 __all__ = [
-    "RunAnalyzer",
     "AnalysisResult",
-    "Recommender",
-    "Recommendation",
-    "RecommendationType",
     "AutoOptimizer",
     "OptimizationStrategy",
+    "Recommendation",
+    "RecommendationType",
+    "Recommender",
+    "RunAnalyzer",
 ]
 
 
@@ -26,23 +27,31 @@ def __getattr__(name: str):
     """Lazy loading of optimization components."""
     if name == "RunAnalyzer":
         from .analyzer import RunAnalyzer
+
         return RunAnalyzer
-    elif name == "AnalysisResult":
+    if name == "AnalysisResult":
         from .analyzer import AnalysisResult
+
         return AnalysisResult
-    elif name == "Recommender":
+    if name == "Recommender":
         from .recommender import Recommender
+
         return Recommender
-    elif name == "Recommendation":
+    if name == "Recommendation":
         from .recommender import Recommendation
+
         return Recommendation
-    elif name == "RecommendationType":
+    if name == "RecommendationType":
         from .recommender import RecommendationType
+
         return RecommendationType
-    elif name == "AutoOptimizer":
+    if name == "AutoOptimizer":
         from .optimizer import AutoOptimizer
+
         return AutoOptimizer
-    elif name == "OptimizationStrategy":
+    if name == "OptimizationStrategy":
         from .optimizer import OptimizationStrategy
+
         return OptimizationStrategy
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)

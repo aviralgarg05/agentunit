@@ -37,7 +37,7 @@ def test_dashboard_config():
         host="0.0.0.0",
         port=9000,
         theme="dark",
-        auto_open_browser=False
+        auto_open_browser=False,
     )
 
     assert config.workspace_path == Path("/tmp/test")

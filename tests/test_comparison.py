@@ -126,12 +126,12 @@ def test_comparison_report():
                 "percent_change": 6.25,
                 "p_value": 0.02,
                 "statistically_significant": True,
-                "recommendation": "Significant improvement detected"
+                "recommendation": "Significant improvement detected",
             }
         },
         overall_assessment="IMPROVEMENT_DETECTED",
         timestamp=datetime.now(timezone.utc),
-        metadata={}
+        metadata={},
     )
 
     markdown = report.to_markdown()
@@ -157,12 +157,12 @@ def test_regression_report():
                 "new_mean": 0.7,
                 "difference": -0.2,
                 "percent_change": -22.2,
-                "recommendation": "BLOCK: critical regression detected"
+                "recommendation": "BLOCK: critical regression detected",
             }
         ],
         passed=False,
         timestamp=datetime.now(timezone.utc),
-        metadata={}
+        metadata={},
     )
 
     markdown = report.to_markdown()

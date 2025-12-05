@@ -1,15 +1,23 @@
 """Adapter for Anthropic Claude models running via Amazon Bedrock."""
+
 from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any
+
+from agentunit.core.exceptions import AgentUnitError
 
 from .base import AdapterOutcome, BaseAdapter
 from .registry import register_adapter
-from ..core.exceptions import AgentUnitError
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,20 +32,22 @@ class AnthropicBedrockAdapter(BaseAdapter):
         *,
         client: Any,
         model_id: str,
-        prompt_builder: Optional[Callable[[DatasetCase], Dict[str, Any]]] = None,
-        invoke_kwargs: Optional[Dict[str, Any]] = None,
+        prompt_builder: Callable[[DatasetCase], dict[str, Any]] | None = None,
+        invoke_kwargs: dict[str, Any] | None = None,
         response_key: str = "content",
     ) -> None:
         if client is None:
-            raise AgentUnitError("AnthropicBedrockAdapter requires a Bedrock runtime client or callable")
+            msg = "AnthropicBedrockAdapter requires a Bedrock runtime client or callable"
+            raise AgentUnitError(msg)
         if not model_id:
-            raise AgentUnitError("AnthropicBedrockAdapter requires a model_id")
+            msg = "AnthropicBedrockAdapter requires a model_id"
+            raise AgentUnitError(msg)
         self._client = client
         self._model_id = model_id
         self._prompt_builder = prompt_builder or self._default_prompt_builder
         self._invoke_kwargs = invoke_kwargs or {}
         self._response_key = response_key
-        self._callable: Optional[Callable[[Dict[str, Any]], Any]] = None
+        self._callable: Callable[[dict[str, Any]], Any] | None = None
 
     def prepare(self) -> None:
         if self._callable is not None:
@@ -67,7 +77,7 @@ class AnthropicBedrockAdapter(BaseAdapter):
             return AdapterOutcome(success=False, output=None, error=str(exc))
 
     # Helpers -----------------------------------------------------------------
-    def _resolve_invoker(self, client: Any) -> Callable[[Dict[str, Any]], Any]:
+    def _resolve_invoker(self, client: Any) -> Callable[[dict[str, Any]], Any]:
         if callable(client):
             return client
         for attr in ("invoke_model", "invoke_model_with_response_stream", "__call__"):
@@ -75,9 +85,10 @@ class AnthropicBedrockAdapter(BaseAdapter):
                 candidate = getattr(client, attr)
                 if callable(candidate):
                     return lambda request, _c=candidate: _c(**request)
-        raise AgentUnitError("Unsupported Bedrock client; expected invoke_model callable")
+        msg = "Unsupported Bedrock client; expected invoke_model callable"
+        raise AgentUnitError(msg)
 
-    def _default_prompt_builder(self, case: DatasetCase) -> Dict[str, Any]:
+    def _default_prompt_builder(self, case: DatasetCase) -> dict[str, Any]:
         messages = []
         if case.context:
             messages.append({"role": "system", "content": "\n".join(case.context)})
@@ -102,7 +113,7 @@ class AnthropicBedrockAdapter(BaseAdapter):
         extracted = self._extract_from_mapping_like(response)
         return response if extracted is None else extracted
 
-    def _parse_body_if_present(self, response: Dict[str, Any]) -> Any:
+    def _parse_body_if_present(self, response: dict[str, Any]) -> Any:
         if "body" not in response:
             return None
         data = response["body"]

@@ -1,14 +1,20 @@
 """Scenario definition API exposed to end users."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Callable, Iterable, List, Optional
-from pathlib import Path
 import random
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import TYPE_CHECKING
 
-from ..adapters.base import BaseAdapter
-from ..datasets.base import DatasetSource, DatasetCase
-from ..datasets.registry import resolve_dataset
+from agentunit.datasets.registry import resolve_dataset
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from agentunit.adapters.base import BaseAdapter
+    from agentunit.datasets.base import DatasetCase, DatasetSource
 
 
 @dataclass(slots=True)
@@ -21,15 +27,14 @@ class Scenario:
     retries: int = 1
     max_turns: int = 20
     timeout: float = 60.0
-    tags: List[str] = field(default_factory=list)
-    seed: Optional[int] = None
+    tags: list[str] = field(default_factory=list)
+    seed: int | None = None
     metadata: dict = field(default_factory=dict)
 
     def iter_cases(self) -> Iterable[DatasetCase]:
         if self.seed is not None:
             random.seed(self.seed)
-        for case in self.dataset.iter_cases():
-            yield case
+        yield from self.dataset.iter_cases()
 
     # Factories ----------------------------------------------------------------
     @classmethod
@@ -37,10 +42,11 @@ class Scenario:
         cls,
         path: str | Path | object,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
+        name: str | None = None,
         **config: object,
-    ) -> "Scenario":
-        from ..adapters.langgraph import LangGraphAdapter
+    ) -> Scenario:
+        from agentunit.adapters.langgraph import LangGraphAdapter
+
         adapter = LangGraphAdapter.from_source(path, **config)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(path, fallback="langgraph-scenario")
@@ -51,10 +57,11 @@ class Scenario:
         cls,
         flow: object,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
+        name: str | None = None,
         **options: object,
-    ) -> "Scenario":
-        from ..adapters.openai_agents import OpenAIAgentsAdapter
+    ) -> Scenario:
+        from agentunit.adapters.openai_agents import OpenAIAgentsAdapter
+
         adapter = OpenAIAgentsAdapter.from_flow(flow, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or getattr(flow, "__name__", "openai-agents-scenario")
@@ -62,14 +69,15 @@ class Scenario:
 
     @classmethod
     def from_crewai(
-        cls, 
+        cls,
         crew: object,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
-        **options: object
-    ) -> 'Scenario':
+        name: str | None = None,
+        **options: object,
+    ) -> Scenario:
         """Create scenario from CrewAI crew."""
-        from ..adapters.crewai import CrewAIAdapter
+        from agentunit.adapters.crewai import CrewAIAdapter
+
         adapter = CrewAIAdapter.from_crew(crew, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(crew, fallback="crewai-scenario")
@@ -77,14 +85,15 @@ class Scenario:
 
     @classmethod
     def from_autogen(
-        cls, 
+        cls,
         orchestrator: object,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
-        **options: object
-    ) -> 'Scenario':
+        name: str | None = None,
+        **options: object,
+    ) -> Scenario:
         """Create scenario from AutoGen orchestrator."""
-        from ..adapters.autogen import AutoGenAdapter
+        from agentunit.adapters.autogen import AutoGenAdapter
+
         adapter = AutoGenAdapter(orchestrator=orchestrator, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(orchestrator, fallback="autogen-scenario")
@@ -95,10 +104,11 @@ class Scenario:
         cls,
         pipeline: object,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
+        name: str | None = None,
         **options: object,
-    ) -> "Scenario":
-        from ..adapters.haystack import HaystackAdapter
+    ) -> Scenario:
+        from agentunit.adapters.haystack import HaystackAdapter
+
         adapter = HaystackAdapter(pipeline=pipeline, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(pipeline, fallback="haystack-scenario")
@@ -109,10 +119,11 @@ class Scenario:
         cls,
         engine: object,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
+        name: str | None = None,
         **options: object,
-    ) -> "Scenario":
-        from ..adapters.llama_index import LlamaIndexAdapter
+    ) -> Scenario:
+        from agentunit.adapters.llama_index import LlamaIndexAdapter
+
         adapter = LlamaIndexAdapter(engine=engine, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(engine, fallback="llama-index-scenario")
@@ -123,10 +134,11 @@ class Scenario:
         cls,
         invoker: object,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
+        name: str | None = None,
         **options: object,
-    ) -> "Scenario":
-        from ..adapters.semantic_kernel import SemanticKernelAdapter
+    ) -> Scenario:
+        from agentunit.adapters.semantic_kernel import SemanticKernelAdapter
+
         adapter = SemanticKernelAdapter(invoker=invoker, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(invoker, fallback="semantic-kernel-scenario")
@@ -137,10 +149,11 @@ class Scenario:
         cls,
         agent: object,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
+        name: str | None = None,
         **options: object,
-    ) -> "Scenario":
-        from ..adapters.phidata import PhidataAdapter
+    ) -> Scenario:
+        from agentunit.adapters.phidata import PhidataAdapter
+
         adapter = PhidataAdapter(agent=agent, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(agent, fallback="phidata-scenario")
@@ -151,10 +164,11 @@ class Scenario:
         cls,
         flow: object,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
+        name: str | None = None,
         **options: object,
-    ) -> "Scenario":
-        from ..adapters.promptflow import PromptFlowAdapter
+    ) -> Scenario:
+        from agentunit.adapters.promptflow import PromptFlowAdapter
+
         adapter = PromptFlowAdapter(flow=flow, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(flow, fallback="promptflow-scenario")
@@ -165,10 +179,11 @@ class Scenario:
         cls,
         swarm: object,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
+        name: str | None = None,
         **options: object,
-    ) -> "Scenario":
-        from ..adapters.openai_swarm import OpenAISwarmAdapter
+    ) -> Scenario:
+        from agentunit.adapters.openai_swarm import OpenAISwarmAdapter
+
         adapter = OpenAISwarmAdapter(swarm=swarm, **options)
         ds = resolve_dataset(dataset)
         scenario_name = name or _infer_name(swarm, fallback="openai-swarm-scenario")
@@ -180,10 +195,11 @@ class Scenario:
         client: object,
         model_id: str,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
+        name: str | None = None,
         **options: object,
-    ) -> "Scenario":
-        from ..adapters.anthropic_bedrock import AnthropicBedrockAdapter
+    ) -> Scenario:
+        from agentunit.adapters.anthropic_bedrock import AnthropicBedrockAdapter
+
         adapter = AnthropicBedrockAdapter(client=client, model_id=model_id, **options)
         ds = resolve_dataset(dataset)
         base_name = name or f"{model_id}-bedrock"
@@ -194,10 +210,11 @@ class Scenario:
         cls,
         base_url: str,
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
+        name: str | None = None,
         **options: object,
-    ) -> "Scenario":
-        from ..adapters.mistral_server import MistralServerAdapter
+    ) -> Scenario:
+        from agentunit.adapters.mistral_server import MistralServerAdapter
+
         adapter = MistralServerAdapter(base_url=base_url, **options)
         ds = resolve_dataset(dataset)
         if name is not None:
@@ -213,20 +230,18 @@ class Scenario:
         cls,
         target: str | Callable[[dict], object],
         dataset: str | DatasetSource | None = None,
-        name: Optional[str] = None,
+        name: str | None = None,
         **options: object,
-    ) -> "Scenario":
-        from ..adapters.rasa import RasaAdapter
+    ) -> Scenario:
+        from agentunit.adapters.rasa import RasaAdapter
+
         adapter = RasaAdapter(target=target, **options)
         ds = resolve_dataset(dataset)
-        if name is not None:
-            scenario_name = name
-        else:
-            scenario_name = _infer_name(target, fallback="rasa-scenario")
+        scenario_name = name if name is not None else _infer_name(target, fallback="rasa-scenario")
         return cls(name=scenario_name, adapter=adapter, dataset=ds)
 
     # Convenience ----------------------------------------------------------------
-    def with_dataset(self, dataset: str | DatasetSource) -> "Scenario":
+    def with_dataset(self, dataset: str | DatasetSource) -> Scenario:
         return Scenario(
             name=self.name,
             adapter=self.adapter,
@@ -239,7 +254,7 @@ class Scenario:
             metadata=dict(self.metadata),
         )
 
-    def clone(self, **overrides: object) -> "Scenario":
+    def clone(self, **overrides: object) -> Scenario:
         data = {
             "name": self.name,
             "adapter": self.adapter,
@@ -259,7 +274,7 @@ def _infer_name(source: object, fallback: str) -> str:
     if isinstance(source, (str, Path)):
         return Path(source).stem
     if hasattr(source, "__name__"):
-        return getattr(source, "__name__")
+        return source.__name__
     if hasattr(source, "__class__") and hasattr(source.__class__, "__name__"):
         return source.__class__.__name__
     return fallback

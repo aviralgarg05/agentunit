@@ -1,4 +1,5 @@
 """Custom exceptions for AgentUnit."""
+
 from __future__ import annotations
 
 

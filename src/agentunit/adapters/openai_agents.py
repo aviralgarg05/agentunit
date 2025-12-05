@@ -1,14 +1,22 @@
 """Adapter for the OpenAI Agents SDK (March 2025 release)."""
+
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Optional
 import logging
+from typing import TYPE_CHECKING, Any
 
-from .base import BaseAdapter, AdapterOutcome
+from agentunit.core.exceptions import AgentUnitError
+
+from .base import AdapterOutcome, BaseAdapter
 from .registry import register_adapter
-from ..core.exceptions import AgentUnitError
-from ..core.trace import TraceLog
-from ..datasets.base import DatasetCase
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agentunit.core.trace import TraceLog
+    from agentunit.datasets.base import DatasetCase
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,28 +29,30 @@ except Exception:  # pragma: no cover
 class OpenAIAgentsAdapter(BaseAdapter):
     name = "openai-agents"
 
-    def __init__(self, flow: Any, client: Optional[Any] = None, **options: Any) -> None:
+    def __init__(self, flow: Any, client: Any | None = None, **options: Any) -> None:
         self._flow = flow
         self._client = client or self._default_client(options)
         self._options = options
-        self._callable: Optional[Callable[[Dict[str, Any]], Any]] = None
+        self._callable: Callable[[dict[str, Any]], Any] | None = None
 
     @classmethod
-    def from_flow(cls, flow: Any, **options: Any) -> "OpenAIAgentsAdapter":
+    def from_flow(cls, flow: Any, **options: Any) -> OpenAIAgentsAdapter:
         return cls(flow=flow, **options)
 
     def prepare(self) -> None:
         if self._callable is not None:
             return
         if self._flow is None:
-            raise AgentUnitError("OpenAI Agents flow is not defined")
+            msg = "OpenAI Agents flow is not defined"
+            raise AgentUnitError(msg)
         if hasattr(self._flow, "run"):
             self._callable = self._flow.run
             return
         if callable(self._flow):
             self._callable = self._flow
             return
-        raise AgentUnitError("Unsupported OpenAI Agents flow; expected callable or .run method")
+        msg = "Unsupported OpenAI Agents flow; expected callable or .run method"
+        raise AgentUnitError(msg)
 
     def execute(self, case: DatasetCase, trace: TraceLog) -> AdapterOutcome:
         if self._callable is None:
@@ -73,10 +83,14 @@ class OpenAIAgentsAdapter(BaseAdapter):
             tool_calls = response.get("tool_calls") or []
             for tool in tool_calls:
                 trace.record("tool_call", **tool)
-            return AdapterOutcome(success=response.get("success", True), output=response.get("output"), tool_calls=tool_calls)
+            return AdapterOutcome(
+                success=response.get("success", True),
+                output=response.get("output"),
+                tool_calls=tool_calls,
+            )
         return AdapterOutcome(success=True, output=response)
 
-    def _default_client(self, options: Dict[str, Any]) -> Optional[Any]:
+    def _default_client(self, options: dict[str, Any]) -> Any | None:
         if AgentsClient is None:
             logger.warning("OpenAI Agents SDK not installed; running in mock mode")
             return None
