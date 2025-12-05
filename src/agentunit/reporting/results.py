@@ -86,7 +86,7 @@ class SuiteResult:
         lines = ["# AgentUnit Report", ""]
         for scenario in self.scenarios:
             lines.extend(_render_markdown_scenario(scenario))
-        target.write_text("\n".join(lines))
+        target.write_text("\n".join(lines), encoding="utf-8")
         return target
 
     def to_junit(self, path: str | Path) -> Path:
