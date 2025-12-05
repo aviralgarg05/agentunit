@@ -1,20 +1,21 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
+from agentunit.adapters.anthropic_bedrock import AnthropicBedrockAdapter
 from agentunit.adapters.autogen import AutoGenAdapter
 from agentunit.adapters.haystack import HaystackAdapter
 from agentunit.adapters.llama_index import LlamaIndexAdapter
-from agentunit.adapters.semantic_kernel import SemanticKernelAdapter
+from agentunit.adapters.mistral_server import MistralServerAdapter
+from agentunit.adapters.openai_swarm import OpenAISwarmAdapter
 from agentunit.adapters.phidata import PhidataAdapter
 from agentunit.adapters.promptflow import PromptFlowAdapter
-from agentunit.adapters.openai_swarm import OpenAISwarmAdapter
-from agentunit.adapters.anthropic_bedrock import AnthropicBedrockAdapter
-from agentunit.adapters.mistral_server import MistralServerAdapter
 from agentunit.adapters.rasa import RasaAdapter
 from agentunit.adapters.registry import resolve_adapter
+from agentunit.adapters.semantic_kernel import SemanticKernelAdapter
 from agentunit.core.trace import TraceLog
 from agentunit.datasets.base import DatasetCase
+
 
 def _dataset_case() -> DatasetCase:
     return DatasetCase(
@@ -28,10 +29,10 @@ def _dataset_case() -> DatasetCase:
 
 
 def test_autogen_adapter_with_run_method() -> None:
-    calls: List[Dict[str, Any]] = []
+    calls: list[dict[str, Any]] = []
 
     class DummyOrchestrator:
-        def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        def run(self, payload: dict[str, Any]) -> dict[str, Any]:
             calls.append(payload)
             return {"response": "Autogen reply"}
 
@@ -44,10 +45,10 @@ def test_autogen_adapter_with_run_method() -> None:
 
 
 def test_haystack_adapter_handles_answers_dict() -> None:
-    recorded: List[Dict[str, Any]] = []
+    recorded: list[dict[str, Any]] = []
 
     class DummyPipeline:
-        def run(self, payload: Dict[str, Any], **_: Any) -> Dict[str, Any]:
+        def run(self, payload: dict[str, Any], **_: Any) -> dict[str, Any]:
             recorded.append(payload)
             return {"answers": ["Haystack answer"]}
 
@@ -68,10 +69,10 @@ def test_llama_index_adapter_allows_callable_engine() -> None:
 
 
 def test_semantic_kernel_adapter_invokes_callable() -> None:
-    captured: List[Dict[str, Any]] = []
+    captured: list[dict[str, Any]] = []
 
     class DummyInvoker:
-        def __call__(self, variables: Dict[str, Any]) -> Dict[str, Any]:
+        def __call__(self, variables: dict[str, Any]) -> dict[str, Any]:
             captured.append(variables)
             return {"result": "Semantic Kernel reply"}
 
@@ -84,9 +85,9 @@ def test_semantic_kernel_adapter_invokes_callable() -> None:
 
 
 def test_phidata_adapter_runs_callable_agent() -> None:
-    calls: List[Dict[str, Any]] = []
+    calls: list[dict[str, Any]] = []
 
-    def agent(payload: Dict[str, Any]) -> Dict[str, Any]:
+    def agent(payload: dict[str, Any]) -> dict[str, Any]:
         calls.append(payload)
         return {"response": "Phi reply"}
 
@@ -99,9 +100,9 @@ def test_phidata_adapter_runs_callable_agent() -> None:
 
 
 def test_promptflow_adapter_invokes_flow_callable() -> None:
-    calls: List[Dict[str, Any]] = []
+    calls: list[dict[str, Any]] = []
 
-    def flow(context: Dict[str, Any]) -> Dict[str, Any]:
+    def flow(context: dict[str, Any]) -> dict[str, Any]:
         calls.append(context)
         return {"output": "PromptFlow reply"}
 
@@ -114,9 +115,9 @@ def test_promptflow_adapter_invokes_flow_callable() -> None:
 
 
 def test_openai_swarm_adapter_runs_swarm_callable() -> None:
-    calls: List[List[Dict[str, Any]]] = []
+    calls: list[list[dict[str, Any]]] = []
 
-    def swarm(*, messages: List[Dict[str, Any]], **_: Any) -> Dict[str, Any]:
+    def swarm(*, messages: list[dict[str, Any]], **_: Any) -> dict[str, Any]:
         calls.append(messages)
         return {"output": "Swarm reply"}
 
@@ -129,12 +130,11 @@ def test_openai_swarm_adapter_runs_swarm_callable() -> None:
 
 
 def test_anthropic_bedrock_adapter_uses_callable_client() -> None:
-    recorded: List[Dict[str, Any]] = []
+    recorded: list[dict[str, Any]] = []
 
-    def client(request: Dict[str, Any]) -> Dict[str, Any]:
+    def client(request: dict[str, Any]) -> dict[str, Any]:
         recorded.append(request)
-        body = {"completion": "Claude reply"}
-        return body
+        return {"completion": "Claude reply"}
 
     adapter = AnthropicBedrockAdapter(client=client, model_id="anthropic.claude-v2")
     outcome = adapter.execute(_dataset_case(), TraceLog())
@@ -146,20 +146,20 @@ def test_anthropic_bedrock_adapter_uses_callable_client() -> None:
 
 def test_mistral_server_adapter_parses_response() -> None:
     class DummyResponse:
-        def __init__(self, payload: Dict[str, Any]) -> None:
+        def __init__(self, payload: dict[str, Any]) -> None:
             self._payload = payload
 
         def raise_for_status(self) -> None:
             return None
 
-        def json(self) -> Dict[str, Any]:
+        def json(self) -> dict[str, Any]:
             return self._payload
 
     class DummyClient:
         def __init__(self) -> None:
-            self.captured: List[Dict[str, Any]] = []
+            self.captured: list[dict[str, Any]] = []
 
-        def post(self, _: str, json: Dict[str, Any]) -> DummyResponse:
+        def post(self, _: str, json: dict[str, Any]) -> DummyResponse:
             self.captured.append(json)
             return DummyResponse(
                 {
@@ -179,7 +179,7 @@ def test_mistral_server_adapter_parses_response() -> None:
 
 
 def test_rasa_adapter_supports_callable_target() -> None:
-    def rasa_handler(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def rasa_handler(payload: dict[str, Any]) -> list[dict[str, Any]]:
         return [{"text": "Rasa reply"}]
 
     adapter = RasaAdapter(target=rasa_handler)

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .gaia import GAIABenchmark, GAIALevel
-    from .arena import AgentArenaBenchmark, ArenaTask
+    from .arena import AgentArenaBenchmark, ArenaTask, ArenaTaskType
     from .leaderboard import LeaderboardSubmitter, LeaderboardConfig
     from .runner import BenchmarkRunner, BenchmarkResult
 
@@ -17,6 +17,7 @@ __all__ = [
     "GAIALevel",
     "AgentArenaBenchmark",
     "ArenaTask",
+    "ArenaTaskType",
     "LeaderboardSubmitter",
     "LeaderboardConfig",
     "BenchmarkRunner",
@@ -38,6 +39,9 @@ def __getattr__(name: str):
     elif name == "ArenaTask":
         from .arena import ArenaTask
         return ArenaTask
+    elif name == "ArenaTaskType":
+        from .arena import ArenaTaskType
+        return ArenaTaskType
     elif name == "LeaderboardSubmitter":
         from .leaderboard import LeaderboardSubmitter
         return LeaderboardSubmitter

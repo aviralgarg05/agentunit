@@ -2,13 +2,18 @@ from __future__ import annotations
 
 import json
 from math import isclose
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-from agentunit.adapters.base import BaseAdapter, AdapterOutcome
+from agentunit.adapters.base import AdapterOutcome, BaseAdapter
 from agentunit.core.runner import run_suite
 from agentunit.core.scenario import Scenario
-from agentunit.core.trace import TraceLog
 from agentunit.datasets.base import DatasetCase, DatasetSource
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from agentunit.core.trace import TraceLog
 
 
 class FakeAdapter(BaseAdapter):

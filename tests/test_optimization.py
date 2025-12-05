@@ -1,14 +1,13 @@
 """Tests for optimization module."""
 
-import pytest
 from agentunit.optimization import (
-    RunAnalyzer,
     AnalysisResult,
-    Recommender,
-    Recommendation,
-    RecommendationType,
     AutoOptimizer,
     OptimizationStrategy,
+    Recommendation,
+    RecommendationType,
+    Recommender,
+    RunAnalyzer,
 )
 
 
@@ -26,7 +25,7 @@ def test_optimization_imports():
 def test_run_analyzer_basic():
     """Test basic run analysis."""
     analyzer = RunAnalyzer(latency_threshold=3.0, cost_threshold=0.05)
-    
+
     run_data = {
         "cases": [
             {"id": "1", "passed": True, "latency": 1.2, "tokens": 500, "cost": 0.01},
@@ -37,9 +36,9 @@ def test_run_analyzer_basic():
             "accuracy": [0.9, 0.95, 0.0]
         }
     }
-    
+
     result = analyzer.analyze_run(run_data)
-    
+
     assert result.total_cases == 3
     assert result.passed_cases == 2
     assert result.failed_cases == 1
@@ -52,7 +51,7 @@ def test_run_analyzer_basic():
 def test_run_analyzer_failure_patterns():
     """Test failure pattern detection."""
     analyzer = RunAnalyzer()
-    
+
     run_data = {
         "cases": [
             {"id": "1", "passed": False, "error": "API timeout"},
@@ -62,9 +61,9 @@ def test_run_analyzer_failure_patterns():
             {"id": "5", "passed": True},
         ]
     }
-    
+
     result = analyzer.analyze_run(run_data)
-    
+
     assert len(result.failure_patterns) > 0
     # Should detect recurring "API timeout" pattern
     timeout_pattern = next(
@@ -78,16 +77,16 @@ def test_run_analyzer_failure_patterns():
 def test_run_analyzer_performance_bottlenecks():
     """Test performance bottleneck detection."""
     analyzer = RunAnalyzer(latency_threshold=2.0, cost_threshold=0.05)
-    
+
     run_data = {
         "cases": [
             {"id": "1", "passed": True, "latency": 5.0, "cost": 0.10},
             {"id": "2", "passed": True, "latency": 6.0, "cost": 0.12},
         ]
     }
-    
+
     result = analyzer.analyze_run(run_data)
-    
+
     assert len(result.performance_bottlenecks) > 0
     # Should detect high latency
     high_latency = next(
@@ -106,7 +105,7 @@ def test_run_analyzer_performance_bottlenecks():
 def test_recommender_low_success():
     """Test recommendations for low success rate."""
     recommender = Recommender()
-    
+
     analysis = AnalysisResult(
         total_cases=10,
         passed_cases=4,
@@ -114,9 +113,9 @@ def test_recommender_low_success():
         avg_latency=2.0,
         total_cost=0.5
     )
-    
+
     recommendations = recommender.generate_recommendations(analysis)
-    
+
     assert len(recommendations) > 0
     # Should recommend prompt improvements
     prompt_recs = [r for r in recommendations if r.type == RecommendationType.PROMPT]
@@ -129,7 +128,7 @@ def test_recommender_low_success():
 def test_recommender_performance_issues():
     """Test recommendations for performance issues."""
     recommender = Recommender()
-    
+
     analysis = AnalysisResult(
         total_cases=10,
         passed_cases=8,
@@ -139,9 +138,9 @@ def test_recommender_performance_issues():
             {"type": "high_latency", "avg_latency": 8.0, "threshold": 5.0, "severity": "high"}
         ]
     )
-    
+
     recommendations = recommender.generate_recommendations(analysis)
-    
+
     # Should recommend performance improvements
     perf_recs = [r for r in recommendations if r.type == RecommendationType.PERFORMANCE]
     assert len(perf_recs) > 0
@@ -150,7 +149,7 @@ def test_recommender_performance_issues():
 def test_recommender_cost_optimization():
     """Test recommendations for cost optimization."""
     recommender = Recommender()
-    
+
     analysis = AnalysisResult(
         total_cases=10,
         passed_cases=9,
@@ -159,9 +158,9 @@ def test_recommender_cost_optimization():
         total_tokens=500000,
         total_cost=5.0
     )
-    
+
     recommendations = recommender.generate_recommendations(analysis)
-    
+
     # Should recommend cost optimizations
     cost_recs = [r for r in recommendations if r.type == RecommendationType.COST]
     assert len(cost_recs) > 0
@@ -170,7 +169,7 @@ def test_recommender_cost_optimization():
 def test_recommendation_sorting():
     """Test that recommendations are sorted by priority."""
     recommender = Recommender()
-    
+
     analysis = AnalysisResult(
         total_cases=10,
         passed_cases=3,
@@ -181,9 +180,9 @@ def test_recommendation_sorting():
             {"type": "high_latency", "avg_latency": 10.0, "threshold": 5.0, "severity": "high"}
         ]
     )
-    
+
     recommendations = recommender.generate_recommendations(analysis)
-    
+
     assert len(recommendations) > 0
     # Check sorted by priority descending
     for i in range(len(recommendations) - 1):
@@ -196,16 +195,16 @@ def test_auto_optimizer_conservative():
         strategy=OptimizationStrategy.CONSERVATIVE,
         auto_apply=True
     )
-    
+
     run_data = {
         "cases": [
             {"id": "1", "passed": False, "latency": 10.0},
             {"id": "2", "passed": False, "latency": 12.0},
         ]
     }
-    
+
     result = optimizer.optimize(run_data, config={})
-    
+
     # Conservative should only apply high-priority recommendations
     assert len(result.applied_recommendations) >= 0
     for rec in result.applied_recommendations:
@@ -218,16 +217,16 @@ def test_auto_optimizer_balanced():
         strategy=OptimizationStrategy.BALANCED,
         auto_apply=True
     )
-    
+
     run_data = {
         "cases": [
             {"id": "1", "passed": True, "latency": 8.0, "cost": 0.15},
             {"id": "2", "passed": True, "latency": 9.0, "cost": 0.18},
         ]
     }
-    
+
     result = optimizer.optimize(run_data, config={})
-    
+
     # Balanced should apply medium to high priority
     assert len(result.applied_recommendations) >= 0
     for rec in result.applied_recommendations:
@@ -240,15 +239,15 @@ def test_auto_optimizer_changes():
         strategy=OptimizationStrategy.AGGRESSIVE,
         auto_apply=True
     )
-    
+
     run_data = {
         "cases": [
             {"id": "1", "passed": True, "latency": 10.0, "cost": 0.20, "tokens": 50000},
         ]
     }
-    
+
     result = optimizer.optimize(run_data, config={})
-    
+
     # Should have some changes or recommendations
     assert len(result.applied_recommendations) > 0 or len(result.skipped_recommendations) > 0
 
@@ -256,27 +255,27 @@ def test_auto_optimizer_changes():
 def test_auto_optimizer_manual_approval():
     """Test auto-optimizer with manual approval."""
     approved_count = 0
-    
+
     def approval_callback(rec: Recommendation) -> bool:
         nonlocal approved_count
         approved_count += 1
         return rec.priority >= 9  # Only approve high priority
-    
+
     optimizer = AutoOptimizer(
         strategy=OptimizationStrategy.BALANCED,
         auto_apply=False,
         approval_callback=approval_callback
     )
-    
+
     run_data = {
         "cases": [
             {"id": "1", "passed": False, "error": "timeout"},
             {"id": "2", "passed": False, "error": "timeout"},
         ]
     }
-    
-    result = optimizer.optimize(run_data, config={})
-    
+
+    optimizer.optimize(run_data, config={})
+
     # Approval callback should have been called
     assert approved_count > 0
 
@@ -300,10 +299,10 @@ def test_analysis_result_properties():
         failed_cases=3,
         total_cost=2.5
     )
-    
+
     assert abs(result.success_rate - 0.7) < 0.01
     assert abs(result.avg_cost_per_case - 0.25) < 0.01
-    
+
     # Test zero division handling
     empty_result = AnalysisResult()
     assert empty_result.success_rate == 0.0
