@@ -1,13 +1,32 @@
-# This workflow demonstrates how to integrate AgentUnit into your CI/CD pipeline
-# Copy and adapt this file to your project's .github/workflows/ directory
+# =============================================================================
+# EXAMPLE WORKFLOW - DO NOT USE DIRECTLY
+# =============================================================================
+# This workflow demonstrates how to integrate AgentUnit into YOUR CI/CD pipeline.
+# Copy and adapt this file to your project's .github/workflows/ directory.
+#
+# This workflow is disabled in the AgentUnit repository itself.
+# For actual AgentUnit CI, see: ci.yml
+# =============================================================================
 
 name: AgentUnit CI Example
 
+# Disabled - this is an example for users to copy, not for running in this repo
+# Uncomment and modify the triggers when using in your own project:
+#
+# on:
+#   push:
+#     branches: [ main, develop ]
+#   pull_request:
+#     branches: [ main, develop ]
+
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+  workflow_dispatch:
+    # Manual trigger only - for testing the example workflow if needed
+    inputs:
+      scenario_path:
+        description: 'Path to evaluation scenarios'
+        required: false
+        default: 'tests/eval/scenarios/'
 
 jobs:
   agentunit-evaluation:
