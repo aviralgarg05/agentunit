@@ -1,4 +1,6 @@
-"""Scenario definition API exposed to end users."""
+"""
+Scenario definition API exposed to end users.
+"""
 
 from __future__ import annotations
 
@@ -19,7 +21,9 @@ if TYPE_CHECKING:
 
 @dataclass(slots=True)
 class Scenario:
-    """Defines a reproducible agent evaluation scenario."""
+    """
+    Defines a reproducible agent evaluation scenario.
+    """
 
     name: str
     adapter: BaseAdapter
@@ -75,7 +79,9 @@ class Scenario:
         name: str | None = None,
         **options: object,
     ) -> Scenario:
-        """Create scenario from CrewAI crew."""
+        """
+        Create scenario from CrewAI crew.
+        """
         from agentunit.adapters.crewai import CrewAIAdapter
 
         adapter = CrewAIAdapter.from_crew(crew, **options)
@@ -91,7 +97,9 @@ class Scenario:
         name: str | None = None,
         **options: object,
     ) -> Scenario:
-        """Create scenario from AutoGen orchestrator."""
+        """
+        Create scenario from AutoGen orchestrator.
+        """
         from agentunit.adapters.autogen import AutoGenAdapter
 
         adapter = AutoGenAdapter(orchestrator=orchestrator, **options)
