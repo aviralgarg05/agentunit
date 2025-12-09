@@ -8,3 +8,7 @@ This file is created to verify CodeRabbit auto-review functionality.
 - **Incremental test**: Additional commits should trigger incremental reviews
 
 This file can be safely deleted after verification.
+
+## Second Commit
+This section was added in a second commit to verify that CodeRabbit performs
+incremental reviews when new commits are pushed to an open PR.
