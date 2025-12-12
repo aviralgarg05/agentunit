@@ -54,3 +54,18 @@ agentunit = "agentunit.cli:entrypoint"
 requires = ["poetry-core>=1.8.2"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pytest.ini_options]
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+    "langgraph: marks tests as requiring LangGraph (skipped if not installed)",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+]
+
