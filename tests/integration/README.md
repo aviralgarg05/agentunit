@@ -11,10 +11,11 @@ The LangGraph integration tests verify that AgentUnit can properly evaluate Lang
 To run LangGraph integration tests, you need to install LangGraph:
 
 ```bash
-pip install langgraph
+# Install optional integration test dependencies
+poetry install --extras integration-tests
 ```
 
-Or with poetry:
+Or install LangGraph manually:
 
 ```bash
 poetry add langgraph --group dev

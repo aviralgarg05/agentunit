@@ -108,7 +108,8 @@ pytest -m "not integration"
 
 ### Install LangGraph for testing:
 ```bash
-pip install langgraph
+# Install optional integration test dependencies
+poetry install --extras integration-tests
 ```
 
 ## 🔧 Technical Implementation Details
