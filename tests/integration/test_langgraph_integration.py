@@ -144,7 +144,7 @@ class TestLangGraphIntegration:
         )
 
         # Run with basic metrics (if available)
-        result = run_suite([scenario], metrics=["response_length"])
+        result = run_suite([scenario], metrics=["faithfulness"])
 
         scenario_result = result.scenarios[0]
 
