@@ -24,7 +24,7 @@ classifiers = [
 python = "^3.10"
 pyyaml = "^6.0"
 crewai = { version = "^0.201.1", python = "<3.14" }
-langchain = ">=0.0.353,<0.2.0"  # security: stay on patched 0.0.x line compatible with ecosystem
+langchain = ">=0.0.353,<0.4.0"  # security: stay on patched line compatible with ecosystem
 opentelemetry-api = "^1.25.0"
 opentelemetry-sdk = "^1.25.0"
 opentelemetry-exporter-otlp = "^1.25.0"
