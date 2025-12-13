@@ -30,7 +30,7 @@ class SimpleDataset(DatasetSource):
                 expected_output="Quantum tunneling is a quantum mechanical phenomenon",
                 context=["Physics", "Quantum Mechanics"],
                 tools=["search"],
-                metadata={"difficulty": "intermediate"}
+                metadata={"difficulty": "intermediate"},
             ),
             DatasetCase(
                 id="python-query",
@@ -38,7 +38,7 @@ class SimpleDataset(DatasetSource):
                 expected_output="Python is a high-level programming language",
                 context=["Programming", "Software Development"],
                 tools=["documentation"],
-                metadata={"difficulty": "beginner"}
+                metadata={"difficulty": "beginner"},
             ),
             DatasetCase(
                 id="weather-query",
@@ -46,8 +46,8 @@ class SimpleDataset(DatasetSource):
                 expected_output="I would need access to weather APIs",
                 context=["Weather", "APIs"],
                 tools=["weather_api"],
-                metadata={"difficulty": "advanced"}
-            )
+                metadata={"difficulty": "advanced"},
+            ),
         ]
 
 
@@ -62,9 +62,7 @@ class TestLangGraphIntegration:
 
         # Create scenario using the callable
         scenario = Scenario.load_langgraph(
-            path=invoke_agent,
-            dataset=SimpleDataset(),
-            name="test-langgraph-callable"
+            path=invoke_agent, dataset=SimpleDataset(), name="test-langgraph-callable"
         )
 
         assert scenario.name == "test-langgraph-callable"
@@ -80,10 +78,11 @@ class TestLangGraphIntegration:
             expected_output="",
             context=["Physics"],
             tools=["search"],
-            metadata={}
+            metadata={},
         )
 
         from agentunit.core.trace import TraceLog
+
         trace = TraceLog()
         outcome = scenario.adapter.execute(test_case, trace)
 
@@ -100,7 +99,7 @@ class TestLangGraphIntegration:
             path=agent_file,
             dataset=SimpleDataset(),
             name="test-langgraph-file",
-            callable="invoke_agent"  # Specify the callable name
+            callable="invoke_agent",  # Specify the callable name
         )
 
         assert scenario.name == "test-langgraph-file"
@@ -112,9 +111,7 @@ class TestLangGraphIntegration:
 
         # Create scenario
         scenario = Scenario.load_langgraph(
-            path=invoke_agent,
-            dataset=SimpleDataset(),
-            name="full-cycle-test"
+            path=invoke_agent, dataset=SimpleDataset(), name="full-cycle-test"
         )
 
         # Run the evaluation
@@ -138,9 +135,7 @@ class TestLangGraphIntegration:
         from .simple_langgraph_agent import invoke_agent
 
         scenario = Scenario.load_langgraph(
-            path=invoke_agent,
-            dataset=SimpleDataset(),
-            name="metrics-test"
+            path=invoke_agent, dataset=SimpleDataset(), name="metrics-test"
         )
 
         # Run with basic metrics (if available)
@@ -154,14 +149,13 @@ class TestLangGraphIntegration:
 
     def test_scenario_error_handling(self):
         """Test that scenarios handle errors gracefully."""
+
         def failing_agent(payload):
             """An agent that always fails."""
             raise ValueError("Simulated agent failure")
 
         scenario = Scenario.load_langgraph(
-            path=failing_agent,
-            dataset=SimpleDataset(),
-            name="error-test"
+            path=failing_agent, dataset=SimpleDataset(), name="error-test"
         )
 
         result = run_suite([scenario])
@@ -178,9 +172,7 @@ class TestLangGraphIntegration:
         from .simple_langgraph_agent import invoke_agent
 
         scenario = Scenario.load_langgraph(
-            path=invoke_agent,
-            dataset=SimpleDataset(),
-            name="retry-test"
+            path=invoke_agent, dataset=SimpleDataset(), name="retry-test"
         )
 
         # Set retries
@@ -198,17 +190,11 @@ class TestLangGraphIntegration:
         from .simple_langgraph_agent import invoke_agent
 
         original = Scenario.load_langgraph(
-            path=invoke_agent,
-            dataset=SimpleDataset(),
-            name="original"
+            path=invoke_agent, dataset=SimpleDataset(), name="original"
         )
 
         # Clone with modifications
-        cloned = original.clone(
-            name="cloned",
-            retries=3,
-            timeout=120.0
-        )
+        cloned = original.clone(name="cloned", retries=3, timeout=120.0)
 
         assert cloned.name == "cloned"
         assert cloned.retries == 3
@@ -240,11 +226,7 @@ def test_multiple_scenarios():
 
     # Create multiple scenarios
     scenarios = [
-        Scenario.load_langgraph(
-            path=invoke_agent,
-            dataset=SimpleDataset(),
-            name=f"scenario-{i}"
-        )
+        Scenario.load_langgraph(path=invoke_agent, dataset=SimpleDataset(), name=f"scenario-{i}")
         for i in range(3)
     ]
 

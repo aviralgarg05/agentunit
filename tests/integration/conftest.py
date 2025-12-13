@@ -8,7 +8,8 @@ import pytest
 def pytest_configure(config):
     """Configure pytest markers for integration tests."""
     config.addinivalue_line(
-        "markers", "integration: marks tests as integration tests (deselect with '-m \"not integration\"')"
+        "markers",
+        "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
     )
     config.addinivalue_line(
         "markers", "langgraph: marks tests as requiring LangGraph (skipped if not installed)"

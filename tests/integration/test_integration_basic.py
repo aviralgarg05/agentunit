@@ -30,7 +30,7 @@ def test_simple_langgraph_agent_fallback():
         "query": "What is quantum tunneling?",
         "context": ["Physics"],
         "tools": ["search"],
-        "metadata": {}
+        "metadata": {},
     }
 
     result = invoke_agent(payload)

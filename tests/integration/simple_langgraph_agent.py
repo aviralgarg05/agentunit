@@ -9,9 +9,11 @@ try:
     from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
     from langgraph.graph import END, StateGraph
     from langgraph.graph.message import add_messages
+
     LANGGRAPH_AVAILABLE = True
 except ImportError:
     LANGGRAPH_AVAILABLE = False
+
     # Fallback types for when LangGraph is not available
     class StateGraph:
         pass
@@ -33,6 +35,7 @@ except ImportError:
 
 class AgentState(TypedDict):
     """State for the simple agent."""
+
     messages: list[BaseMessage]
     query: str
     context: list[str]
@@ -67,10 +70,7 @@ def create_simple_agent():
         # Create response message
         ai_message = AIMessage(content=response)
 
-        return {
-            **state,
-            "messages": [*state.get("messages", []), ai_message]
-        }
+        return {**state, "messages": [*state.get("messages", []), ai_message]}
 
     def should_continue(state: AgentState) -> str:
         """Determine if the agent should continue processing."""
@@ -86,11 +86,7 @@ def create_simple_agent():
     workflow.set_entry_point("process")
 
     # Add edges
-    workflow.add_conditional_edges(
-        "process",
-        should_continue,
-        {END: END}
-    )
+    workflow.add_conditional_edges("process", should_continue, {END: END})
 
     # Compile the graph
     return workflow.compile()
@@ -102,7 +98,7 @@ def invoke_agent(payload: dict[str, Any]) -> dict[str, Any]:
         # Return a mock response when LangGraph is not available
         return {
             "result": f"Mock response for: {payload.get('query', 'unknown query')}",
-            "events": []
+            "events": [],
         }
 
     agent = create_simple_agent()
@@ -113,7 +109,7 @@ def invoke_agent(payload: dict[str, Any]) -> dict[str, Any]:
         "query": payload.get("query", ""),
         "context": payload.get("context", []),
         "tools": payload.get("tools", []),
-        "metadata": payload.get("metadata", {})
+        "metadata": payload.get("metadata", {}),
     }
 
     # Run the agent
@@ -128,8 +124,8 @@ def invoke_agent(payload: dict[str, Any]) -> dict[str, Any]:
         "result": final_response,
         "events": [
             {"type": "agent_start", "query": payload.get("query")},
-            {"type": "agent_response", "content": final_response}
-        ]
+            {"type": "agent_response", "content": final_response},
+        ],
     }
 
 
