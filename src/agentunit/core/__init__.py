@@ -1,4 +1,6 @@
-"""Core components for AgentUnit."""
+"""
+Core components for AgentUnit.
+"""
 
 from agentunit.datasets.base import DatasetCase, DatasetSource
 from agentunit.reporting.results import ScenarioResult
