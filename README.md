@@ -41,6 +41,13 @@ poetry install --with promptflow,crewai,langgraph
 # or with pip
 pip install agentunit[promptflow,crewai,langgraph]
 ```
+##  Run CI locally
+Prerequisites: Python 3.10+,Poetry
+- poetry install --with dev
+- poetry check
+- poetry run ruff check .
+- poetry run ruff format --check .
+- poetry run pytest
 
 ### Optional Extras
 
