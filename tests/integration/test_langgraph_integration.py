@@ -17,34 +17,38 @@ langgraph = pytest.importorskip("langgraph", reason="LangGraph not installed")
 class SimpleDataset(DatasetSource):
     """Simple dataset for testing."""
 
-    def iter_cases(self):
+    def __init__(self):
+        """Initialize the simple dataset."""
+        super().__init__(name="simple-test-dataset", loader=self._generate_cases)
+
+    def _generate_cases(self):
         """Generate test cases."""
-        yield DatasetCase(
-            id="quantum-query",
-            query="What is quantum tunneling?",
-            expected_output="Quantum tunneling is a quantum mechanical phenomenon",
-            context=["Physics", "Quantum Mechanics"],
-            tools=["search"],
-            metadata={"difficulty": "intermediate"}
-        )
-
-        yield DatasetCase(
-            id="python-query",
-            query="Tell me about Python programming",
-            expected_output="Python is a high-level programming language",
-            context=["Programming", "Software Development"],
-            tools=["documentation"],
-            metadata={"difficulty": "beginner"}
-        )
-
-        yield DatasetCase(
-            id="weather-query",
-            query="What's the weather like today?",
-            expected_output="I would need access to weather APIs",
-            context=["Weather", "APIs"],
-            tools=["weather_api"],
-            metadata={"difficulty": "advanced"}
-        )
+        return [
+            DatasetCase(
+                id="quantum-query",
+                query="What is quantum tunneling?",
+                expected_output="Quantum tunneling is a quantum mechanical phenomenon",
+                context=["Physics", "Quantum Mechanics"],
+                tools=["search"],
+                metadata={"difficulty": "intermediate"}
+            ),
+            DatasetCase(
+                id="python-query",
+                query="Tell me about Python programming",
+                expected_output="Python is a high-level programming language",
+                context=["Programming", "Software Development"],
+                tools=["documentation"],
+                metadata={"difficulty": "beginner"}
+            ),
+            DatasetCase(
+                id="weather-query",
+                query="What's the weather like today?",
+                expected_output="I would need access to weather APIs",
+                context=["Weather", "APIs"],
+                tools=["weather_api"],
+                metadata={"difficulty": "advanced"}
+            )
+        ]
 
 
 @pytest.mark.langgraph
