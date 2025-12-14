@@ -7,8 +7,8 @@ AgentUnit with a FakeAdapter. It is designed for beginners and does
 not require any extra dependencies.
 """
 
-from agentunit.core.evaluator import Evaluator
 from agentunit.core.adapters import BaseAdapter
+from agentunit.core.evaluator import Evaluator
 
 
 class FakeAdapter(BaseAdapter):
