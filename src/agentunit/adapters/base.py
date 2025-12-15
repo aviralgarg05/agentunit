@@ -41,7 +41,6 @@ class BaseAdapter(abc.ABC):
             None
         """
 
-
     @abc.abstractmethod
     def execute(self, case: DatasetCase, trace: TraceLog) -> AdapterOutcome:
         """
@@ -55,7 +54,6 @@ class BaseAdapter(abc.ABC):
             AdapterOutcome: The outcome produced by executing the adapter.
         """
 
-
     def cleanup(self) -> None:  # pragma: no cover - default no-op
         """
         Clean up resources after execution.
@@ -67,7 +65,5 @@ class BaseAdapter(abc.ABC):
             None
         """
 
-
     def supports_replay(self) -> bool:
         return True
-
