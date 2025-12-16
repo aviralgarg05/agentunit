@@ -1,4 +1,6 @@
-"""Tracing utilities shared between adapters and the runner."""
+"""
+Tracing utilities shared between adapters and the runner.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +13,9 @@ from typing import Any
 
 @dataclass(slots=True)
 class TraceEvent:
-    """Represents a single prompt, tool call, or response in an agent run."""
+    """
+    Represents a single prompt, tool call, or response in an agent run.
+    """
 
     type: str
     payload: dict[str, Any]
@@ -20,7 +24,9 @@ class TraceEvent:
 
 @dataclass(slots=True)
 class TraceLog:
-    """A collection of chronological events for a scenario iteration."""
+    """
+    A collection of chronological events for a scenario iteration.
+    """
 
     events: list[TraceEvent] = field(default_factory=list)
 
