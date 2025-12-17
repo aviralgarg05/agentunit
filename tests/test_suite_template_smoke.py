@@ -1,6 +1,6 @@
-import pytest
 from agentunit import Scenario, DatasetCase, Runner
-from agentunit.metrics.builtin import AnswerCorrectnessMetric
+from agentunit.adapters.base import AdapterOutcome, BaseAdapter
+from agentunit.datasets.base import DatasetSource
 
 class MockAgent:
     def connect(self):
@@ -8,9 +8,6 @@ class MockAgent:
 
     def answer(self, query: str) -> str:
         return "This is a canned FAQ answer."
-
-from agentunit.adapters.base import AdapterOutcome, BaseAdapter
-from agentunit.datasets.base import DatasetSource
 
 
 class MockAdapter(BaseAdapter):
