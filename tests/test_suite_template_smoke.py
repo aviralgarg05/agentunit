@@ -1,6 +1,6 @@
-from agentunit import Scenario, DatasetCase, Runner
 from agentunit.adapters.base import AdapterOutcome, BaseAdapter
 from agentunit.datasets.base import DatasetSource
+from agentunit import DatasetCase, Runner, Scenario
 
 class MockAgent:
     def connect(self):
