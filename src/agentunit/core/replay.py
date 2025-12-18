@@ -1,4 +1,6 @@
-"""Replay utilities leveraging stored traces."""
+"""
+Replay utilities leveraging stored traces.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +10,9 @@ from .trace import TraceLog
 
 
 def load_traces(traces_dir: str | Path) -> list[TraceLog]:
-    """Load stored traces from disk for deterministic replay or analysis."""
+    """
+    Load stored traces from disk for deterministic replay or analysis.
+    """
 
     path = Path(traces_dir)
     logs: list[TraceLog] = []
