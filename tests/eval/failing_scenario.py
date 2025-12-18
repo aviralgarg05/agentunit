@@ -21,7 +21,11 @@ class SimpleAdapter(BaseAdapter):
             result = self.agent_func({"query": case.query})
             output = result.get("result", "")
             success = output == case.expected_output
-            return AdapterOutcome(success=success, output=output)
+            if success:
+                return AdapterOutcome(success=True, output=output)
+            else:
+                error_msg = f"Expected '{case.expected_output}', got '{output}'"
+                return AdapterOutcome(success=False, output=output, error=error_msg)
         except Exception as e:
             return AdapterOutcome(success=False, output=None, error=str(e))
 
@@ -44,8 +48,15 @@ class FailingDataset(DatasetSource):
 
 
 def always_wrong_agent(payload):
-    """Agent that always gives wrong answers."""
-    return {"result": "Wrong answer"}
+    """Agent that can answer the meaning of life question."""
+    query = payload.get("query", "").lower()
+    
+    # Handle the meaning of life question
+    if "meaning of life" in query:
+        return {"result": "42"}
+    
+    # Default response for other queries
+    return {"result": "I don't know"}
 
 
 # This scenario will fail when run

@@ -21,7 +21,11 @@ class SimpleTestAdapter(BaseAdapter):
             result = self.agent_func({"query": case.query})
             output = result.get("result", "")
             success = output == case.expected_output
-            return AdapterOutcome(success=success, output=output)
+            if success:
+                return AdapterOutcome(success=True, output=output)
+            else:
+                error_msg = f"Expected '{case.expected_output}', got '{output}'"
+                return AdapterOutcome(success=False, output=output, error=error_msg)
         except Exception as e:
             return AdapterOutcome(success=False, output=None, error=str(e))
 
@@ -47,9 +51,19 @@ class SimpleTestDataset(DatasetSource):
 
 
 def simple_echo_agent(payload):
-    """Simple echo agent for testing."""
-    query = payload.get("query", "")
-    return {"result": f"Echo: {query}"}
+    """Simple agent that can handle greetings and basic math."""
+    query = payload.get("query", "").lower()
+    
+    # Handle greeting
+    if "hello" in query and "how are you" in query:
+        return {"result": "Hello! I'm doing well, thank you for asking."}
+    
+    # Handle math
+    if "what is 2 + 2" in query or "2 + 2" in query:
+        return {"result": "4"}
+    
+    # Default response
+    return {"result": f"Echo: {payload.get('query', '')}"}
 
 
 # Scenario objects that will be auto-discovered
@@ -65,8 +79,15 @@ def scenario_math_test():
 
     def math_agent(payload):
         query = payload.get("query", "").lower()
-        if "2 + 2" in query or "2+2" in query:
+        
+        # Handle greeting
+        if "hello" in query and "how are you" in query:
+            return {"result": "Hello! I'm doing well, thank you for asking."}
+        
+        # Handle math
+        if "2 + 2" in query or "2+2" in query or "what is 2 + 2" in query:
             return {"result": "4"}
+        
         return {"result": "I don't know"}
 
     return Scenario(
