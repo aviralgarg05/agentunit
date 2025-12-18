@@ -47,6 +47,10 @@ sphinx = "^7.3.7"
 
 [tool.poetry.scripts]
 agentunit = "agentunit.cli:entrypoint"
+agentunit-init-eval = "agentunit.pytest.cli:init_eval"
+
+[tool.poetry.plugins."pytest11"]
+agentunit = "agentunit.pytest.plugin"
 
 [tool.poetry.urls]
 "Issue Tracker" = "https://github.com/aviralgarg05/agentunit/issues"
@@ -60,6 +64,8 @@ build-backend = "poetry.core.masonry.api"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
     "langgraph: marks tests as requiring LangGraph (skipped if not installed)",
+    "agentunit: marks test as an AgentUnit scenario evaluation",
+    "scenario(name): marks test with specific scenario name",
 ]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
