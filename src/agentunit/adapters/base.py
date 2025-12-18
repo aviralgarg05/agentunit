@@ -32,14 +32,38 @@ class BaseAdapter(abc.ABC):
 
     @abc.abstractmethod
     def prepare(self) -> None:
-        """Perform any lazy setup (loading graphs, flows, etc.)."""
+        """
+        Perform any lazy setup required before execution.
+
+        This may include loading graphs, flows, or other resources.
+
+        Returns:
+            None
+        """
 
     @abc.abstractmethod
     def execute(self, case: DatasetCase, trace: TraceLog) -> AdapterOutcome:
-        """Run the agent flow on a single dataset case."""
+        """
+        Run the agent flow on a single dataset case.
+
+        Args:
+            case (DatasetCase): The dataset case to be processed.
+            trace (TraceLog): Trace log used to record execution details.
+
+        Returns:
+            AdapterOutcome: The outcome produced by executing the adapter.
+        """
 
     def cleanup(self) -> None:  # pragma: no cover - default no-op
-        """Hook for cleaning up resources such as temporary files or servers."""
+        """
+        Clean up resources after execution.
+
+        This hook can be used to release resources such as temporary files
+        or running servers.
+
+        Returns:
+            None
+        """
 
     def supports_replay(self) -> bool:
         return True
