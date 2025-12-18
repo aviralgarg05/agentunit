@@ -50,11 +50,11 @@ class FailingDataset(DatasetSource):
 def always_wrong_agent(payload):
     """Agent that can answer the meaning of life question."""
     query = payload.get("query", "").lower()
-    
+
     # Handle the meaning of life question
     if "meaning of life" in query:
         return {"result": "42"}
-    
+
     # Default response for other queries
     return {"result": "I don't know"}
 

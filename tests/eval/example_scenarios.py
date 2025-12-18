@@ -53,15 +53,15 @@ class SimpleTestDataset(DatasetSource):
 def simple_echo_agent(payload):
     """Simple agent that can handle greetings and basic math."""
     query = payload.get("query", "").lower()
-    
+
     # Handle greeting
     if "hello" in query and "how are you" in query:
         return {"result": "Hello! I'm doing well, thank you for asking."}
-    
+
     # Handle math
     if "what is 2 + 2" in query or "2 + 2" in query:
         return {"result": "4"}
-    
+
     # Default response
     return {"result": f"Echo: {payload.get('query', '')}"}
 
@@ -79,15 +79,15 @@ def scenario_math_test():
 
     def math_agent(payload):
         query = payload.get("query", "").lower()
-        
+
         # Handle greeting
         if "hello" in query and "how are you" in query:
             return {"result": "Hello! I'm doing well, thank you for asking."}
-        
+
         # Handle math
         if "2 + 2" in query or "2+2" in query or "what is 2 + 2" in query:
             return {"result": "4"}
-        
+
         return {"result": "I don't know"}
 
     return Scenario(
