@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from .base import DatasetCase, DatasetSource
 
@@ -11,7 +11,18 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
-_GAIA_L1_SHOPPING: list[dict[str, object]] = [
+class DatasetRow(TypedDict):
+    """Provides structure for type hints"""
+
+    id: str
+    query: str
+    expected_output: str | None
+    tools: list[str] | None
+    context: list[str] | None
+    metadata: NotRequired[dict[str, object]]
+
+
+_GAIA_L1_SHOPPING: list[DatasetRow] = [
     {
         "id": "gaia-shopping-001",
         "query": "Find the best price for a pack of AA rechargeable batteries with at least 2500mAh capacity.",
@@ -28,7 +39,7 @@ _GAIA_L1_SHOPPING: list[dict[str, object]] = [
     },
 ]
 
-_SWE_BENCH_LITE: list[dict[str, object]] = [
+_SWE_BENCH_LITE: list[DatasetRow] = [
     {
         "id": "swe-lite-001",
         "query": "Fix the bug where the API returns HTTP 500 when the username is missing.",
@@ -48,7 +59,7 @@ _SWE_BENCH_LITE: list[dict[str, object]] = [
 ]
 
 
-def _build_loader(rows: list[dict[str, object]]) -> Iterable[DatasetCase]:
+def _build_loader(rows: list[DatasetRow]) -> Iterable[DatasetCase]:
     for row in rows:
         yield DatasetCase(
             id=row["id"],
