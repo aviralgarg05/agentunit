@@ -219,6 +219,21 @@ poetry run python3 -m pytest tests/integration/ -v
 
 Latest verification (2025-10-24): 144 passed, 10 skipped, 32 warnings. Warnings originate from third-party dependencies (`langchain` pydantic shim deprecations and `datetime.utcnow` usage). Track upstream fixes or pin patched releases as needed.
 
+### Running CI Checks Locally
+
+Before opening a pull request, you can run the same checks locally that are executed in CI.
+
+#### Requirements
+- Python **3.10 or higher**
+- [Poetry](https://python-poetry.org/) installed
+
+#### Setup
+Install dependencies (including dev tools):
+
+```bash
+poetry install --with dev
+```
+
 ## Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
