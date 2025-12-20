@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
+
 import sys
-import os
+from pathlib import Path
+
 
 # Add the agentunit folder to Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "agentunit")))
+sys.path.insert(0, str(Path(__file__).parent.parent / "agentunit"))
 
-import pytest
-
-from agentunit.core.reporting import SuiteResult, RunResult
+from agentunit.core.reporting import RunResult, SuiteResult
 
 
 def test_markdown_contains_emojis():
