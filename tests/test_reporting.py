@@ -1,37 +1,53 @@
-
-import sys
+from datetime import datetime
 from pathlib import Path
 
-
-# Add the agentunit folder to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent / "agentunit"))
-
-from agentunit.core.reporting import RunResult, SuiteResult
+from agentunit.reporting.results import (
+    SuiteResult,
+    ScenarioResult,
+    ScenarioRun,
+)
 
 
 def test_markdown_contains_emojis():
-    # Adjusted to match common RunResult constructor
-    passing_run = RunResult(
-        name="test_pass",
-        status="pass",
-        exception=None,
+    passing_run = ScenarioRun(
+    scenario_name="emoji-suite",
+    case_id="test_pass",
+    success=True,
+    metrics={},
+    duration_ms=5,
+    trace=[],
+    error=None,
+)
+
+
+    failing_run = ScenarioRun(
+    scenario_name="emoji-suite",
+    case_id="test_fail",
+    success=False,
+    metrics={},
+    duration_ms=6,
+    trace=[],
+    error="AssertionError",
     )
 
-    failing_run = RunResult(
-        name="test_fail",
-        status="fail",
-        exception="AssertionError",
+
+    scenario = ScenarioResult(
+    name="emoji-suite",
+    runs=[passing_run, failing_run],
     )
 
     suite = SuiteResult(
-        name="emoji-suite",
-        runs=[passing_run, failing_run],
+    scenarios=[scenario],
+    started_at=datetime.now(),
+    finished_at=datetime.now(),
     )
 
-    markdown = suite.to_markdown()
+    output_path = Path("report.md")
+    suite.to_markdown(output_path)
+
 
     assert "✅" in markdown
     assert "❌" in markdown
 
-    # UTF-8 safety
+    # UTF-8 safety check (important for Windows)
     markdown.encode("utf-8")
