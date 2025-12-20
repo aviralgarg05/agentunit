@@ -143,8 +143,9 @@ class CostMetric(Metric):
         cost = 0.0
 
         # Check trace metadata
-        if trace.metadata and "cost" in trace.metadata:
-            cost = float(trace.metadata["cost"])
+        metadata = getattr(trace, "metadata", {})
+        if metadata and "cost" in metadata:
+            cost = float(metadata["cost"])
 
         # Check outcome
         elif hasattr(outcome, "cost"):
@@ -168,8 +169,9 @@ class TokenUsageMetric(Metric):
         total_tokens = 0
 
         # Check trace metadata
-        if trace.metadata and "usage" in trace.metadata:
-            usage = trace.metadata["usage"]
+        metadata = getattr(trace, "metadata", {})
+        if metadata and "usage" in metadata:
+            usage = metadata["usage"]
             prompt_tokens = usage.get("prompt_tokens", 0)
             completion_tokens = usage.get("completion_tokens", 0)
             total_tokens = usage.get("total_tokens", 0)

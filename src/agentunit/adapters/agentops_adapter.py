@@ -67,13 +67,15 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
         self.project_id = project_id
         self.default_tags = default_tags or []
         self.auto_start_session = auto_start_session
+        self.enable_tracing = kwargs.get("enable_tracing", True)
+        self.client: Any = None
         self.platform = MonitoringPlatform.AGENTOPS
         """
         Initialize LangSmith adapter.
 
         Args:
             api_key: LangSmith API key
-            project_name: Project name for organizing traces
+            project_id: Langsmith project ID
             endpoint: Optional custom LangSmith endpoint
             enable_tracing: Whether to enable automatic tracing
             enable_feedback: Whether to collect feedback data
@@ -98,9 +100,10 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
         """Initialize AgentOps client and verify connection."""
         try:
             # Import AgentOps SDK
-            import agentops
+            import agentops  # type: ignore[import-not-found]
 
             self.agentops = agentops
+            self.client = agentops
 
             # Initialize AgentOps
             if self.api_key:
@@ -124,10 +127,9 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
             logger.error(f"Failed to connect to AgentOps: {e}")
             raise
 
-    @property
-    def platform(self) -> MonitoringPlatform:
-        """Return the monitoring platform type."""
-        return MonitoringPlatform.AGENTOPS
+    # def platform(self) -> MonitoringPlatform:
+    #     """Return the monitoring platform type."""
+    #     return MonitoringPlatform.AGENTOPS
 
     def create_agent(self, role: AgentRole, agent_id: str | None = None, **kwargs) -> AgentMetadata:
         """
@@ -244,7 +246,7 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
         interaction = AgentInteraction(
             interaction_id=interaction_id,
             from_agent=from_agent,
-            to_agent=to_agent,
+            to_agent=to_agent or "",
             content=message,
             timestamp=timestamp,
             metadata=metadata or {},
@@ -337,14 +339,20 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
         unique_agents = set()
 
         for interaction in self.session_interactions:
-            unique_agents.add(interaction.from_agent)
+            if isinstance(interaction.from_agent, list):
+                unique_agents.update(interaction.from_agent)
+            else:
+                unique_agents.add(interaction.from_agent)
             if interaction.to_agent:
-                unique_agents.add(interaction.to_agent)
+                if isinstance(interaction.to_agent, list):
+                    unique_agents.update(interaction.to_agent)
+                else:
+                    unique_agents.add(interaction.to_agent)
 
         agent_participation = len(unique_agents)
 
         # Calculate message distribution
-        agent_counts = {}
+        agent_counts: dict[str, int] = {}
         for interaction in self.session_interactions:
             from_agent = interaction.from_agent
             agent_counts[from_agent] = agent_counts.get(from_agent, 0) + 1
@@ -374,7 +382,7 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
             else 0.0,
         }
 
-    def run_scenario(self, scenario: Scenario) -> ScenarioResult:
+    async def run_scenario(self, scenario: Scenario) -> ScenarioResult:
         """
         Run a scenario with LangSmith integration.
 
@@ -390,14 +398,14 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
         scenario_run_id = None
         if self.enable_tracing:
             try:
-                run = self.client.create_run(
+                run_id = self.agentops.start_trace(
                     name=f"Scenario: {scenario.name}",
                     run_type="chain",
-                    project_name=self.project_name,
-                    inputs={"scenario": scenario.name, "description": scenario.description},
+                    project_name=self.project_id,
+                    inputs={"scenario": scenario.name},
                     tags=["agentunit", "scenario"],
                 )
-                scenario_run_id = str(run.id)
+                scenario_run_id = str(run_id)
             except Exception as e:
                 logger.warning(f"Failed to create scenario run: {e}")
 
@@ -483,15 +491,20 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
             # Update LangSmith run with results
             if scenario_run_id and self.enable_tracing:
                 try:
-                    self.client.update_run(
-                        run_id=scenario_run_id,
-                        outputs={
-                            "result": result.passed,
-                            "execution_time": execution_time,
-                            "details": result.details,
-                        },
-                        end_time=datetime.now(timezone.utc),
+                    # self.client.update_run(
+                    #     run_id=scenario_run_id,
+                    #     outputs={
+                    #         "result": result.success_rate,
+                    #         "execution_time": execution_time,
+                    #         "details": result.to_dict(),
+                    #     },
+                    #     end_time=datetime.now(timezone.utc),
+                    # )
+                    self.agentops.update_trace_metadata(
+                        trace_id=scenario_run_id,
+                        metadata={"result": result.success_rate, "details": result.to_dict()},
                     )
+                    self.agentops.end_trace(trace_id=scenario_run_id, status_code="SUCCESS")
                 except Exception as e:
                     logger.warning(f"Failed to update scenario run: {e}")
 
@@ -527,11 +540,16 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
             # Update LangSmith run with error
             if scenario_run_id and self.enable_tracing:
                 try:
-                    self.client.update_run(
-                        run_id=scenario_run_id,
-                        outputs={"error": str(e)},
-                        end_time=datetime.now(timezone.utc),
+                    # self.client.update_run(
+                    #     run_id=scenario_run_id,
+                    #     outputs={"error": str(e)},
+                    #     end_time=datetime.now(timezone.utc),
+                    # )
+                    self.agentops.update_trace_metadata(
+                        trace_id=scenario_run_id,
+                        metadata={"result": result.success_rate, "details": result.to_dict()},
                     )
+                    self.agentops.end_trace(trace_id=scenario_run_id, status_code="SUCCESS")
                 except Exception as e:
                     logger.warning(f"Failed to update failed scenario run: {e}")
 
@@ -551,7 +569,7 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
         """
         try:
             # Query recent runs from LangSmith
-            runs = list(self.client.list_runs(project_name=self.project_name, limit=100))
+            runs = list(self.client.list_runs(project_name=self.project_id, limit=100))
 
             if not runs:
                 return ProductionMetrics(
@@ -637,7 +655,7 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
             # Query historical runs
             runs = list(
                 self.client.list_runs(
-                    project_name=self.project_name, start_time=start_date, end_time=end_date
+                    project_name=self.project_id, start_time=start_date, end_time=end_date
                 )
             )
 
@@ -749,7 +767,7 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
             logger.error(f"Failed to create LangSmith dataset: {e}")
             raise
 
-    def run_evaluation(self, dataset_id: str, evaluator_function: Any, **kwargs) -> dict[str, Any]:
+    def run_evaluation(self, dataset_id: str, evaluator_function: Any, **kwargs) -> Any:
         """
         Run evaluation on a LangSmith dataset.
 
@@ -767,7 +785,7 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
             results = evaluate(
                 evaluator_function,
                 data=dataset_id,
-                project_name=f"{self.project_name}-evaluation",
+                experiment_prefix=f"{self.project_id}-evaluation",
                 **kwargs,
             )
 
