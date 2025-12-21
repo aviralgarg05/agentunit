@@ -46,12 +46,8 @@ def pytest_addoption(parser: Parser) -> None:
 
 def pytest_configure(config: Config) -> None:
     """Configure pytest with AgentUnit markers."""
-    config.addinivalue_line(
-        "markers", "agentunit: mark test as an AgentUnit scenario evaluation"
-    )
-    config.addinivalue_line(
-        "markers", "scenario(name): mark test with specific scenario name"
-    )
+    config.addinivalue_line("markers", "agentunit: mark test as an AgentUnit scenario evaluation")
+    config.addinivalue_line("markers", "scenario(name): mark test with specific scenario name")
 
     # Initialize cache
     root_path = config.rootpath
@@ -86,7 +82,6 @@ def _is_eval_directory(file_path: Path) -> bool:
     return "tests" in parts and "eval" in parts
 
 
-
 class AgentUnitFile(pytest.File):
     """Pytest file collector for AgentUnit scenarios."""
 
@@ -95,9 +90,7 @@ class AgentUnitFile(pytest.File):
         try:
             scenarios = self._discover_scenarios()
             for scenario in scenarios:
-                yield AgentUnitItem.from_parent(
-                    self, name=scenario.name, scenario=scenario
-                )
+                yield AgentUnitItem.from_parent(self, name=scenario.name, scenario=scenario)
         except Exception as e:
             # If we can't load scenarios, create a single failing test
             yield AgentUnitItem.from_parent(
@@ -220,8 +213,7 @@ class AgentUnitItem(pytest.Item):
                 if not cached.success:
                     failure_summary = "\n".join(cached.failures)
                     raise AssertionError(
-                        f"Scenario '{self.scenario.name}' failed (cached):\n"
-                        f"{failure_summary}"
+                        f"Scenario '{self.scenario.name}' failed (cached):\n{failure_summary}"
                     )
                 return  # Cached success
 
@@ -250,9 +242,7 @@ class AgentUnitItem(pytest.Item):
 
         if failures:
             failure_summary = "\n".join(failures)
-            raise AssertionError(
-                f"Scenario '{self.scenario.name}' failed:\n{failure_summary}"
-            )
+            raise AssertionError(f"Scenario '{self.scenario.name}' failed:\n{failure_summary}")
 
     def repr_failure(self, excinfo: Any) -> str:
         """Represent test failure."""

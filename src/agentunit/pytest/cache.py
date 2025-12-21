@@ -104,9 +104,7 @@ class ScenarioCache:
         """Get path to cache file for given key."""
         return self.cache_dir / f"{cache_key}.json"
 
-    def get(
-        self, scenario: Scenario, source_path: Path | None = None
-    ) -> CachedResult | None:
+    def get(self, scenario: Scenario, source_path: Path | None = None) -> CachedResult | None:
         """Get cached result for scenario if available and valid."""
         if not self.enabled:
             logger.debug("Cache disabled, skipping lookup")
@@ -129,8 +127,7 @@ class ScenarioCache:
             if current_source_hash and cached_source_hash:
                 if current_source_hash != cached_source_hash:
                     logger.info(
-                        f"Cache invalidated for scenario '{scenario.name}' "
-                        "(source file changed)"
+                        f"Cache invalidated for scenario '{scenario.name}' (source file changed)"
                     )
                     return None
 
