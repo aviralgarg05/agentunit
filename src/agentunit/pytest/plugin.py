@@ -11,6 +11,7 @@ from agentunit import Scenario, run_suite
 from agentunit.core.exceptions import AgentUnitError
 from agentunit.pytest.cache import ScenarioCache
 
+
 if TYPE_CHECKING:
     from collections.abc import Generator
     from pathlib import Path
