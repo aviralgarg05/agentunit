@@ -2,7 +2,7 @@
 
 import json
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -108,7 +108,7 @@ class LeaderboardSubmitter:
             "model_name": self.config.model_name,
             "organization": self.config.organization,
             "contact": self.config.contact_email,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "results": [],
         }
 
@@ -140,7 +140,7 @@ class LeaderboardSubmitter:
         Returns:
             Path to saved file
         """
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         filename = f"{benchmark_name}_{self.config.model_name}_{timestamp}.json"
         filepath = self.output_dir / filename
 

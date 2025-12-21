@@ -19,7 +19,10 @@ class TraceEvent:
 
     type: str
     payload: dict[str, Any]
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(
+        default_factory=lambda: datetime.now(timezone.utc)
+)
+
 
 
 @dataclass(slots=True)
