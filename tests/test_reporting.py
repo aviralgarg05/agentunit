@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from agentunit.reporting.results import (
@@ -36,8 +36,9 @@ def test_markdown_contains_emojis():
 
     suite = SuiteResult(
         scenarios=[scenario],
-        started_at=datetime.now(),
-        finished_at=datetime.now(),
+        started_at=datetime.now(timezone.utc),
+        finished_at=datetime.now(timezone.utc),
+
     )
 
     output_path = Path("report.md")
