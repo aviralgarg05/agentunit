@@ -39,6 +39,14 @@ from agentunit.adapters.base import BaseAdapter, AdapterOutcome
 from agentunit.datasets.base import DatasetCase, DatasetSource
 
 class SimpleAdapter(BaseAdapter):
+    name = "simple"
+
+    def __init__(self, agent_func):
+        self.agent_func = agent_func
+
+    def prepare(self):
+        pass
+
     """Simple adapter for function-based agents."""
     
     name = "simple"
@@ -61,6 +69,7 @@ class SimpleAdapter(BaseAdapter):
 class MyDataset(DatasetSource):
     def __init__(self):
         super().__init__(name="my-dataset", loader=self._generate_cases)
+
     
     def _generate_cases(self):
         return [
@@ -182,6 +191,75 @@ pytest tests/eval/basic_scenarios.py
 
 # Filter by markers
 pytest -m agentunit
+```
+
+## Result Caching
+
+The plugin supports result caching to skip re-running unchanged scenarios, improving performance for repeated test runs.
+
+### How It Works
+
+- Scenario inputs (dataset, adapter config) are hashed to create cache keys
+- Results are stored in `.agentunit_cache/` directory
+- Cache is automatically invalidated when source files change
+- Cache hit/miss is logged for visibility
+
+### Cache Options
+
+```bash
+# Force fresh runs (bypass cache)
+pytest tests/eval/ --no-cache
+
+# Clear cache before running tests
+pytest tests/eval/ --clear-cache
+
+# Combine options
+pytest tests/eval/ --clear-cache --no-cache
+```
+
+### Cache Behavior
+
+- **Cache hit**: Repeated runs with same inputs use cached results (logged as info)
+- **Cache miss**: New or changed scenarios are executed fresh
+- **Source change**: Modifying scenario source files invalidates the cache
+- **Manual clear**: Use `--clear-cache` to remove all cached results
+
+### Cache Directory
+
+The cache is stored in `.agentunit_cache/` at the project root. Add it to `.gitignore`:
+
+```gitignore
+# AgentUnit cache
+.agentunit_cache/
+```
+
+## Configuration
+
+Add pytest configuration in `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options]
+markers = [
+    "agentunit: marks test as an AgentUnit scenario evaluation",
+    "scenario(name): marks test with specific scenario name",
+]
+testpaths = ["tests", "tests/eval"]
+```
+
+## Example Directory Structure
+
+```
+project/
+├── tests/
+│   ├── eval/                    # AgentUnit scenarios
+│   │   ├── __init__.py
+│   │   ├── basic_scenarios.py
+│   │   └── advanced_scenarios.py
+│   └── test_regular.py
+├── src/
+│   └── myproject/
+└── pyproject.toml
+```
 
 # Run with coverage
 pytest tests/eval/ --cov=myproject
