@@ -1,34 +1,39 @@
-from agentunit import Evaluation, Task
+from agentunit import DatasetCase, Runner, Scenario
 
 
 class FakeAdapter:
     def __init__(self, response: str):
         self.response = response
 
-    def run(self, prompt: str) -> str:
+    def run(self, case: DatasetCase) -> str:
         return self.response
 
 
-def main():
-    # define simple task
-    # each task specifies a prompt and expected output
-    task = Task(name="echo-task", prompt="Say hello", expected="hello")
-    # create a fake model adapter that always outputs "hello"
-    fake_model = FakeAdapter(response="hello")
+def main() -> None:
+    # define simple dataset
+    cases = [
+        DatasetCase(
+            id="echo-task",
+            query="Say hello",
+            expected_output="hello",
+        )
+    ]
+    # create a scenario using the fake adapter
+    scenario = Scenario(
+        name="Basic Evaluation Example",
+        adapter=FakeAdapter(response="hello"),
+        dataset=cases,
+    )
 
-    # build the evaluation
-    evaluation = Evaluation(task=[task], model=fake_model)
-    # results can be inspected/printed
-    results = evaluation.run()
+    # run evaluation
+    runner = Runner()
+    result = runner.run(scenario)
 
-    # print a readable summary
+    # print summary
     print("=== Evaluation Summary ===")
-    for result in results:
-        print(f"Task: {result.task.name}")
-        print(f"Prompt: {result.task.prompt}")
-        print(f"Model Output: {result.output}")
-        print(f"Expected: {result.task.expected}")
-        print(f"Passed: {result.passed}")
-        print("-" * 30)
-    if __name__ == "__main__":
-        main()
+    print(f"Scenario: {scenario.name}")
+    print(f"Success rate: {result.success_rate:.0%}")
+
+
+if __name__ == "__main__":
+    main()
