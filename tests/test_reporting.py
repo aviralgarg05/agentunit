@@ -48,3 +48,4 @@ def test_markdown_contains_emojis():
     markdown = output_path.read_text(encoding="utf-8")
 
     assert "✅" in markdown
+    assert "❌" in markdown
