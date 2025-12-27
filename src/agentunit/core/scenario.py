@@ -7,7 +7,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from agentunit.datasets.registry import resolve_dataset
 
@@ -68,7 +68,7 @@ class Scenario:
 
         adapter = OpenAIAgentsAdapter.from_flow(flow, **options)
         ds = resolve_dataset(dataset)
-        scenario_name = name or getattr(flow, "__name__", "openai-agents-scenario")
+        scenario_name = name or getattr(flow, "__name__", None) or "openai-agents-scenario"
         return cls(name=scenario_name, adapter=adapter, dataset=ds)
 
     @classmethod
@@ -95,7 +95,7 @@ class Scenario:
         orchestrator: object,
         dataset: str | DatasetSource | None = None,
         name: str | None = None,
-        **options: object,
+        **options: Any,
     ) -> Scenario:
         """
         Create scenario from AutoGen orchestrator.
@@ -113,7 +113,7 @@ class Scenario:
         pipeline: object,
         dataset: str | DatasetSource | None = None,
         name: str | None = None,
-        **options: object,
+        **options: Any,
     ) -> Scenario:
         from agentunit.adapters.haystack import HaystackAdapter
 
@@ -128,7 +128,7 @@ class Scenario:
         engine: object,
         dataset: str | DatasetSource | None = None,
         name: str | None = None,
-        **options: object,
+        **options: Any,
     ) -> Scenario:
         from agentunit.adapters.llama_index import LlamaIndexAdapter
 
@@ -143,7 +143,7 @@ class Scenario:
         invoker: object,
         dataset: str | DatasetSource | None = None,
         name: str | None = None,
-        **options: object,
+        **options: Any,
     ) -> Scenario:
         from agentunit.adapters.semantic_kernel import SemanticKernelAdapter
 
@@ -158,7 +158,7 @@ class Scenario:
         agent: object,
         dataset: str | DatasetSource | None = None,
         name: str | None = None,
-        **options: object,
+        **options: Any,
     ) -> Scenario:
         from agentunit.adapters.phidata import PhidataAdapter
 
@@ -173,7 +173,7 @@ class Scenario:
         flow: object,
         dataset: str | DatasetSource | None = None,
         name: str | None = None,
-        **options: object,
+        **options: Any,
     ) -> Scenario:
         from agentunit.adapters.promptflow import PromptFlowAdapter
 
@@ -188,7 +188,7 @@ class Scenario:
         swarm: object,
         dataset: str | DatasetSource | None = None,
         name: str | None = None,
-        **options: object,
+        **options: Any,
     ) -> Scenario:
         from agentunit.adapters.openai_swarm import OpenAISwarmAdapter
 
@@ -204,7 +204,7 @@ class Scenario:
         model_id: str,
         dataset: str | DatasetSource | None = None,
         name: str | None = None,
-        **options: object,
+        **options: Any,
     ) -> Scenario:
         from agentunit.adapters.anthropic_bedrock import AnthropicBedrockAdapter
 
@@ -219,7 +219,7 @@ class Scenario:
         base_url: str,
         dataset: str | DatasetSource | None = None,
         name: str | None = None,
-        **options: object,
+        **options: Any,
     ) -> Scenario:
         from agentunit.adapters.mistral_server import MistralServerAdapter
 
@@ -239,7 +239,7 @@ class Scenario:
         target: str | Callable[[dict], object],
         dataset: str | DatasetSource | None = None,
         name: str | None = None,
-        **options: object,
+        **options: Any,
     ) -> Scenario:
         from agentunit.adapters.rasa import RasaAdapter
 
