@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from pathlib import Path
 
+from agentunit.core.trace import TraceLog
 from agentunit.reporting.results import (
     ScenarioResult,
     ScenarioRun,
@@ -15,7 +16,7 @@ def test_markdown_contains_emojis():
         success=True,
         metrics={},
         duration_ms=5,
-        trace=[],
+        trace=TraceLog(),
         error=None,
     )
 
@@ -25,7 +26,7 @@ def test_markdown_contains_emojis():
         success=False,
         metrics={},
         duration_ms=6,
-        trace=[],
+        trace=TraceLog(),
         error="AssertionError",
     )
 
@@ -38,7 +39,6 @@ def test_markdown_contains_emojis():
         scenarios=[scenario],
         started_at=datetime.now(timezone.utc),
         finished_at=datetime.now(timezone.utc),
-
     )
 
     output_path = Path("report.md")

@@ -1896,7 +1896,7 @@ description = "IPython: Productive Interactive Computing"
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "python_version < \"3.14\" and python_version >= \"3.11\""
+markers = "python_version >= \"3.11\" and python_version < \"3.14\""
 files = [
     {file = "ipython-9.6.0-py3-none-any.whl", hash = "sha256:5f77efafc886d2f023442479b8149e7d86547ad0a979e9da9f045d252f648196"},
     {file = "ipython-9.6.0.tar.gz", hash = "sha256:5603d6d5d356378be5043e69441a072b50a5b33b4503428c77b04cb8ce7bc731"},
@@ -1930,7 +1930,7 @@ description = "Defines a variety of Pygments lexers for highlighting IPython cod
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "python_version < \"3.14\" and python_version >= \"3.11\""
+markers = "python_version >= \"3.11\" and python_version < \"3.14\""
 files = [
     {file = "ipython_pygments_lexers-1.1.1-py3-none-any.whl", hash = "sha256:a9462224a505ade19a605f71f8fa63c2048833ce50abc86768a0d81d876dc81c"},
     {file = "ipython_pygments_lexers-1.1.1.tar.gz", hash = "sha256:09c0138009e56b6854f9535736f4171d855c8c08a563a0dcd8022f78355c7e81"},
@@ -2980,7 +2980,7 @@ description = "Python package for creating and manipulating graphs and networks"
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "python_version < \"3.14\" and python_version >= \"3.11\""
+markers = "python_version >= \"3.11\" and python_version < \"3.14\""
 files = [
     {file = "networkx-3.5-py3-none-any.whl", hash = "sha256:0030d386a9a06dee3565298b4a734b68589749a544acbb6c412dc9e2489ec6ec"},
     {file = "networkx-3.5.tar.gz", hash = "sha256:d4c6f9cf81f52d69230866796b82afbccdec3db7ae4fbd1b65ea750feed50037"},
@@ -4297,7 +4297,7 @@ description = "C parser in Python"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "implementation_name != \"PyPy\" and platform_python_implementation != \"PyPy\" and python_version < \"3.14\""
+markers = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\" and python_version < \"3.14\""
 files = [
     {file = "pycparser-2.23-py3-none-any.whl", hash = "sha256:e5c6e8d3fbad53479cab09ac03729e0a9faf2bee3db8208a550daf5af81a5934"},
     {file = "pycparser-2.23.tar.gz", hash = "sha256:78816d4f24add8f10a06d6f05b4d424ad9e96cfebf68a4ddc99c65c0720d00c2"},
@@ -6601,5 +6601,4 @@ ragas = ["ragas"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "13d74922317e2b0b8fddbb6e71dfb0f574702ba69edd83d3984d5e9544cf29c3"
-
+content-hash = "dc289f86d94b05811ba2744b50cf6b0003d8812ff64df12d692ae1afb3dece95"
