@@ -1,5 +1,3 @@
-"""AgentUnit - pytest-style evaluation harness for agentic AI and RAG workflows."""
-
 from __future__ import annotations
 
 from .core.runner import Runner, run_suite
@@ -7,6 +5,8 @@ from .core.scenario import Scenario
 from .datasets.base import DatasetCase, DatasetSource
 from .reporting.results import ScenarioResult, SuiteResult
 
+
+"""AgentUnit - pytest-style evaluation harness for agentic AI and RAG workflows."""
 
 __all__ = [
     "DatasetCase",
@@ -19,4 +19,3 @@ __all__ = [
 ]
 
 __version__ = "0.7.0"
-
