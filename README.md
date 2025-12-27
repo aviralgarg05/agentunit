@@ -41,6 +41,13 @@ poetry install --with promptflow,crewai,langgraph
 # or with pip
 pip install agentunit[promptflow,crewai,langgraph]
 ```
+##  Run CI locally
+Prerequisites: Python 3.10+,Poetry
+- poetry install --with dev
+- poetry check
+- poetry run ruff check .
+- poetry run ruff format --check .
+- poetry run pytest
 
 ### Optional Extras
 
@@ -193,13 +200,22 @@ Use the table above as the canonical navigation surface; every document cross-li
 ## Development workflow
 
 1. Install dependencies (Poetry or pip).
-2. Run the unit and integration suite:
+2. Run the test suite:
 
 ```bash
+# Run all tests (unit + integration)
 poetry run python3 -m pytest tests -v
+
+# Run only unit tests (skip integration tests)
+poetry run python3 -m pytest -m "not integration" -v
+
+# Run only integration tests (requires framework dependencies)
+poetry run python3 -m pytest tests/integration/ -v
 ```
 
 3. Execute targeted suites during active development, then run the full matrix before opening a pull request.
+
+**Integration Tests**: The `tests/integration/` directory contains tests that verify AgentUnit works with real framework implementations (LangGraph, etc.). These tests are automatically skipped if the required dependencies are not installed. See [tests/integration/README.md](tests/integration/README.md) for details.
 
 Latest verification (2025-10-24): 144 passed, 10 skipped, 32 warnings. Warnings originate from third-party dependencies (`langchain` pydantic shim deprecations and `datetime.utcnow` usage). Track upstream fixes or pin patched releases as needed.
 

@@ -1,0 +1,91 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit Configuration
+# Documentation: https://docs.coderabbit.ai/reference/configuration
+
+# General settings
+language: "en-US"
+early_access: false
+
+# Reviews configuration
+reviews:
+  # Review profile: "chill" for constructive feedback, "assertive" for stricter reviews
+  profile: "chill"
+  
+  # Don't request changes workflow (just leave comments)
+  request_changes_workflow: false
+  
+  # Generate a high-level summary of all changes in the PR
+  high_level_summary: true
+  
+  # Show review status
+  review_status: true
+  
+  # Keep walkthrough expanded for better visibility
+  collapse_walkthrough: false
+  
+  # Show changed files summary
+  changed_files_summary: true
+  
+  # Generate sequence diagrams when applicable
+  sequence_diagrams: true
+  
+  # Estimate code review effort
+  estimate_code_review_effort: true
+  
+  # Assess linked issues
+  assess_linked_issues: true
+  
+  # Show related issues and PRs
+  related_issues: true
+  related_prs: true
+  
+  # Suggest labels and reviewers
+  suggested_labels: true
+  suggested_reviewers: true
+  
+  # Disable poem to keep reviews professional
+  poem: false
+  
+  # Auto-review configuration - CRITICAL for auto PR review
+  auto_review:
+    # Enable automatic reviews on all PRs
+    enabled: true
+    
+    # Enable incremental review for each new commit
+    auto_incremental_review: true
+    
+    # Also review draft PRs
+    drafts: true
+    
+    # Review PRs targeting any base branch (empty means all branches)
+    base_branches: []
+    
+    # Don't ignore any title keywords
+    ignore_title_keywords: []
+    
+    # Review all labels (empty means no label filtering)
+    labels: []
+  
+  # Tools configuration for enhanced code analysis
+  tools:
+    # Enable Ruff for Python linting
+    ruff:
+      enabled: true
+    
+    # Enable Shellcheck for shell script analysis
+    shellcheck:
+      enabled: true
+    
+    # Enable Markdownlint for documentation
+    markdownlint:
+      enabled: true
+    
+    # Enable GitHub checks integration
+    github-checks:
+      enabled: true
+      timeout_ms: 90000
+
+# Chat configuration
+chat:
+  # Enable auto-reply to chat messages
+  auto_reply: true
