@@ -1,31 +1,52 @@
-# -*- coding: utf-8 -*-
-import pytest
+import tempfile
+from datetime import datetime
+from pathlib import Path
 
-from agentunit.core.reporting import SuiteResult, RunResult
+from agentunit.reporting.results import ScenarioResult, ScenarioRun, SuiteResult
 
 
 def test_markdown_contains_emojis():
-    passing_run = RunResult(
-        name="test_pass",
-        passed=True,
-        error=None,
+    passing_run = ScenarioRun(
+        scenario_name="test_pass",
+        case_id=1,
+        success=True,
+        metrics={},
+        duration_ms=10,
+        trace=[]
     )
 
-    failing_run = RunResult(
-        name="test_fail",
-        passed=False,
-        error="AssertionError",
+    failing_run = ScenarioRun(
+        scenario_name="test_fail",
+        case_id=2,
+        success=False,
+        metrics={},
+        duration_ms=10,
+        trace=[],
+        error="AssertionError"
+    )
+
+    scenario_result = ScenarioResult(
+        name="emoji-scenario",
+        runs=[passing_run, failing_run]
     )
 
     suite = SuiteResult(
-        name="emoji-suite",
-        runs=[passing_run, failing_run],
+        scenarios=[scenario_result],
+        started_at=datetime.now(),
+        finished_at=datetime.now()
     )
 
-    markdown = suite.to_markdown()
+    # Use TemporaryDirectory to avoid Windows PermissionError
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_path = Path(tmpdir) / "suite.md"
+        suite.to_markdown(path=tmp_path)
 
+        # Read the generated Markdown
+        markdown = tmp_path.read_text(encoding="utf-8")
+
+    # Assertions
     assert "✅" in markdown
     assert "❌" in markdown
 
-    # UTF-8 safety check (important for Windows)
+    # UTF-8 safety check
     markdown.encode("utf-8")
