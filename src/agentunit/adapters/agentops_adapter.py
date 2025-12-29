@@ -127,10 +127,6 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
             logger.error(f"Failed to connect to AgentOps: {e}")
             raise
 
-    # def platform(self) -> MonitoringPlatform:
-    #     """Return the monitoring platform type."""
-    #     return MonitoringPlatform.AGENTOPS
-
     def create_agent(self, role: AgentRole, agent_id: str | None = None, **kwargs) -> AgentMetadata:
         """
         Create an agent for AgentOps monitoring.
@@ -246,7 +242,7 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
         interaction = AgentInteraction(
             interaction_id=interaction_id,
             from_agent=from_agent,
-            to_agent=to_agent or "",
+            to_agent=to_agent or "broadcast",
             content=message,
             timestamp=timestamp,
             metadata=metadata or {},
@@ -339,10 +335,7 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
         unique_agents = set()
 
         for interaction in self.session_interactions:
-            if isinstance(interaction.from_agent, list):
-                unique_agents.update(interaction.from_agent)
-            else:
-                unique_agents.add(interaction.from_agent)
+            unique_agents.add(interaction.from_agent)
             if interaction.to_agent:
                 if isinstance(interaction.to_agent, list):
                     unique_agents.update(interaction.to_agent)
@@ -491,15 +484,6 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
             # Update LangSmith run with results
             if scenario_run_id and self.enable_tracing:
                 try:
-                    # self.client.update_run(
-                    #     run_id=scenario_run_id,
-                    #     outputs={
-                    #         "result": result.success_rate,
-                    #         "execution_time": execution_time,
-                    #         "details": result.to_dict(),
-                    #     },
-                    #     end_time=datetime.now(timezone.utc),
-                    # )
                     self.agentops.update_trace_metadata(
                         trace_id=scenario_run_id,
                         metadata={"result": result.success_rate, "details": result.to_dict()},
@@ -540,11 +524,6 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
             # Update LangSmith run with error
             if scenario_run_id and self.enable_tracing:
                 try:
-                    # self.client.update_run(
-                    #     run_id=scenario_run_id,
-                    #     outputs={"error": str(e)},
-                    #     end_time=datetime.now(timezone.utc),
-                    # )
                     self.agentops.update_trace_metadata(
                         trace_id=scenario_run_id,
                         metadata={"result": result.success_rate, "details": result.to_dict()},
