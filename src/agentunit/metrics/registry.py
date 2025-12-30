@@ -39,3 +39,18 @@ def resolve_metrics(names: Sequence[str] | None) -> list[Metric]:
             raise KeyError(msg)
         resolved.append(metric)
     return resolved
+
+
+def register_metric(name: str, metric: Metric) -> None:
+    if name in DEFAULT_METRICS:
+        msg = f"Metric '{name}' is already registered"
+        raise ValueError(msg)
+    DEFAULT_METRICS[name] = metric
+
+
+def get_metric(name: str) -> Metric:
+    metric = DEFAULT_METRICS.get(name)
+    if metric is None:
+        msg = f"Metric '{name}' not found"
+        raise KeyError(msg)
+    return metric
