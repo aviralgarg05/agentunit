@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from typing import TYPE_CHECKING
 
 from .builtin import (
@@ -11,7 +12,6 @@ from .builtin import (
     RetrievalQualityMetric,
     ToolSuccessMetric,
 )
-
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -26,6 +26,8 @@ DEFAULT_METRICS: dict[str, Metric] = {
     "hallucination_rate": HallucinationRateMetric(),
     "retrieval_quality": RetrievalQualityMetric(),
 }
+
+_registry_lock = threading.Lock()
 
 
 def resolve_metrics(names: Sequence[str] | None) -> list[Metric]:
@@ -42,15 +44,14 @@ def resolve_metrics(names: Sequence[str] | None) -> list[Metric]:
 
 
 def register_metric(name: str, metric: Metric) -> None:
-    if name in DEFAULT_METRICS:
-        msg = f"Metric '{name}' is already registered"
-        raise ValueError(msg)
-    DEFAULT_METRICS[name] = metric
+    with _registry_lock:
+        if name in DEFAULT_METRICS:
+            msg = f"Metric '{name}' is already registered"
+            raise ValueError(msg)
+        DEFAULT_METRICS[name] = metric
 
 
 def get_metric(name: str) -> Metric:
-    metric = DEFAULT_METRICS.get(name)
-    if metric is None:
-        msg = f"Metric '{name}' not found"
-        raise KeyError(msg)
-    return metric
+    # Deduplicates logic by using resolve_metrics,
+    # which ensures the same error message is used.
+    return resolve_metrics([name])[0]
