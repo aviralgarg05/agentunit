@@ -1,4 +1,5 @@
 import pytest
+
 from agentunit.metrics.registry import (
     DEFAULT_METRICS,
     get_metric,
