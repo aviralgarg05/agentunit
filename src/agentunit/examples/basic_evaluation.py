@@ -1,8 +1,9 @@
-from agentunit.adapters.base import BaseAdapter
-from agentunit.core.outcome import Outcome
+from agentunit.adapters.base import BaseAdapter, AdapterOutcome
+from agentunit.core.tracelog import TraceLog
 from agentunit.core.runner import Runner
 from agentunit.core.scenario import Scenario
-from agentunit.dataset import DatasetCase, DatasetSource
+from agentunit.datasets.base import DatasetCase, DatasetSource
+
 
 class FakeAdapter(BaseAdapter):
     def __init__(self, response: str):
@@ -10,33 +11,36 @@ class FakeAdapter(BaseAdapter):
 
     def prepare(self):
         pass
-    def execute(self, case, trace_log):
-        return Outcome(success=True, output=self.response, error=None)
+
+    def execute(self, case, trace_log: TraceLog) -> AdapterOutcome:
+        return AdapterOutcome(success=True, output=self.response, error=None)
+
     def cleanup(self):
         pass
+
 
 def main() -> None:
     # define simple dataset
     cases = [
         DatasetCase(
+            id="case_1",
             input="hello",
-            expected="hello",
+            expected_output="hello",
         )
     ]
-    dataset = DatasetSource.from_list(cases)
     
     # create a scenario using the fake adapter
     scenario = Scenario(
         name="Basic Evaluation Example",
         adapter=FakeAdapter(response="hello"),
-        dataset=dataset,
+        dataset=DatasetSource.from_list(cases),
     )
 
     # run evaluation
     runner = Runner([scenario])
-    suite_result = runner.run()
+    result = runner.run()
 
-    scenario_result = suite_result.scenarios[0]
+    scenario_result = result.scenarios[0]
     # print summary
     print("=== Evaluation Summary ===")
     print(f"Scenario: {scenario.name}")
