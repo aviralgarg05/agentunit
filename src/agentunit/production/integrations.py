@@ -97,7 +97,7 @@ class ProductionIntegration(ABC):
         self, historical_data: list[dict[str, Any]], metrics: list[str]
     ) -> dict[str, dict[str, dict[str, float]]]:
         """Calculate baseline statistics from historical data."""
-        baseline_stats = {
+        baseline_stats: dict[str, dict[str, dict[str, float]]] = {
             "performance_baseline": {},
             "quality_baseline": {},
             "reliability_baseline": {},
