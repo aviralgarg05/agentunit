@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any
 
 import pytest
 
 from agentunit import Scenario, run_suite
 from agentunit.core.exceptions import AgentUnitError
+from agentunit.pytest.cache import ScenarioCache
 
 
 if TYPE_CHECKING:
@@ -15,14 +17,50 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from _pytest.config import Config
+    from _pytest.config.argparsing import Parser
     from _pytest.nodes import Collector
     from _pytest.python import Module
+
+
+logger = logging.getLogger(__name__)
+
+
+def pytest_addoption(parser: Parser) -> None:
+    """Add AgentUnit command-line options."""
+    group = parser.getgroup("agentunit", "AgentUnit scenario caching")
+    group.addoption(
+        "--no-cache",
+        action="store_true",
+        default=False,
+        dest="agentunit_no_cache",
+        help="Bypass AgentUnit result cache and force fresh runs",
+    )
+    group.addoption(
+        "--clear-cache",
+        action="store_true",
+        default=False,
+        dest="agentunit_clear_cache",
+        help="Clear AgentUnit result cache before running tests",
+    )
 
 
 def pytest_configure(config: Config) -> None:
     """Configure pytest with AgentUnit markers."""
     config.addinivalue_line("markers", "agentunit: mark test as an AgentUnit scenario evaluation")
     config.addinivalue_line("markers", "scenario(name): mark test with specific scenario name")
+
+    # Initialize cache
+    root_path = config.rootpath
+    no_cache = config.getoption("agentunit_no_cache", default=False)
+    clear_cache = config.getoption("agentunit_clear_cache", default=False)
+
+    cache = ScenarioCache(root_path, enabled=not no_cache)
+    config._agentunit_cache = cache  # type: ignore[attr-defined]
+
+    if clear_cache:
+        count = cache.clear()
+        if count > 0:
+            logger.info(f"Cleared {count} cached AgentUnit results")
 
 
 def pytest_collect_file(file_path: Path, parent: Collector) -> Module | None:
@@ -56,7 +94,10 @@ class AgentUnitFile(pytest.File):
         except Exception as e:
             # If we can't load scenarios, create a single failing test
             yield AgentUnitItem.from_parent(
-                self, name=f"load_error_{self.path.stem}", scenario=None, load_error=str(e)
+                self,
+                name=f"load_error_{self.path.stem}",
+                scenario=None,
+                load_error=str(e),
             )
 
     def _discover_scenarios(self) -> list[Scenario]:
@@ -100,8 +141,6 @@ class AgentUnitFile(pytest.File):
 
     def _discover_config_scenarios(self) -> list[Scenario]:
         """Discover scenarios from config files."""
-        # This would integrate with the nocode module to load scenarios
-        # from YAML/JSON configuration files
         try:
             from agentunit.nocode import ScenarioBuilder
 
@@ -109,10 +148,8 @@ class AgentUnitFile(pytest.File):
             scenario = builder.to_scenario()
             return [scenario]
         except ImportError:
-            # nocode module not available
             return []
         except Exception:
-            # Failed to load config
             return []
 
     def _import_module(self) -> Any:
@@ -146,6 +183,7 @@ class AgentUnitItem(pytest.Item):
         super().__init__(name, parent)
         self.scenario = scenario
         self.load_error = load_error
+        self._source_path = parent.path if parent else None
 
         # Add agentunit marker
         self.add_marker(pytest.mark.agentunit)
@@ -154,6 +192,10 @@ class AgentUnitItem(pytest.Item):
         if scenario:
             self.add_marker(pytest.mark.scenario(name=scenario.name))
 
+    def _get_cache(self) -> ScenarioCache | None:
+        """Get the scenario cache from config."""
+        return getattr(self.config, "_agentunit_cache", None)
+
     def runtest(self) -> None:
         """Run the AgentUnit scenario as a pytest test."""
         if self.load_error:
@@ -161,6 +203,19 @@ class AgentUnitItem(pytest.Item):
 
         if self.scenario is None:
             raise AgentUnitError("No scenario to run")
+
+        # Check cache for existing result
+        cache = self._get_cache()
+        if cache:
+            cached = cache.get(self.scenario, self._source_path)
+            if cached:
+                logger.info(f"Using cached result for scenario '{self.scenario.name}'")
+                if not cached.success:
+                    failure_summary = "\n".join(cached.failures)
+                    raise AssertionError(
+                        f"Scenario '{self.scenario.name}' failed (cached):\n{failure_summary}"
+                    )
+                return  # Cached success
 
         # Run the scenario using AgentUnit
         result = run_suite([self.scenario])
@@ -174,6 +229,16 @@ class AgentUnitItem(pytest.Item):
             if not run.success:
                 error_msg = run.error or "Unknown error"
                 failures.append(f"Case {run.case_id}: {error_msg}")
+
+        success = len(failures) == 0
+
+        # Cache the result
+        if cache:
+            cache.set(self.scenario, success, failures, self._source_path)
+            if success:
+                logger.debug(f"Cached successful result for '{self.scenario.name}'")
+            else:
+                logger.debug(f"Cached failed result for '{self.scenario.name}'")
 
         if failures:
             failure_summary = "\n".join(failures)

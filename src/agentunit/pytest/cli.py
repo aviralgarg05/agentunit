@@ -34,13 +34,23 @@ def init_eval(directory: str, example: bool) -> None:
         click.echo(f"Created {init_file}")
 
     if example:
-        # Create example scenario file
-        example_file = eval_dir / "example_scenarios.py"
-        if not example_file.exists():
-            example_content = '''"""Example AgentUnit scenarios for pytest plugin."""
+        _create_example_files(eval_dir)
+
+    click.echo(f"\nEvaluation directory initialized at {eval_dir}")
+    click.echo("\nNext steps:")
+    click.echo(f"1. Add scenario files to {eval_dir}/")
+    click.echo("2. Run: pytest tests/eval/")
+    click.echo("3. See docs/pytest-plugin.md for more information")
+
+
+def _create_example_files(eval_dir: Path) -> None:
+    """Create example scenario files."""
+    example_file = eval_dir / "example_scenarios.py"
+    if not example_file.exists():
+        example_content = '''"""Example AgentUnit scenarios for pytest plugin."""
 
 from agentunit import Scenario
-from agentunit.adapters.base import BaseAdapter, AdapterOutcome
+from agentunit.adapters.base import AdapterOutcome, BaseAdapter
 from agentunit.datasets.base import DatasetCase, DatasetSource
 
 
@@ -77,13 +87,13 @@ class ExampleDataset(DatasetSource):
                 id="greeting",
                 query="Hello, how are you?",
                 expected_output="Hello! I'm doing well, thank you.",
-                metadata={"category": "greeting"}
+                metadata={"category": "greeting"},
             ),
             DatasetCase(
                 id="math_simple",
                 query="What is 2 + 2?",
                 expected_output="4",
-                metadata={"category": "math"}
+                metadata={"category": "math"},
             ),
         ]
 
@@ -110,6 +120,7 @@ example_scenario = Scenario(
 
 def scenario_math_focused():
     """Factory function for math-focused scenario."""
+
     class MathDataset(DatasetSource):
         def __init__(self):
             super().__init__(name="math-dataset", loader=self._generate_cases)
@@ -130,7 +141,6 @@ def scenario_math_focused():
 
     def math_agent(payload):
         query = payload.get("query", "")
-        # Simple math agent - in practice, this would be more sophisticated
         if "5 + 3" in query:
             return {"result": "8"}
         elif "4 * 6" in query:
@@ -143,14 +153,12 @@ def scenario_math_focused():
         dataset=MathDataset(),
     )
 '''
+        example_file.write_text(example_content)
+        click.echo(f"Created {example_file}")
 
-            example_file.write_text(example_content)
-            click.echo(f"Created {example_file}")
-
-        # Create README
-        readme_file = eval_dir / "README.md"
-        if not readme_file.exists():
-            readme_content = """# AgentUnit Evaluation Scenarios
+    readme_file = eval_dir / "README.md"
+    if not readme_file.exists():
+        readme_content = """# AgentUnit Evaluation Scenarios
 
 This directory contains AgentUnit scenarios that can be run as pytest tests.
 
@@ -178,25 +186,9 @@ pytest -m agentunit
 3. Implement agent functions that process queries and return results
 
 See `example_scenarios.py` for examples.
-
-## Markers
-
-- `@pytest.mark.agentunit`: Automatically added to all scenarios
-- `@pytest.mark.scenario(name="scenario-name")`: Added with scenario name
-
-## Documentation
-
-See `docs/pytest-plugin.md` for complete documentation.
 """
-
-            readme_file.write_text(readme_content)
-            click.echo(f"Created {readme_file}")
-
-    click.echo(f"\nEvaluation directory initialized at {eval_dir}")
-    click.echo("\nNext steps:")
-    click.echo(f"1. Add scenario files to {eval_dir}/")
-    click.echo("2. Run: pytest tests/eval/")
-    click.echo("3. See docs/pytest-plugin.md for more information")
+        readme_file.write_text(readme_content)
+        click.echo(f"Created {readme_file}")
 
 
 if __name__ == "__main__":

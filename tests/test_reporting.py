@@ -11,6 +11,7 @@ from agentunit.reporting.results import (
 
 def test_markdown_contains_emojis():
     passing_run = ScenarioRun(
+
         scenario_name="test_pass",
         case_id=1,
         success=True,
@@ -41,7 +42,6 @@ def test_markdown_contains_emojis():
         finished_at=datetime.now()
     )
 
-    # Use TemporaryDirectory to avoid Windows PermissionError
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_path = Path(tmpdir) / "suite.md"
         suite.to_markdown(path=tmp_path)
@@ -49,7 +49,45 @@ def test_markdown_contains_emojis():
         # Read the generated Markdown
         markdown = tmp_path.read_text(encoding="utf-8")
 
-    assert "✅" in markdown
-    assert "❌" in markdown
+        scenario_name="emoji-suite",
+        case_id="test_pass",
+        success=True,
+        metrics={},
+        duration_ms=5,
+        trace=[],
+        error=None,
+    )
 
-    markdown.encode("utf-8")
+    failing_run = ScenarioRun(
+        scenario_name="emoji-suite",
+        case_id="test_fail",
+        success=False,
+        metrics={},
+        duration_ms=6,
+        trace=[],
+        error="AssertionError",
+    )
+
+    scenario = ScenarioResult(
+        name="emoji-suite",
+        runs=[passing_run, failing_run],
+    )
+
+    suite = SuiteResult(
+        scenarios=[scenario],
+        started_at=datetime.now(),
+        finished_at=datetime.now(),
+    )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_path = Path(tmpdir) / "suite.md"
+        suite.to_markdown(output_path)
+
+        # Read the generated Markdown
+        markdown = output_path.read_text(encoding="utf-8")
+
+
+        assert "✅" in markdown
+        assert "❌" in markdown
+
+        markdown.encode("utf-8")

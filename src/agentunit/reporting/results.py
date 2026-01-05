@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from agentunit.reporting.html import render_html_report
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -126,6 +128,16 @@ class SuiteResult:
                     failure.text = json.dumps(run.metrics)
         tree = ET.ElementTree(testsuites)
         tree.write(target, encoding="utf-8", xml_declaration=True)
+        return target
+
+    def to_html(self, path: str | Path) -> Path:
+        """
+        Export results as a self-contained HTML report.
+        """
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        html = render_html_report(self)
+        target.write_text(html, encoding="utf-8")
         return target
 
 
