@@ -1,22 +1,50 @@
-from agentunit.adapters.base import BaseAdapter, AdapterOutcome
-from agentunit.core.tracelog import TraceLog
+from agentunit.adapters.base import AdapterOutcome, BaseAdapter
 from agentunit.core.runner import Runner
 from agentunit.core.scenario import Scenario
+from agentunit.core.trace import TraceLog
 from agentunit.datasets.base import DatasetCase, DatasetSource
 
 
 class FakeAdapter(BaseAdapter):
+    """
+    A minimal adapter implementation used for testing and examples.
+
+    FakeAdapter simulates an adapter without performing real computation, it returns predefined response.
+    This becomes useful in representing integration of adapters with the AgentUnit.
+    """
+
     def __init__(self, response: str):
+        """
+        Initialize adapter with static response.
+
+        Args:
+            response (str): The output string returns on execution.
+        """
         self.response = response
 
     def prepare(self):
-        pass
+        """
+        Prepare adapter before execution.
+
+        FakeAdapter do nor require setup.
+        """
 
     def execute(self, case, trace_log: TraceLog) -> AdapterOutcome:
+        """
+        Execute the adapter for a given evaluation case.
+
+        Args:
+            case(object): Input case of evaluation.
+            trace_log (TraceLog): Trace log for recording execution details.
+        """
         return AdapterOutcome(success=True, output=self.response, error=None)
 
     def cleanup(self):
-        pass
+        """
+        Cleanup adapter resources.
+
+        No cleanup required for FakeAdapter.
+        """
 
 
 def main() -> None:
@@ -28,7 +56,7 @@ def main() -> None:
             expected_output="hello",
         )
     ]
-    
+
     # create a scenario using the fake adapter
     scenario = Scenario(
         name="Basic Evaluation Example",
