@@ -1,7 +1,7 @@
-from datetime import datetime, timezone
+import tempfile
+from datetime import datetime
 from pathlib import Path
 
-from agentunit.core.trace import TraceLog
 from agentunit.reporting.results import (
     ScenarioResult,
     ScenarioRun,
@@ -11,41 +11,45 @@ from agentunit.reporting.results import (
 
 def test_markdown_contains_emojis():
     passing_run = ScenarioRun(
-        scenario_name="emoji-suite",
-        case_id="test_pass",
+        scenario_name="test_pass",
+        case_id=1,
         success=True,
         metrics={},
-        duration_ms=5,
-        trace=TraceLog(),
-        error=None,
+        duration_ms=10,
+        trace=[],
+        error=None
     )
 
     failing_run = ScenarioRun(
-        scenario_name="emoji-suite",
-        case_id="test_fail",
+        scenario_name="test_fail",
+        case_id=2,
         success=False,
         metrics={},
-        duration_ms=6,
-        trace=TraceLog(),
-        error="AssertionError",
+        duration_ms=10,
+        trace=[],
+        error="AssertionError"
     )
 
-    scenario = ScenarioResult(
-        name="emoji-suite",
-        runs=[passing_run, failing_run],
+    scenario_result = ScenarioResult(
+        name="emoji-scenario",
+        runs=[passing_run, failing_run]
     )
 
     suite = SuiteResult(
-        scenarios=[scenario],
-        started_at=datetime.now(timezone.utc),
-        finished_at=datetime.now(timezone.utc),
+        scenarios=[scenario_result],
+        started_at=datetime.now(),
+        finished_at=datetime.now()
     )
 
-    output_path = Path("report.md")
-    suite.to_markdown(output_path)
+    # Use TemporaryDirectory to avoid Windows PermissionError
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_path = Path(tmpdir) / "suite.md"
+        suite.to_markdown(path=tmp_path)
 
-    # FIX: Read the file content
-    markdown = output_path.read_text(encoding="utf-8")
+        # Read the generated Markdown
+        markdown = tmp_path.read_text(encoding="utf-8")
 
     assert "✅" in markdown
     assert "❌" in markdown
+
+    markdown.encode("utf-8")
