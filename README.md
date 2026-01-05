@@ -220,6 +220,15 @@ poetry run python3 -m pytest tests/integration/ -v
 Latest verification (2025-10-24): 144 passed, 10 skipped, 32 warnings. Warnings originate from third-party dependencies (`langchain` pydantic shim deprecations and `datetime.utcnow` usage). Track upstream fixes or pin patched releases as needed.
 
 ### Running CI Checks Locally
+#### Usage
+
+Run all checks (same as CI):
+
+```bash
+poetry run ruff check .
+poetry run ruff format --check .
+poetry run pytest tests -v
+```
 
 Before opening a pull request, you can run the same checks locally that are executed in CI.
 

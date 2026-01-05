@@ -23,7 +23,7 @@ This roadmap outlines the evolution of AgentUnit from a foundational testing fra
 **Development Time:** 8-10 weeks  
 **Theme:** "Intelligent Automation"
 
-### 🤖 Auto-Test Generation Engine
+### Auto-Test Generation Engine
 
 #### Core Components
 ```python
@@ -58,7 +58,7 @@ agentunit generate --from-code ./my_agent.py --model llama-3.1-8b
 agentunit generate --edge-cases --base-suite ./existing_suite.py
 ```
 
-### 🚀 Multi-Agent Orchestration Framework
+### Multi-Agent Orchestration Framework
 
 #### New Adapters
 ```python
@@ -93,7 +93,7 @@ class CoordinationMetrics:
     role_adherence: float        # How well agents stick to roles
 ```
 
-### 📊 Enhanced Metrics & Reporting
+### Enhanced Metrics & Reporting
 
 #### New Metric Categories
 - **Swarm Intelligence Metrics**: Collective problem-solving effectiveness
@@ -109,7 +109,7 @@ class CoordinationMetrics:
 **Development Time:** 10-12 weeks  
 **Theme:** "Production Ready"
 
-### 🔄 Real-Time Production Integration
+### Real-Time Production Integration
 
 #### Live Monitoring Bridge
 ```python
@@ -143,7 +143,7 @@ class ContinuousEvaluator:
 - **Alert System**: Configurable alerts for performance issues
 - **A/B Testing Integration**: Compare agent versions in production
 
-### 🛡️ Advanced Guardrailing & Safety
+### Advanced Guardrailing & Safety
 
 #### Safety Framework
 ```python
@@ -179,7 +179,7 @@ class RedTeamDatasets:
 - **ISO/IEC 23053**: AI risk management integration
 - **Custom Policies**: Configurable organizational compliance rules
 
-### ⚡ Performance & Resource Profiling
+### Performance & Resource Profiling
 
 #### Resource Monitoring
 ```python
@@ -221,7 +221,7 @@ class ModelRouter:
 **Development Time:** 8-10 weeks  
 **Theme:** "Industry Standards"
 
-### 🏆 Benchmark Automation
+### Benchmark Automation
 
 #### Benchmark Integration
 ```python
@@ -251,7 +251,7 @@ class LeaderboardTracker:
         """Generate detailed comparison with competitors"""
 ```
 
-### 📈 Statistical Analysis Tools
+### Statistical Analysis Tools
 
 #### Advanced Analytics
 ```python
@@ -281,7 +281,7 @@ class FailureModeAnalysis:
         """Predict likelihood of failure for new scenarios"""
 ```
 
-### 🎯 Inclusive & Diverse Testing
+### Inclusive & Diverse Testing
 
 #### Diversity Framework
 ```python
@@ -316,7 +316,7 @@ class MultimodalTester:
 **Development Time:** 12-14 weeks  
 **Theme:** "Enterprise Ready"
 
-### 🏢 Enterprise-Grade Infrastructure
+### Enterprise-Grade Infrastructure
 
 #### Security & Access Control
 ```python
@@ -346,7 +346,7 @@ class AuditLogger:
         """Generate compliance audit reports"""
 ```
 
-### 📋 Certification & Compliance Reports
+### Certification & Compliance Reports
 
 #### Automated Reporting
 ```python
@@ -379,7 +379,7 @@ class GovernanceFramework:
         """Track ongoing compliance status"""
 ```
 
-### 🔌 Plugin Ecosystem & Marketplace
+### Plugin Ecosystem & Marketplace
 
 #### Extensibility Framework
 ```python

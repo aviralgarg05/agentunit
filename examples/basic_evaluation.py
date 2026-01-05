@@ -11,6 +11,7 @@ from agentunit.core.adapters import BaseAdapter
 from agentunit.core.evaluator import Evaluator
 
 
+
 class FakeAdapter(BaseAdapter):
     """
     A simple mock adapter used only for demonstration.

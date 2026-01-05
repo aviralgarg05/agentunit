@@ -21,7 +21,7 @@ We take the security of AgentUnit seriously. If you believe you have found a sec
 
 ### How to Report
 
-**For security vulnerabilities, please email:** opensource@agentunit.dev
+**For security vulnerabilities, please email:** gargaviral99@gmail.com
 
 In your report, please include:
 
@@ -182,7 +182,7 @@ See [Privacy Documentation](docs/privacy.md) for details.
 
 ## Contact
 
-- Security Email: opensource@agentunit.dev
+- Security Email: gargaviral99@gmail.com
 - General Issues: [GitHub Issues](https://github.com/aviralgarg05/agentunit/issues)
 - Discussions: [GitHub Discussions](https://github.com/aviralgarg05/agentunit/discussions)
 
