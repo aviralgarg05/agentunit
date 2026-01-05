@@ -1,11 +1,9 @@
 import tempfile
-from agentunit.reporting.results import ScenarioResult, ScenarioRun, SuiteResult
-from datetime import datetime
+
+from datetime import datetime, timezone
 from pathlib import Path
 
-# Local imports
 from agentunit.reporting.results import ScenarioResult, ScenarioRun, SuiteResult
-
 
 
 def test_markdown_contains_emojis():
