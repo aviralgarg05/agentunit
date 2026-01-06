@@ -9,6 +9,14 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .arena import AgentArenaBenchmark, ArenaTask, ArenaTaskType
+    from .experiments import (
+        BenchmarkExperiment,
+        ExperimentConfig,
+        ExperimentResult,
+        ResearchGapAnalyzer,
+        TaskResult,
+        run_standard_experiment,
+    )
     from .gaia import GAIABenchmark, GAIALevel
     from .leaderboard import LeaderboardConfig, LeaderboardSubmitter
     from .runner import BenchmarkResult, BenchmarkRunner
@@ -17,12 +25,24 @@ __all__ = [
     "AgentArenaBenchmark",
     "ArenaTask",
     "ArenaTaskType",
+    "BenchmarkExperiment",
     "BenchmarkResult",
     "BenchmarkRunner",
+    "ExperimentConfig",
+    "ExperimentResult",
     "GAIABenchmark",
     "GAIALevel",
     "LeaderboardConfig",
     "LeaderboardSubmitter",
+    "LLMClient",
+    "LLMConfig",
+    "RESEARCH_GAPS",
+    "RealExperimentRunner",
+    "RealTaskResult",
+    "ResearchGapAnalyzer",
+    "TaskResult",
+    "run_real_experiment",
+    "run_standard_experiment",
 ]
 
 
@@ -64,5 +84,59 @@ def __getattr__(name: str):
         from .runner import BenchmarkResult
 
         return BenchmarkResult
+    
+    # New experiment exports
+    if name == "BenchmarkExperiment":
+        from .experiments import BenchmarkExperiment
+
+        return BenchmarkExperiment
+    if name == "ExperimentConfig":
+        from .experiments import ExperimentConfig
+
+        return ExperimentConfig
+    if name == "ExperimentResult":
+        from .experiments import ExperimentResult
+
+        return ExperimentResult
+    if name == "TaskResult":
+        from .experiments import TaskResult
+
+        return TaskResult
+    if name == "ResearchGapAnalyzer":
+        from .experiments import ResearchGapAnalyzer
+
+        return ResearchGapAnalyzer
+    if name == "run_standard_experiment":
+        from .experiments import run_standard_experiment
+
+        return run_standard_experiment
+    
+    # Real experiment exports
+    if name == "LLMConfig":
+        from .real_experiments import LLMConfig
+
+        return LLMConfig
+    if name == "LLMClient":
+        from .real_experiments import LLMClient
+
+        return LLMClient
+    if name == "RealTaskResult":
+        from .real_experiments import RealTaskResult
+
+        return RealTaskResult
+    if name == "RealExperimentRunner":
+        from .real_experiments import RealExperimentRunner
+
+        return RealExperimentRunner
+    if name == "run_real_experiment":
+        from .real_experiments import run_real_experiment
+
+        return run_real_experiment
+    if name == "RESEARCH_GAPS":
+        from .real_experiments import RESEARCH_GAPS
+
+        return RESEARCH_GAPS
+    
     msg = f"module {__name__!r} has no attribute {name!r}"
     raise AttributeError(msg)
+

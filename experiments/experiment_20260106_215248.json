@@ -1,0 +1,276 @@
+{
+  "timestamp": "2026-01-06T21:52:48.027759",
+  "n_results": 8,
+  "systems": [
+    "groq/llama-3.3-70b-versatile"
+  ],
+  "benchmarks": [
+    "arena_sample",
+    "gaia_sample"
+  ],
+  "analysis": {
+    "summary": {},
+    "by_system": {
+      "groq/llama-3.3-70b-versatile": {
+        "n_tasks": 8,
+        "n_passed": 7,
+        "accuracy": {
+          "mean": 0.875,
+          "ci_95": [
+            0.625,
+            1.0
+          ],
+          "std_error": 0.11823564254135538
+        },
+        "avg_score": 0.9375,
+        "avg_latency_ms": 263.10995221138,
+        "total_cost_usd": 0.0,
+        "avg_cost_per_task": 0.0,
+        "total_tokens": 1035,
+        "avg_tokens_per_task": 129.375
+      }
+    },
+    "by_benchmark": {},
+    "statistical_comparisons": [],
+    "cost_analysis": {},
+    "research_gaps_addressed": {
+      "gap_1": {
+        "name": "Outcome-Only Evaluation",
+        "description": "Current benchmarks focus solely on final correctness, ignoring process quality",
+        "addressed": true,
+        "solution": "Process metrics: steps, tool calls, latency, intermediate reasoning",
+        "sources": [
+          "IBM Research 2024 - Process vs outcome evaluation",
+          "GEMMAS (arXiv) - IDS and UPR metrics for collaboration analysis",
+          "MultiAgentBench - Milestone-based performance indicators"
+        ]
+      },
+      "gap_2": {
+        "name": "No Multi-Agent Coordination Metrics",
+        "description": "No standardized metrics for handoffs, conflicts, communication efficiency",
+        "addressed": true,
+        "solution": "InteractionAnalyzer, NetworkAnalyzer, EmergentBehaviorDetector",
+        "sources": [
+          "MultiAgentBench (ACL 2024) - Coordination protocols evaluation",
+          "LLM-Coordination Benchmark - Theory of Mind reasoning",
+          "Galileo AI - Coordination failures analysis"
+        ]
+      },
+      "gap_3": {
+        "name": "Lack of Statistical Rigor",
+        "description": "Most papers report only mean accuracy without CI or significance tests",
+        "addressed": true,
+        "solution": "StatisticalAnalyzer: bootstrap CI, t-tests, effect sizes",
+        "sources": [
+          "FermiEval (arXiv 2025) - LLM confidence interval calibration",
+          "ACL 2024 - Characterizing confidence of LLM evaluation metrics",
+          "Meta-analysis: only 23% of papers report confidence intervals"
+        ]
+      },
+      "gap_4": {
+        "name": "Single-Framework Evaluation",
+        "description": "Papers typically test one framework, preventing fair comparison",
+        "addressed": true,
+        "solution": "18+ adapters with unified evaluation across frameworks",
+        "sources": [
+          "AgentBench (OpenReview) - 8 environments but framework-specific",
+          "OSWorld (NeurIPS 2024) - Virtual environment but single-agent",
+          "WorkArena - Enterprise workflows, limited framework support"
+        ]
+      },
+      "gap_5": {
+        "name": "Ignoring Cost/Efficiency Tradeoffs",
+        "description": "Production systems care about cost-accuracy tradeoffs, benchmarks don't",
+        "addressed": true,
+        "solution": "Cost metrics, tokens, latency, cost-efficiency scores",
+        "sources": [
+          "CLEAR framework (Galileo AI) - Cost, Latency, Efficiency metrics",
+          "Samiranama 2024 - Token usage and API cost tracking",
+          "TheAgentCompany benchmark - Real-world economic impact"
+        ]
+      }
+    }
+  },
+  "results": [
+    {
+      "task_id": "gaia_sample_1",
+      "benchmark": "gaia_sample",
+      "system": "groq/llama-3.3-70b-versatile",
+      "passed": true,
+      "score": 1.0,
+      "expected": "Paris",
+      "actual": "The capital of France is **Paris**.",
+      "latency_ms": 311.0618591308594,
+      "cost_usd": 0.0,
+      "tokens_input": 79,
+      "tokens_output": 10,
+      "tokens_total": 89,
+      "steps": 1,
+      "timestamp": "2026-01-06T21:52:42.494004"
+    },
+    {
+      "task_id": "gaia_sample_2",
+      "benchmark": "gaia_sample",
+      "system": "groq/llama-3.3-70b-versatile",
+      "passed": true,
+      "score": 1.0,
+      "expected": "36",
+      "actual": "To calculate 15% of 240, we need to multiply 240 by 0.15 (since 15% is equal to 0.15).\n\n Calculation: \n240 * 0.15 = 36\n\nThe final answer is: $\\boxed{36}$",
+      "latency_ms": 405.80201148986816,
+      "cost_usd": 0.0,
+      "tokens_input": 83,
+      "tokens_output": 57,
+      "tokens_total": 140,
+      "steps": 2,
+      "timestamp": "2026-01-06T21:52:43.113055"
+    },
+    {
+      "task_id": "gaia_sample_3",
+      "benchmark": "gaia_sample",
+      "system": "groq/llama-3.3-70b-versatile",
+      "passed": true,
+      "score": 1.0,
+      "expected": "Paris",
+      "actual": "The Eiffel Tower is located in Paris, France.",
+      "latency_ms": 136.02185249328613,
+      "cost_usd": 0.0,
+      "tokens_input": 84,
+      "tokens_output": 13,
+      "tokens_total": 97,
+      "steps": 1,
+      "timestamp": "2026-01-06T21:52:43.447841"
+    },
+    {
+      "task_id": "gaia_sample_4",
+      "benchmark": "gaia_sample",
+      "system": "groq/llama-3.3-70b-versatile",
+      "passed": true,
+      "score": 1.0,
+      "expected": "150 miles",
+      "actual": "To find the distance traveled by the train, we need to multiply its speed by the time it traveled.\n\nSpeed = 60 mph\nTime = 2.5 hours\n\nDistance = Speed * Time\nDistance = 60 * 2.5\nDistance = 150 miles\n\nThe final answer is: $\\boxed{150}$",
+      "latency_ms": 296.9820499420166,
+      "cost_usd": 0.0,
+      "tokens_input": 93,
+      "tokens_output": 68,
+      "tokens_total": 161,
+      "steps": 3,
+      "timestamp": "2026-01-06T21:52:44.001909"
+    },
+    {
+      "task_id": "gaia_sample_5",
+      "benchmark": "gaia_sample",
+      "system": "groq/llama-3.3-70b-versatile",
+      "passed": true,
+      "score": 1.0,
+      "expected": "H2O",
+      "actual": "The chemical formula for water is **H2O**.",
+      "latency_ms": 143.2960033416748,
+      "cost_usd": 0.0,
+      "tokens_input": 80,
+      "tokens_output": 13,
+      "tokens_total": 93,
+      "steps": 1,
+      "timestamp": "2026-01-06T21:52:44.383206"
+    },
+    {
+      "task_id": "arena_code_1",
+      "benchmark": "arena_sample",
+      "system": "groq/llama-3.3-70b-versatile",
+      "passed": true,
+      "score": 1.0,
+      "expected": "120",
+      "actual": "```python\nimport math\n\ndef calculate_factorial():\n    number = 5\n    factorial = math.factorial(number)\n    return factorial\n\nresult = calculate_factorial()\nprint(result)\n```",
+      "latency_ms": 209.15794372558594,
+      "cost_usd": 0.0,
+      "tokens_input": 90,
+      "tokens_output": 40,
+      "tokens_total": 130,
+      "steps": 1,
+      "timestamp": "2026-01-06T21:52:46.362149"
+    },
+    {
+      "task_id": "arena_reasoning_1",
+      "benchmark": "arena_sample",
+      "system": "groq/llama-3.3-70b-versatile",
+      "passed": false,
+      "score": 0.5,
+      "expected": "no",
+      "actual": "**Yes**\nWe can conclude that some roses might fade quickly because the statement \"some flowers fade quickly\" includes all types of flowers, which encompasses roses. However, it's not a definitive conclusion that all roses fade quickly, just a possibility.",
+      "latency_ms": 336.51089668273926,
+      "cost_usd": 0.0,
+      "tokens_input": 100,
+      "tokens_output": 50,
+      "tokens_total": 150,
+      "steps": 1,
+      "timestamp": "2026-01-06T21:52:46.946151"
+    },
+    {
+      "task_id": "arena_math_1",
+      "benchmark": "arena_sample",
+      "system": "groq/llama-3.3-70b-versatile",
+      "passed": true,
+      "score": 1.0,
+      "expected": "$40",
+      "actual": "To find the sale price, we need to calculate the discount amount and subtract it from the original price.\n\nOriginal price = $50\nDiscount percentage = 20%\n\nDiscount amount = Original price * Discount percentage\n= $50 * 0.20\n= $10\n\nSale price = Original price - Discount amount\n= $50 - $10\n= $40\n\nThe final answer is: $40",
+      "latency_ms": 266.04700088500977,
+      "cost_usd": 0.0,
+      "tokens_input": 92,
+      "tokens_output": 83,
+      "tokens_total": 175,
+      "steps": 5,
+      "timestamp": "2026-01-06T21:52:47.440248"
+    }
+  ],
+  "research_gaps": {
+    "gap_1": {
+      "name": "Outcome-Only Evaluation",
+      "description": "Current benchmarks focus solely on final correctness, ignoring process quality",
+      "sources": [
+        "IBM Research 2024 - Process vs outcome evaluation",
+        "GEMMAS (arXiv) - IDS and UPR metrics for collaboration analysis",
+        "MultiAgentBench - Milestone-based performance indicators"
+      ],
+      "agentunit_solution": "Process metrics: steps, tool calls, latency, intermediate reasoning"
+    },
+    "gap_2": {
+      "name": "No Multi-Agent Coordination Metrics",
+      "description": "No standardized metrics for handoffs, conflicts, communication efficiency",
+      "sources": [
+        "MultiAgentBench (ACL 2024) - Coordination protocols evaluation",
+        "LLM-Coordination Benchmark - Theory of Mind reasoning",
+        "Galileo AI - Coordination failures analysis"
+      ],
+      "agentunit_solution": "InteractionAnalyzer, NetworkAnalyzer, EmergentBehaviorDetector"
+    },
+    "gap_3": {
+      "name": "Lack of Statistical Rigor",
+      "description": "Most papers report only mean accuracy without CI or significance tests",
+      "sources": [
+        "FermiEval (arXiv 2025) - LLM confidence interval calibration",
+        "ACL 2024 - Characterizing confidence of LLM evaluation metrics",
+        "Meta-analysis: only 23% of papers report confidence intervals"
+      ],
+      "agentunit_solution": "StatisticalAnalyzer: bootstrap CI, t-tests, effect sizes"
+    },
+    "gap_4": {
+      "name": "Single-Framework Evaluation",
+      "description": "Papers typically test one framework, preventing fair comparison",
+      "sources": [
+        "AgentBench (OpenReview) - 8 environments but framework-specific",
+        "OSWorld (NeurIPS 2024) - Virtual environment but single-agent",
+        "WorkArena - Enterprise workflows, limited framework support"
+      ],
+      "agentunit_solution": "18+ adapters with unified evaluation across frameworks"
+    },
+    "gap_5": {
+      "name": "Ignoring Cost/Efficiency Tradeoffs",
+      "description": "Production systems care about cost-accuracy tradeoffs, benchmarks don't",
+      "sources": [
+        "CLEAR framework (Galileo AI) - Cost, Latency, Efficiency metrics",
+        "Samiranama 2024 - Token usage and API cost tracking",
+        "TheAgentCompany benchmark - Real-world economic impact"
+      ],
+      "agentunit_solution": "Cost metrics, tokens, latency, cost-efficiency scores"
+    }
+  }
+}

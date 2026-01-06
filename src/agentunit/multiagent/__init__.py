@@ -648,6 +648,20 @@ class MultiAgentAdapter(ABC):
         logger.info(f"Exported session data to {filepath}")
 
 
+# Import metrics submodule for convenient access
+from agentunit.multiagent.metrics import (
+    CoordinationEfficiencyMetric,
+    CoordinationMetrics,
+    EmergentBehaviorDetector,
+    EmergentBehaviorMetrics,
+    InteractionAnalyzer,
+    MultiAgentMetricsCalculator,
+    NetworkAnalyzer,
+    NetworkFaultToleranceMetric,
+    NetworkMetrics,
+    SwarmIntelligenceMetric,
+)
+
 # Export main classes and enums
 __all__ = [
     # Type aliases
@@ -674,4 +688,15 @@ __all__ = [
     "__description__",
     # Version info
     "__version__",
+    # Metrics (new)
+    "CoordinationMetrics",
+    "NetworkMetrics",
+    "EmergentBehaviorMetrics",
+    "InteractionAnalyzer",
+    "NetworkAnalyzer",
+    "EmergentBehaviorDetector",
+    "MultiAgentMetricsCalculator",
+    "CoordinationEfficiencyMetric",
+    "SwarmIntelligenceMetric",
+    "NetworkFaultToleranceMetric",
 ]
