@@ -108,7 +108,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 "src/agentunit/dashboard/server.py" = ["F401"]
 "src/agentunit/multimodal/adapters.py" = ["F401"]
 "src/agentunit/multiagent/__init__.py" = ["E402"]  # Lazy imports after module code
-"src/agentunit/pytest/cache.py" = ["TC003"]  # Path used at runtime
+"src/agentunit/pytest/cache.py" = ["TCH003"]  # Path used at runtime
 "src/agentunit/reporting/results.py" = ["N817"]  # ET is conventional for ElementTree
 
 # __init__.py files can have unused imports
