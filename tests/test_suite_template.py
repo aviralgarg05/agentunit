@@ -9,14 +9,18 @@ class FAQItem:
     question: str
     answer: str
 
+
 class MockDataset:
     """Simulates the dataset source from the template."""
+
     def __iter__(self) -> Generator[FAQItem]:
         yield FAQItem("What is AgentUnit?", "A framework.")
         yield FAQItem("Is it open source?", "Yes.")
 
+
 class MockAgent:
     """A fake agent that always answers correctly."""
+
     def connect(self) -> None:
         pass
 
@@ -26,22 +30,27 @@ class MockAgent:
             return "A framework."
         return "Yes."
 
+
 class FAQAdapter(BaseAdapter):
     """
     This mimics the adapter in docs/templates/suite_template.py
     """
+
     def __init__(self):
         self.agent = MockAgent()
+
     def prepare(self) -> None:
         self.agent.connect()
+
     def execute(self, input_data: FAQItem) -> AdapterOutcome:
         # The core logic we want to test
         response = self.agent.answer(input_data.question)
 
         # Simple exact match check
-        success = (response == input_data.answer)
+        success = response == input_data.answer
 
-        return AdapterOutcome(success=success,output=response)
+        return AdapterOutcome(success=success, output=response)
+
 
 def test_suite_template_flow():
     """
