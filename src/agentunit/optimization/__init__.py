@@ -4,13 +4,10 @@ This module provides meta-evaluation capabilities to analyze test runs
 and generate actionable recommendations for improving agent performance.
 """
 
-from typing import TYPE_CHECKING
+from .analyzer import AnalysisResult, RunAnalyzer
+from .optimizer import AutoOptimizer, OptimizationStrategy
+from .recommender import Recommendation, RecommendationType, Recommender
 
-
-if TYPE_CHECKING:
-    from .analyzer import AnalysisResult, RunAnalyzer
-    from .optimizer import AutoOptimizer, OptimizationStrategy
-    from .recommender import Recommendation, RecommendationType, Recommender
 
 __all__ = [
     "AnalysisResult",

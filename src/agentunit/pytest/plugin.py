@@ -19,7 +19,6 @@ if TYPE_CHECKING:
     from _pytest.config import Config
     from _pytest.config.argparsing import Parser
     from _pytest.nodes import Collector
-    from _pytest.python import Module
 
 
 logger = logging.getLogger(__name__)

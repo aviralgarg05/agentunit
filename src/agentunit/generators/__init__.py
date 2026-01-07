@@ -4,18 +4,15 @@ This module provides LLM-powered tools for generating synthetic datasets
 with edge case augmentation, adversarial queries, and noisy contexts.
 """
 
-from typing import TYPE_CHECKING
+from .augmentation import (
+    AdversarialAugmenter,
+    DistributionShifter,
+    EdgeCaseGenerator,
+    NoiseAugmenter,
+)
+from .llm_generator import LlamaDatasetGenerator, OpenAIDatasetGenerator
+from .templates import DatasetTemplate, PromptTemplate
 
-
-if TYPE_CHECKING:
-    from .augmentation import (
-        AdversarialAugmenter,
-        DistributionShifter,
-        EdgeCaseGenerator,
-        NoiseAugmenter,
-    )
-    from .llm_generator import LlamaDatasetGenerator, OpenAIDatasetGenerator
-    from .templates import DatasetTemplate, PromptTemplate
 
 __all__ = [
     "AdversarialAugmenter",

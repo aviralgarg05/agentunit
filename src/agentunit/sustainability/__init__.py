@@ -8,13 +8,10 @@ This module provides tracking for:
 - Cost tracking
 """
 
-from typing import TYPE_CHECKING
+from .carbon import CarbonReport, CarbonTracker
+from .metrics import CarbonMetric, EnergyMetric, ResourceUtilizationMetric
+from .tracker import ResourceMetrics, ResourceTracker
 
-
-if TYPE_CHECKING:
-    from .carbon import CarbonReport, CarbonTracker
-    from .metrics import CarbonMetric, EnergyMetric, ResourceUtilizationMetric
-    from .tracker import ResourceMetrics, ResourceTracker
 
 __all__ = [
     "CarbonMetric",

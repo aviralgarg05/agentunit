@@ -107,6 +107,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Intentional imports for availability checking
 "src/agentunit/dashboard/server.py" = ["F401"]
 "src/agentunit/multimodal/adapters.py" = ["F401"]
+"src/agentunit/multiagent/__init__.py" = ["E402"]  # Lazy imports after module code
 
 # __init__.py files can have unused imports
 "__init__.py" = ["F401"]

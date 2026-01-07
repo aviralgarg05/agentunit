@@ -649,7 +649,7 @@ class MultiAgentAdapter(ABC):
 
 
 # Import metrics submodule for convenient access
-from agentunit.multiagent.metrics import (  # noqa: E402
+from agentunit.multiagent.metrics import (
     CoordinationEfficiencyMetric,
     CoordinationMetrics,
     EmergentBehaviorDetector,

@@ -389,7 +389,7 @@ Respond in this exact JSON format:
                         criteria_scores[name] = info
 
             overall = data.get("overall_score", 0.5)
-            if isinstance(overall, (int, float)):
+            if isinstance(overall, int | float):
                 overall_score = float(overall)
             else:
                 overall_score = 0.5

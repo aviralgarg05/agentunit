@@ -279,7 +279,7 @@ class Scenario:
 
 
 def _infer_name(source: object, fallback: str) -> str:
-    if isinstance(source, (str, Path)):
+    if isinstance(source, str | Path):
         return Path(source).stem
     if hasattr(source, "__name__"):
         return source.__name__

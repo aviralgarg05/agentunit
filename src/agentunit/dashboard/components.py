@@ -220,7 +220,7 @@ class TraceViewer:
                     score = (
                         metric_data.get("score") if isinstance(metric_data, dict) else metric_data
                     )
-                    if isinstance(score, (int, float)):
+                    if isinstance(score, int | float):
                         st.metric("Score", f"{score:.2f}")
 
 
