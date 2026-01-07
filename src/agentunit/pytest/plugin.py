@@ -63,7 +63,7 @@ def pytest_configure(config: Config) -> None:
             logger.info(f"Cleared {count} cached AgentUnit results")
 
 
-def pytest_collect_file(file_path: Path, parent: Collector) -> Module | None:
+def pytest_collect_file(file_path: Path, parent: Collector) -> Collector | None:
     """Collect AgentUnit scenario files as pytest tests."""
     # Only collect files in tests/eval/ directory
     if not _is_eval_directory(file_path):
@@ -102,7 +102,7 @@ class AgentUnitFile(pytest.File):
 
     def _discover_scenarios(self) -> list[Scenario]:
         """Discover scenarios from the file."""
-        scenarios = []
+        scenarios: list[Scenario] = []
 
         if self.path.suffix == ".py":
             scenarios.extend(self._discover_python_scenarios())
@@ -144,9 +144,12 @@ class AgentUnitFile(pytest.File):
         try:
             from agentunit.nocode import ScenarioBuilder
 
-            builder = ScenarioBuilder.from_file(self.path)
-            scenario = builder.to_scenario()
-            return [scenario]
+            builder = ScenarioBuilder()
+            if self.path.suffix in (".yaml", ".yml"):
+                return [builder.from_yaml(self.path)]
+            elif self.path.suffix == ".json":
+                return [builder.from_json(self.path)]
+            return []
         except ImportError:
             return []
         except Exception:
@@ -244,11 +247,15 @@ class AgentUnitItem(pytest.Item):
             failure_summary = "\n".join(failures)
             raise AssertionError(f"Scenario '{self.scenario.name}' failed:\n{failure_summary}")
 
-    def repr_failure(self, excinfo: Any) -> str:
+    def repr_failure(
+        self,
+        excinfo: Any,
+        style: Any | None = None,
+    ) -> str | Any:
         """Represent test failure."""
         if isinstance(excinfo.value, AssertionError):
             return str(excinfo.value)
-        return super().repr_failure(excinfo)
+        return super().repr_failure(excinfo, style)
 
     def reportinfo(self) -> tuple[str, int | None, str]:
         """Report test location info."""

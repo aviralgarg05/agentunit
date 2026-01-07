@@ -1,12 +1,10 @@
 """Tests for benchmarks module."""
 
 import json
-from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
 
-from agentunit.benchmarks import BenchmarkRunner, BenchmarkScenario, ScenarioResult
+from agentunit.benchmarks import BenchmarkRunner, BenchmarkScenario
 from agentunit.benchmarks.definitions import BenchmarkTask
 
 

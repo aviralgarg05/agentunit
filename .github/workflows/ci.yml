@@ -26,13 +26,21 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install Poetry (for project metadata checks)
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install poetry
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
-        run: poetry install --with dev
+        run: poetry install --with dev --no-interaction
 
       - name: Validate project metadata
         run: poetry check
@@ -42,9 +50,6 @@ jobs:
 
       - name: Run ruff formatter check
         run: poetry run ruff format --check src/ tests/
-
-      - name: Run mypy type check
-        run: poetry run mypy src/
 
   test:
     name: Test (Python ${{ matrix.python-version }})

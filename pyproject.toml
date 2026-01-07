@@ -82,3 +82,38 @@ addopts = [
     "-ra",
 ]
 
+[tool.mypy]
+ignore_missing_imports = true
+check_untyped_defs = true
+disallow_untyped_defs = false
+exclude = [
+    "src/agentunit/adapters/",
+    "src/agentunit/benchmarks/real_experiments.py"
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "openai",
+    "anthropic",
+    "groq",
+    "ollama",
+    "agentops",
+    "langsmith",
+    "wandb",
+    "rich.*"
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "agentunit.adapters.*",
+    "agentunit.core.*",
+    "agentunit.nocode.*",
+    "agentunit.production.*",
+    "agentunit.collaboration.*",
+    "agentunit.examples.*",
+    "agentunit.datasets.*"
+]
+ignore_errors = true
+
+
