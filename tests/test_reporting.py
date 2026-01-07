@@ -1,51 +1,49 @@
-from datetime import datetime
+# Standard library
+import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
-from agentunit.reporting.results import (
-    ScenarioResult,
-    ScenarioRun,
-    SuiteResult,
-)
+# Local imports
+from agentunit.reporting.results import ScenarioResult, ScenarioRun, SuiteResult
 
 
 def test_markdown_contains_emojis():
     passing_run = ScenarioRun(
-        scenario_name="emoji-suite",
-        case_id="test_pass",
+        scenario_name="test_pass",
+        case_id="1",
         success=True,
         metrics={},
-        duration_ms=5,
+        duration_ms=10,
         trace=[],
         error=None,
     )
 
     failing_run = ScenarioRun(
-        scenario_name="emoji-suite",
-        case_id="test_fail",
+        scenario_name="test_fail",
+        case_id="2",
         success=False,
         metrics={},
-        duration_ms=6,
+        duration_ms=10,
         trace=[],
         error="AssertionError",
     )
 
     scenario = ScenarioResult(
-        name="emoji-suite",
+        name="emoji-scenario",
         runs=[passing_run, failing_run],
     )
 
     suite = SuiteResult(
         scenarios=[scenario],
-        started_at=datetime.now(),
-        finished_at=datetime.now(),
+        started_at=datetime.now(timezone.utc),
+        finished_at=datetime.now(timezone.utc),
     )
 
-    output_path = Path("report.md")
-    suite.to_markdown(output_path)
-    # UTF-8 safety check (important for Windows)
-    markdown = output_path.read_text(encoding="utf-8")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_path = Path(tmpdir) / "suite.md"
+        suite.to_markdown(path=output_path)
 
-    assert "✅" in markdown
-    assert "❌" in markdown
+        markdown = output_path.read_text(encoding="utf-8")
 
-    markdown.encode("utf-8")
+        assert "✅" in markdown
+        assert "❌" in markdown
