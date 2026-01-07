@@ -3,11 +3,13 @@
 import sys
 from pathlib import Path
 
+
 # Add src to path
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
-from agentunit.benchmarks import BenchmarkRunner, BenchmarkScenario
+from agentunit.benchmarks import BenchmarkRunner
 from agentunit.benchmarks.definitions import DEFAULT_SCENARIOS
+
 
 def dummy_math_agent(prompt: str) -> str:
     """A dummy agent that knows some math."""
@@ -19,6 +21,7 @@ def dummy_math_agent(prompt: str) -> str:
         return "Area is 25"
     return "I don't know."
 
+
 def dummy_reasoning_agent(prompt: str) -> str:
     """A dummy agent for logic."""
     if "cats" in prompt:
@@ -26,6 +29,7 @@ def dummy_reasoning_agent(prompt: str) -> str:
     if "apples" in prompt:
         return "You have 6 apples."
     return "Thinking..."
+
 
 def dummy_qa_agent(prompt: str) -> str:
     """A dummy agent for QA."""
@@ -35,12 +39,14 @@ def dummy_qa_agent(prompt: str) -> str:
         return "William Shakespeare"
     return "Unknown."
 
+
 def router_agent(prompt: str) -> str:
     """Simulates a capable agent by routing to specific dummy logic."""
     # Simulate thinking time
     import time
+
     time.sleep(0.5)
-    
+
     combined = dummy_math_agent(prompt)
     if combined == "I don't know.":
         combined = dummy_reasoning_agent(prompt)
@@ -48,17 +54,17 @@ def router_agent(prompt: str) -> str:
             combined = dummy_qa_agent(prompt)
     return combined
 
+
 def main():
     runner = BenchmarkRunner()
-    
+
     print("🤖 Running Benchmarks with 'Simulated-GPT-4'...")
-    
+
     for scenario in DEFAULT_SCENARIOS:
         runner.run_scenario(
-            scenario=scenario,
-            agent_func=router_agent,
-            model_name="Simulated-GPT-4"
+            scenario=scenario, agent_func=router_agent, model_name="Simulated-GPT-4"
         )
+
 
 if __name__ == "__main__":
     main()

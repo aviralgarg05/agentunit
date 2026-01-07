@@ -3,14 +3,15 @@
 import json
 import logging
 import time
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Optional
 
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
 
-from agentunit.benchmarks.definitions import BenchmarkScenario, ScenarioResult, DEFAULT_SCENARIOS
+from agentunit.benchmarks.definitions import BenchmarkScenario, ScenarioResult
+
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -49,9 +50,11 @@ class BenchmarkRunner:
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
             TaskProgressColumn(),
-            console=console
+            console=console,
         ) as progress:
-            task_id = progress.add_task(f"Running {scenario.total_tasks} tasks...", total=scenario.total_tasks)
+            task_id = progress.add_task(
+                f"Running {scenario.total_tasks} tasks...", total=scenario.total_tasks
+            )
 
             for task in scenario.tasks:
                 start_time = time.time()
@@ -59,46 +62,47 @@ class BenchmarkRunner:
                     # Execute agent
                     response = agent_func(task.prompt)
                     latency = time.time() - start_time
-                    
+
                     # Simple automated verification (can be upgraded to LLM-as-Judge later)
                     # Checks if expected answer is vaguely present in the response
                     correct = False
                     if task.expected_answer:
                         correct = task.expected_answer.lower() in response.lower()
-                    
-                    results.append(ScenarioResult(
-                        task_id=task.id,
-                        prompt=task.prompt,
-                        model_output=response,
-                        correct=correct,
-                        latency=latency
-                    ))
+
+                    results.append(
+                        ScenarioResult(
+                            task_id=task.id,
+                            prompt=task.prompt,
+                            model_output=response,
+                            correct=correct,
+                            latency=latency,
+                        )
+                    )
 
                 except Exception as e:
                     latency = time.time() - start_time
-                    results.append(ScenarioResult(
-                        task_id=task.id,
-                        prompt=task.prompt,
-                        model_output="",
-                        correct=False,
-                        latency=latency,
-                        error=str(e)
-                    ))
-                
+                    results.append(
+                        ScenarioResult(
+                            task_id=task.id,
+                            prompt=task.prompt,
+                            model_output="",
+                            correct=False,
+                            latency=latency,
+                            error=str(e),
+                        )
+                    )
+
                 progress.advance(task_id)
 
         # Save results
         return self._save_submission(scenario, model_name, results)
 
     def _save_submission(
-        self, 
-        scenario: BenchmarkScenario, 
-        model_name: str, 
-        results: list[ScenarioResult]
+        self, scenario: BenchmarkScenario, model_name: str, results: list[ScenarioResult]
     ) -> Path:
         """Save results to JSON format compatible with benchmark_viewer."""
         timestamp = datetime.now(timezone.utc).isoformat()
-        
+
         # Convert objects to dicts
         results_data = [
             {
@@ -108,7 +112,7 @@ class BenchmarkRunner:
                 "correct": r.correct,
                 "latency": r.latency,
                 "cost": r.cost,
-                "error": r.error
+                "error": r.error,
             }
             for r in results
         ]
@@ -118,17 +122,14 @@ class BenchmarkRunner:
             "benchmark": scenario.name,
             "model_name": model_name,
             "results": results_data,
-            "metadata": {
-                "description": scenario.description,
-                "total_tasks": scenario.total_tasks
-            }
+            "metadata": {"description": scenario.description, "total_tasks": scenario.total_tasks},
         }
 
         filename = f"submission_{scenario.name}_{int(time.time())}.json"
         filepath = self.submissions_dir / filename
-        
+
         with open(filepath, "w") as f:
             json.dump(submission_data, f, indent=2, default=str)
-            
+
         console.print(f"\n✅ Results saved to [bold green]{filepath}[/bold green]")
         return filepath

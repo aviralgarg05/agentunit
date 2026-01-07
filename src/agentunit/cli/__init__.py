@@ -340,7 +340,7 @@ def test_coordination(ctx, adapter, pattern, communication, agents, messages):
 
         # Schema for metrics (values would be populated by real execution)
         metrics = {
-            "coordination_efficiency": 0.0, # Requires real execution
+            "coordination_efficiency": 0.0,  # Requires real execution
             "message_latency": 0.0,
             "agent_utilization": 0.0,
         }
@@ -350,7 +350,7 @@ def test_coordination(ctx, adapter, pattern, communication, agents, messages):
             "duration": "0.0s",
             "total_operations": messages + len(created_agents),
             "success_rate": 0.0,
-            "status": "dry_run_validation_only"
+            "status": "dry_run_validation_only",
         }
 
         # Output results
@@ -363,7 +363,7 @@ def test_coordination(ctx, adapter, pattern, communication, agents, messages):
             "messages_sent": messages,
             "coordination_metrics": metrics,
             "session_summary": session_summary,
-            "note": "Metrics are zeroed in dry-run mode. Configure real adapter for actual values."
+            "note": "Metrics are zeroed in dry-run mode. Configure real adapter for actual values.",
         }
 
         output_result(result, config)
@@ -410,7 +410,7 @@ def run_scenario(ctx, scenario_file, adapter):
             "execution_time": "0.0s",
             "success": False,
             "summary": "Dry run only. No steps executed.",
-            "status": "dry_run"
+            "status": "dry_run",
         }
 
         # Output results

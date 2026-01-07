@@ -3,4 +3,5 @@
 from agentunit.benchmarks.definitions import BenchmarkScenario, ScenarioResult
 from agentunit.benchmarks.runner import BenchmarkRunner
 
-__all__ = ["BenchmarkScenario", "ScenarioResult", "BenchmarkRunner"]
+
+__all__ = ["BenchmarkRunner", "BenchmarkScenario", "ScenarioResult"]
