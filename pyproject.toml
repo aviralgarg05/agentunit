@@ -2,7 +2,7 @@
 name = "agentunit"
 version = "0.7.0"
 description = "A framework for evaluating, monitoring, and benchmarking multi-agent systems"
-authors = ["Aviral Garg <aviralgarg05@gmail.com>"]
+authors = ["Aviral Garg <gargaviral99@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{ include = "agentunit", from = "src" }]

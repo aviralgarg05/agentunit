@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-01-07T06:59:53.431904+00:00",
+  "benchmark": "AgentReasoning-v1",
+  "model_name": "Simulated-GPT-4",
+  "results": [
+    {
+      "task_id": "logic_1",
+      "prompt": "If all cats are mammals and all mammals are animals, are all cats animals?",
+      "response": "Yes, cats are animals.",
+      "correct": true,
+      "latency": 0.5050919055938721,
+      "cost": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "logic_2",
+      "prompt": "I have 3 apples. I eat one, give one to my friend, and buy 5 more. How many apples do I have now?",
+      "response": "You have 6 apples.",
+      "correct": true,
+      "latency": 0.5020639896392822,
+      "cost": 0.0,
+      "error": null
+    }
+  ],
+  "metadata": {
+    "description": "Logic and multi-step reasoning capabilities.",
+    "total_tasks": 2
+  }
+}
