@@ -1,6 +1,8 @@
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
+from agentunit.reporting.results import TraceLog
+
 
 from agentunit.reporting.results import (
     ScenarioResult,
@@ -12,21 +14,21 @@ from agentunit.reporting.results import (
 def test_markdown_contains_emojis():
     passing_run = ScenarioRun(
         scenario_name="test_pass",
-        case_id=1,
+        case_id="1",
         success=True,
         metrics={},
         duration_ms=10,
-        trace=[],
+        trace=TraceLog(entries=[]),
         error=None,
     )
 
     failing_run = ScenarioRun(
         scenario_name="test_fail",
-        case_id=2,
+        case_id="2",
         success=False,
         metrics={},
         duration_ms=10,
-        trace=[],
+        trace=TraceLog(entries=[]),
         error="AssertionError",
     )
 
@@ -50,4 +52,4 @@ def test_markdown_contains_emojis():
         assert "✅" in markdown
         assert "❌" in markdown
 
-        markdown.encode("utf-8")
+
