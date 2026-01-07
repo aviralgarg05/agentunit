@@ -2,6 +2,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 
 from agentunit.adapters.base import AdapterOutcome, BaseAdapter
+from agentunit.core.trace import TraceLog
 
 
 @dataclass
@@ -42,14 +43,17 @@ class FAQAdapter(BaseAdapter):
     def prepare(self) -> None:
         self.agent.connect()
 
-    def execute(self, input_data: FAQItem) -> AdapterOutcome:
+    def execute(self, case: FAQItem, trace: TraceLog | None = None) -> AdapterOutcome:
         # The core logic we want to test
-        response = self.agent.answer(input_data.question)
+        response = self.agent.answer(case.question)
 
         # Simple exact match check
-        success = response == input_data.answer
+        success = response == case.answer
 
-        return AdapterOutcome(success=success, output=response)
+        return AdapterOutcome(
+            success=success,
+            output=response,
+        )
 
 
 def test_suite_template_flow():
