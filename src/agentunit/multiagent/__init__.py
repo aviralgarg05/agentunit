@@ -649,7 +649,7 @@ class MultiAgentAdapter(ABC):
 
 
 # Import metrics submodule for convenient access
-from agentunit.multiagent.metrics import (
+from agentunit.multiagent.metrics import (  # noqa: E402
     CoordinationEfficiencyMetric,
     CoordinationMetrics,
     EmergentBehaviorDetector,
@@ -662,6 +662,7 @@ from agentunit.multiagent.metrics import (
     SwarmIntelligenceMetric,
 )
 
+
 # Export main classes and enums
 __all__ = [
     # Type aliases
@@ -673,30 +674,30 @@ __all__ = [
     "AgentState",
     "CommunicationMode",
     "ConflictEvent",
+    "CoordinationEfficiencyMetric",
+    # Metrics (new)
+    "CoordinationMetrics",
+    "EmergentBehaviorDetector",
+    "EmergentBehaviorMetrics",
     "HandoffEvent",
+    "InteractionAnalyzer",
     "InteractionType",
     "MessageID",
     "MultiAgentAdapter",
+    "MultiAgentMetricsCalculator",
     # Protocol and base class
     "MultiAgentProtocol",
+    "NetworkAnalyzer",
+    "NetworkFaultToleranceMetric",
+    "NetworkMetrics",
     # Enums
     "OrchestrationPattern",
     "SessionID",
+    "SwarmIntelligenceMetric",
     "TaskAllocation",
     "TaskID",
     "__author__",
     "__description__",
     # Version info
     "__version__",
-    # Metrics (new)
-    "CoordinationMetrics",
-    "NetworkMetrics",
-    "EmergentBehaviorMetrics",
-    "InteractionAnalyzer",
-    "NetworkAnalyzer",
-    "EmergentBehaviorDetector",
-    "MultiAgentMetricsCalculator",
-    "CoordinationEfficiencyMetric",
-    "SwarmIntelligenceMetric",
-    "NetworkFaultToleranceMetric",
 ]

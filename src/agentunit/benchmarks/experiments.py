@@ -23,13 +23,14 @@ from agentunit.benchmarks.arena import AgentArenaBenchmark, ArenaTask, ArenaTask
 from agentunit.benchmarks.gaia import GAIABenchmark, GAIALevel, GAIATask
 from agentunit.stats import BenchmarkAnalyzer, StatisticalAnalyzer
 
+
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class ExperimentConfig:
     """Configuration for benchmark experiments.
-    
+
     Attributes:
         name: Experiment name
         description: Experiment description
@@ -61,7 +62,7 @@ class ExperimentConfig:
 @dataclass
 class TaskResult:
     """Result for a single benchmark task.
-    
+
     Attributes:
         task_id: Task identifier
         benchmark: Benchmark name
@@ -97,7 +98,7 @@ class TaskResult:
 @dataclass
 class ExperimentResult:
     """Complete result of a benchmark experiment.
-    
+
     Attributes:
         config: Experiment configuration
         systems: List of systems evaluated
@@ -118,7 +119,7 @@ class ExperimentResult:
 
 class ResearchGapAnalyzer:
     """Analyze results in context of research gaps.
-    
+
     Addresses key gaps identified in current AI agent evaluation:
     1. Outcome-only evaluation (no process-level metrics)
     2. Lack of coordination quality metrics
@@ -126,16 +127,16 @@ class ResearchGapAnalyzer:
     4. Single-framework evaluation
     5. Ignoring cost/efficiency tradeoffs
     """
-    
+
     def __init__(self, stats: StatisticalAnalyzer):
         self.stats = stats
-    
+
     def analyze_gap_1_process_metrics(
         self,
         results: list[TaskResult],
     ) -> dict[str, Any]:
         """GAP 1: Evaluate process-level metrics beyond outcome correctness.
-        
+
         Most benchmarks only measure final correctness. We also track:
         - Step efficiency (fewer steps for same outcome = better)
         - Tool usage patterns
@@ -143,31 +144,31 @@ class ResearchGapAnalyzer:
         """
         if not results:
             return {"addressed": False, "reason": "No results"}
-        
+
         # Group by system
         by_system = {}
         for r in results:
             if r.system not in by_system:
                 by_system[r.system] = []
             by_system[r.system].append(r)
-        
+
         analysis = {
             "addressed": True,
             "gap": "Outcome-only evaluation ignores HOW agents solve tasks",
             "agentunit_contribution": "Process-level metrics including steps, tool calls, latency",
             "by_system": {},
         }
-        
+
         for system, sys_results in by_system.items():
             passed_results = [r for r in sys_results if r.passed]
-            
+
             if passed_results:
                 avg_steps = self.stats.mean([r.steps for r in passed_results])
                 avg_tools = self.stats.mean([r.tool_calls for r in passed_results])
                 avg_latency = self.stats.mean([r.latency_ms for r in passed_results])
-                
+
                 steps_ci = self.stats.confidence_interval([r.steps for r in passed_results])
-                
+
                 analysis["by_system"][system] = {
                     "n_passed": len(passed_results),
                     "avg_steps_to_success": avg_steps,
@@ -176,15 +177,15 @@ class ResearchGapAnalyzer:
                     "avg_latency_ms": avg_latency,
                     "efficiency_score": 1.0 / (1.0 + avg_steps) if avg_steps > 0 else 1.0,
                 }
-        
+
         return analysis
-    
+
     def analyze_gap_2_coordination_metrics(
         self,
         results: list[TaskResult],
     ) -> dict[str, Any]:
         """GAP 2: Evaluate coordination quality in multi-agent scenarios.
-        
+
         Current benchmarks don't measure:
         - Handoff success rates
         - Communication efficiency
@@ -193,30 +194,30 @@ class ResearchGapAnalyzer:
         """
         if not results:
             return {"addressed": False, "reason": "No results"}
-        
+
         # Filter results with coordination metrics
         coord_results = [r for r in results if r.coordination_metrics]
-        
+
         if not coord_results:
             return {
                 "addressed": False,
                 "reason": "No coordination metrics in results",
                 "recommendation": "Enable multi-agent tracking for coordination analysis",
             }
-        
+
         analysis = {
             "addressed": True,
             "gap": "No metrics for multi-agent coordination quality",
             "agentunit_contribution": "Handoff, conflict, communication, load balance metrics",
             "by_system": {},
         }
-        
+
         by_system = {}
         for r in coord_results:
             if r.system not in by_system:
                 by_system[r.system] = []
             by_system[r.system].append(r)
-        
+
         for system, sys_results in by_system.items():
             # Aggregate coordination metrics
             metrics = {
@@ -225,12 +226,12 @@ class ResearchGapAnalyzer:
                 "conflict_resolution_rate": [],
                 "load_balance_score": [],
             }
-            
+
             for r in sys_results:
                 for key in metrics:
                     if key in r.coordination_metrics:
                         metrics[key].append(r.coordination_metrics[key])
-            
+
             analysis["by_system"][system] = {
                 key: {
                     "mean": self.stats.mean(values),
@@ -239,16 +240,16 @@ class ResearchGapAnalyzer:
                 for key, values in metrics.items()
                 if values
             }
-        
+
         return analysis
-    
+
     def analyze_gap_3_statistical_rigor(
         self,
         results: list[TaskResult],
         benchmark_analyzer: BenchmarkAnalyzer,
     ) -> dict[str, Any]:
         """GAP 3: Provide statistical rigor missing from most evaluations.
-        
+
         Most papers report only mean accuracy. We provide:
         - Confidence intervals
         - Significance testing
@@ -257,7 +258,7 @@ class ResearchGapAnalyzer:
         """
         if not results:
             return {"addressed": False, "reason": "No results"}
-        
+
         analysis = {
             "addressed": True,
             "gap": "No confidence intervals, significance tests, or effect sizes",
@@ -265,19 +266,19 @@ class ResearchGapAnalyzer:
             "by_system": {},
             "pairwise_comparisons": [],
         }
-        
+
         # Group by system
-        systems = list(set(r.system for r in results))
-        benchmarks = list(set(r.benchmark for r in results))
-        
+        systems = list({r.system for r in results})
+        benchmarks = list({r.benchmark for r in results})
+
         for system in systems:
             sys_results = [r for r in results if r.system == system]
             scores = [r.score for r in sys_results]
             passed = [1.0 if r.passed else 0.0 for r in sys_results]
-            
+
             bootstrap_acc = self.stats.bootstrap_confidence_interval(passed)
             bootstrap_score = self.stats.bootstrap_confidence_interval(scores)
-            
+
             analysis["by_system"][system] = {
                 "n_tasks": len(sys_results),
                 "accuracy": {
@@ -291,7 +292,7 @@ class ResearchGapAnalyzer:
                     "std_error": bootstrap_score.std_error,
                 },
             }
-        
+
         # Pairwise comparisons
         for i, sys_a in enumerate(systems):
             for sys_b in systems[i+1:]:
@@ -311,15 +312,15 @@ class ResearchGapAnalyzer:
                         })
                     except Exception:
                         continue
-        
+
         return analysis
-    
+
     def analyze_gap_4_multi_framework(
         self,
         results: list[TaskResult],
     ) -> dict[str, Any]:
         """GAP 4: Multi-framework comparison on identical tasks.
-        
+
         Most papers test one framework. We enable:
         - Same tasks across multiple frameworks
         - Fair comparison with controlled variables
@@ -327,16 +328,16 @@ class ResearchGapAnalyzer:
         """
         if not results:
             return {"addressed": False, "reason": "No results"}
-        
+
         # Check if we have multiple systems on same tasks
         task_systems = {}
         for r in results:
             if r.task_id not in task_systems:
                 task_systems[r.task_id] = set()
             task_systems[r.task_id].add(r.system)
-        
+
         multi_system_tasks = [t for t, s in task_systems.items() if len(s) > 1]
-        
+
         analysis = {
             "addressed": len(multi_system_tasks) > 0,
             "gap": "Single-framework evaluation prevents fair comparison",
@@ -344,85 +345,85 @@ class ResearchGapAnalyzer:
             "n_shared_tasks": len(multi_system_tasks),
             "total_tasks": len(task_systems),
         }
-        
+
         if multi_system_tasks:
             # Calculate per-task agreement
-            systems = list(set(r.system for r in results))
+            systems = list({r.system for r in results})
             agreement_matrix = {}
-            
+
             for sys_a in systems:
                 for sys_b in systems:
                     if sys_a != sys_b:
                         key = f"{sys_a}_{sys_b}"
                         agreements = 0
                         total = 0
-                        
+
                         for task_id in multi_system_tasks:
                             res_a = next((r for r in results if r.task_id == task_id and r.system == sys_a), None)
                             res_b = next((r for r in results if r.task_id == task_id and r.system == sys_b), None)
-                            
+
                             if res_a and res_b:
                                 total += 1
                                 if res_a.passed == res_b.passed:
                                     agreements += 1
-                        
+
                         if total > 0:
                             agreement_matrix[key] = agreements / total
-            
+
             analysis["system_agreement"] = agreement_matrix
-        
+
         return analysis
-    
+
     def analyze_gap_5_cost_efficiency(
         self,
         results: list[TaskResult],
     ) -> dict[str, Any]:
         """GAP 5: Cost and efficiency analysis alongside accuracy.
-        
+
         Production systems care about cost-accuracy tradeoffs.
         Most benchmarks ignore operational metrics.
         """
         if not results:
             return {"addressed": False, "reason": "No results"}
-        
+
         # Check if cost data is available
         results_with_cost = [r for r in results if r.cost_usd > 0]
-        
+
         if not results_with_cost:
             return {
                 "addressed": False,
                 "reason": "No cost data in results",
                 "recommendation": "Enable cost tracking for efficiency analysis",
             }
-        
+
         analysis = {
             "addressed": True,
             "gap": "Ignoring cost/efficiency tradeoffs critical for production",
             "agentunit_contribution": "Cost, token, latency metrics with accuracy",
             "by_system": {},
         }
-        
+
         by_system = {}
         for r in results_with_cost:
             if r.system not in by_system:
                 by_system[r.system] = []
             by_system[r.system].append(r)
-        
+
         for system, sys_results in by_system.items():
             total_cost = sum(r.cost_usd for r in sys_results)
             total_tokens = sum(r.tokens_used for r in sys_results)
             n_passed = sum(1 for r in sys_results if r.passed)
-            
+
             cost_per_task = total_cost / len(sys_results)
-            cost_per_success = total_cost / n_passed if n_passed > 0 else float('inf')
+            cost_per_success = total_cost / n_passed if n_passed > 0 else float("inf")
             tokens_per_task = total_tokens / len(sys_results)
-            
+
             accuracy = n_passed / len(sys_results)
-            
+
             # Cost-efficiency score: accuracy / log(1 + cost)
             import math
             cost_efficiency = accuracy / math.log1p(cost_per_task) if cost_per_task > 0 else accuracy
-            
+
             analysis["by_system"][system] = {
                 "total_cost_usd": total_cost,
                 "cost_per_task": cost_per_task,
@@ -431,16 +432,16 @@ class ResearchGapAnalyzer:
                 "accuracy": accuracy,
                 "cost_efficiency_score": cost_efficiency,
             }
-        
+
         return analysis
-    
+
     def full_gap_analysis(
         self,
         results: list[TaskResult],
         benchmark_analyzer: BenchmarkAnalyzer,
     ) -> dict[str, Any]:
         """Perform complete gap analysis.
-        
+
         Returns:
             Dictionary with all gap analyses
         """
@@ -467,14 +468,14 @@ class ResearchGapAnalyzer:
 
 class BenchmarkExperiment:
     """Run comprehensive benchmark experiments.
-    
+
     This class orchestrates benchmark experiments that address
     research gaps in AI agent evaluation.
     """
-    
+
     def __init__(self, config: ExperimentConfig):
         """Initialize experiment.
-        
+
         Args:
             config: Experiment configuration
         """
@@ -483,7 +484,7 @@ class BenchmarkExperiment:
         self.benchmark_analyzer = BenchmarkAnalyzer(random_seed=config.random_seed)
         self.gap_analyzer = ResearchGapAnalyzer(self.stats)
         self.results: list[TaskResult] = []
-    
+
     def load_gaia_tasks(self) -> list[GAIATask]:
         """Load GAIA benchmark tasks."""
         tasks = []
@@ -491,7 +492,7 @@ class BenchmarkExperiment:
             gaia = GAIABenchmark(level=GAIALevel(level))
             tasks.extend(gaia.load_dataset())
         return tasks
-    
+
     def load_arena_tasks(self) -> list[ArenaTask]:
         """Load AgentArena benchmark tasks."""
         tasks = []
@@ -499,7 +500,7 @@ class BenchmarkExperiment:
             arena = AgentArenaBenchmark(task_type=ArenaTaskType(task_type))
             tasks.extend(arena.load_dataset())
         return tasks
-    
+
     def simulate_system_result(
         self,
         system_name: str,
@@ -509,22 +510,22 @@ class BenchmarkExperiment:
         base_accuracy: float = 0.7,
     ) -> TaskResult:
         """Simulate a system's result on a task.
-        
+
         For demonstration and testing. In production, this would
         actually run the agent system.
-        
+
         Args:
             system_name: Name of the system
             task_id: Task identifier
             benchmark: Benchmark name
             expected: Expected output
             base_accuracy: Base accuracy for simulation
-            
+
         Returns:
             Simulated TaskResult
         """
         import random
-        
+
         # Simulate with some variance based on system
         system_bonus = {
             "agentunit_langgraph": 0.15,
@@ -533,10 +534,10 @@ class BenchmarkExperiment:
             "baseline_gpt4": 0.05,
             "baseline_claude": 0.08,
         }.get(system_name.lower(), 0.0)
-        
+
         accuracy = min(0.95, base_accuracy + system_bonus + random.uniform(-0.1, 0.1))
         passed = random.random() < accuracy
-        
+
         return TaskResult(
             task_id=task_id,
             benchmark=benchmark,
@@ -561,26 +562,26 @@ class BenchmarkExperiment:
                 "timestamp": datetime.now().isoformat(),
             }
         )
-    
+
     def run_experiment(
         self,
         systems: list[str],
         simulate: bool = True,
     ) -> ExperimentResult:
         """Run the benchmark experiment.
-        
+
         Args:
             systems: List of system names to evaluate
             simulate: If True, simulate results (for testing)
-            
+
         Returns:
             ExperimentResult with comprehensive analysis
         """
         logger.info(f"Starting experiment: {self.config.name}")
-        
+
         # Load tasks
         all_tasks = []
-        
+
         if "gaia" in self.config.benchmarks:
             gaia_tasks = self.load_gaia_tasks()
             all_tasks.extend([
@@ -588,7 +589,7 @@ class BenchmarkExperiment:
                 for t in gaia_tasks
             ])
             logger.info(f"Loaded {len(gaia_tasks)} GAIA tasks")
-        
+
         if "arena" in self.config.benchmarks:
             arena_tasks = self.load_arena_tasks()
             all_tasks.extend([
@@ -596,14 +597,14 @@ class BenchmarkExperiment:
                 for t in arena_tasks
             ])
             logger.info(f"Loaded {len(arena_tasks)} AgentArena tasks")
-        
+
         # Run for each system
         for system in systems:
             logger.info(f"Evaluating system: {system}")
-            
+
             for run_idx in range(self.config.n_runs):
                 for benchmark, task_id, expected, task_meta in all_tasks:
-                    
+
                     if simulate:
                         # Simulate result
                         result = self.simulate_system_result(
@@ -613,12 +614,12 @@ class BenchmarkExperiment:
                         # Actual evaluation would go here
                         # result = self.evaluate_system(system, task, ...)
                         raise NotImplementedError("Actual evaluation not implemented")
-                    
+
                     result.metadata["run_idx"] = run_idx
                     result.metadata["task_meta"] = task_meta
-                    
+
                     self.results.append(result)
-                    
+
                     # Add to benchmark analyzer
                     self.benchmark_analyzer.add_result(
                         system_name=system,
@@ -628,14 +629,14 @@ class BenchmarkExperiment:
                         passed=result.passed,
                         metadata=result.metadata,
                     )
-        
+
         # Generate analysis
         experiment_result = ExperimentResult(
             config=self.config,
             systems=systems,
             task_results=self.results,
         )
-        
+
         # Generate summaries
         for system in systems:
             for benchmark in self.config.benchmarks:
@@ -643,38 +644,38 @@ class BenchmarkExperiment:
                 if system not in experiment_result.summary:
                     experiment_result.summary[system] = {}
                 experiment_result.summary[system][benchmark] = summary
-        
+
         # Generate comparisons
         experiment_result.comparisons = self.benchmark_analyzer.generate_report()["comparisons"]
-        
+
         # Gap analysis
         experiment_result.gap_analysis = self.gap_analyzer.full_gap_analysis(
             self.results, self.benchmark_analyzer
         )
-        
+
         logger.info(f"Experiment complete. {len(self.results)} total results.")
-        
+
         return experiment_result
-    
+
     def save_results(
         self,
         experiment_result: ExperimentResult,
         output_path: Path | None = None,
     ) -> Path:
         """Save experiment results to file.
-        
+
         Args:
             experiment_result: Experiment results
             output_path: Output file path
-            
+
         Returns:
             Path to saved file
         """
         if output_path is None:
             output_path = self.config.output_dir / f"{self.config.name}_{experiment_result.timestamp}.json"
-        
+
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Convert to JSON-serializable format
         data = {
             "config": {
@@ -709,19 +710,19 @@ class BenchmarkExperiment:
                 for r in experiment_result.task_results
             ],
         }
-        
+
         with open(output_path, "w") as f:
             json.dump(data, f, indent=2, default=str)
-        
+
         logger.info(f"Results saved to {output_path}")
         return output_path
 
 
 def run_standard_experiment() -> ExperimentResult:
     """Run a standard benchmark experiment for paper.
-    
+
     This demonstrates AgentUnit's advantages over existing benchmarks.
-    
+
     Returns:
         ExperimentResult with full analysis
     """
@@ -736,9 +737,9 @@ def run_standard_experiment() -> ExperimentResult:
         include_cost_metrics=True,
         include_efficiency_metrics=True,
     )
-    
+
     experiment = BenchmarkExperiment(config)
-    
+
     # Systems to compare
     systems = [
         "AgentUnit_LangGraph",
@@ -747,17 +748,17 @@ def run_standard_experiment() -> ExperimentResult:
         "Baseline_GPT4",
         "Baseline_Claude",
     ]
-    
+
     result = experiment.run_experiment(systems, simulate=True)
-    
+
     return result
 
 
 __all__ = [
-    'ExperimentConfig',
-    'TaskResult',
-    'ExperimentResult',
-    'ResearchGapAnalyzer',
-    'BenchmarkExperiment',
-    'run_standard_experiment',
+    "BenchmarkExperiment",
+    "ExperimentConfig",
+    "ExperimentResult",
+    "ResearchGapAnalyzer",
+    "TaskResult",
+    "run_standard_experiment",
 ]

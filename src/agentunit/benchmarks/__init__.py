@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from .runner import BenchmarkResult, BenchmarkRunner
 
 __all__ = [
+    "RESEARCH_GAPS",
     "AgentArenaBenchmark",
     "ArenaTask",
     "ArenaTaskType",
@@ -32,11 +33,10 @@ __all__ = [
     "ExperimentResult",
     "GAIABenchmark",
     "GAIALevel",
-    "LeaderboardConfig",
-    "LeaderboardSubmitter",
     "LLMClient",
     "LLMConfig",
-    "RESEARCH_GAPS",
+    "LeaderboardConfig",
+    "LeaderboardSubmitter",
     "RealExperimentRunner",
     "RealTaskResult",
     "ResearchGapAnalyzer",
@@ -84,7 +84,7 @@ def __getattr__(name: str):
         from .runner import BenchmarkResult
 
         return BenchmarkResult
-    
+
     # New experiment exports
     if name == "BenchmarkExperiment":
         from .experiments import BenchmarkExperiment
@@ -110,7 +110,7 @@ def __getattr__(name: str):
         from .experiments import run_standard_experiment
 
         return run_standard_experiment
-    
+
     # Real experiment exports
     if name == "LLMConfig":
         from .real_experiments import LLMConfig
@@ -136,7 +136,7 @@ def __getattr__(name: str):
         from .real_experiments import RESEARCH_GAPS
 
         return RESEARCH_GAPS
-    
+
     msg = f"module {__name__!r} has no attribute {name!r}"
     raise AttributeError(msg)
 
