@@ -167,6 +167,13 @@ reports/
 .codacy/
 .qodo/
 
+# Research paper files
+*.pdf
+*.tex
+*.bib
+*.png
+report.md
+
 # Ignore vscode AI rules
 .github/instructions/codacy.instructions.md
 .DS_Store
