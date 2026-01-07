@@ -5,18 +5,15 @@ vision, audio, and other multimodal inputs. Integrates with GPT-4o, CLIP, and
 other multimodal models.
 """
 
-from typing import TYPE_CHECKING
+from .adapters import AudioAdapter, MultimodalAdapter, VisionAdapter
+from .metrics import (
+    AudioTranscriptionMetric,
+    CrossModalGroundingMetric,
+    ImageCaptionAccuracyMetric,
+    MultimodalCoherenceMetric,
+    VideoResponseRelevanceMetric,
+)
 
-
-if TYPE_CHECKING:
-    from .adapters import AudioAdapter, MultimodalAdapter, VisionAdapter
-    from .metrics import (
-        AudioTranscriptionMetric,
-        CrossModalGroundingMetric,
-        ImageCaptionAccuracyMetric,
-        MultimodalCoherenceMetric,
-        VideoResponseRelevanceMetric,
-    )
 
 __all__ = [
     "AudioAdapter",

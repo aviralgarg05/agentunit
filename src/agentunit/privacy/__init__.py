@@ -7,18 +7,16 @@ This module provides:
 """
 
 import sys
-from typing import TYPE_CHECKING
 
+from .federation import FederatedEvaluator, PrivacyGuard
+from .metrics import (
+    ConsentComplianceMetric,
+    DataMinimizationMetric,
+    PIILeakageMetric,
+    PrivacyBudgetMetric,
+)
+from .wrappers import PrivacyConfig, PrivateDatasetWrapper
 
-if TYPE_CHECKING:
-    from .federation import FederatedEvaluator, PrivacyGuard
-    from .metrics import (
-        ConsentComplianceMetric,
-        DataMinimizationMetric,
-        PIILeakageMetric,
-        PrivacyBudgetMetric,
-    )
-    from .wrappers import PrivacyConfig, PrivateDatasetWrapper
 
 __all__ = [
     "ConsentComplianceMetric",

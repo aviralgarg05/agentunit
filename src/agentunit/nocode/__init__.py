@@ -38,15 +38,14 @@ All classes use PEP 562 lazy loading.
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from .builder import ScenarioBuilder
+from .converter import ConfigConverter, ConversionFormat
+from .generator import CodeGenerator, GeneratedCode
+from .templates import ScenarioTemplate, TemplateLibrary
+from .validator import SchemaValidator, ValidationResult
 
-if TYPE_CHECKING:
-    from .builder import ScenarioBuilder
-    from .converter import ConfigConverter, ConversionFormat
-    from .generator import CodeGenerator, GeneratedCode
-    from .templates import ScenarioTemplate, TemplateLibrary
-    from .validator import SchemaValidator, ValidationResult
 
 __version__ = "0.4.0"
 __author__ = "AgentUnit Contributors"

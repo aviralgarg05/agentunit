@@ -253,7 +253,13 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Pull request process
 - Issue labels and tags for open source events
 
+Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
+
 Security disclosures and sensitive topics should follow responsible disclosure guidelines outlined in [SECURITY.md](SECURITY.md).
+
+## Research & Citation
+
+AgentUnit is designed as a research-grade framework. If you use AgentUnit in your research, please see [CITATION.md](CITATION.md) for citation information and reproducibility standards.
 
 ## License
 

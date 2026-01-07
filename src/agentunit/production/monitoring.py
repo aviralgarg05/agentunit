@@ -42,7 +42,7 @@ class ProductionMetrics:
 
         if metric_name in self.custom_metrics:
             value = self.custom_metrics[metric_name]
-            return float(value) if isinstance(value, (int, float)) else None
+            return float(value) if isinstance(value, int | float) else None
 
         return None
 

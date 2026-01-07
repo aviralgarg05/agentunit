@@ -6,7 +6,7 @@ import hashlib
 import json
 import logging
 from dataclasses import dataclass
-from pathlib import Path  # noqa: TC003 - used at runtime
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 

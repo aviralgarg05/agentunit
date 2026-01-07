@@ -38,15 +38,14 @@ All classes use PEP 562 lazy loading for optional dependencies (DVC, MLflow).
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from .branch import BranchManager
+from .hub import CollaborationHub, Lock
+from .merge import Conflict, ConflictResolver, MergeResult, MergeStrategy
+from .tracking import Change, ChangeLog, ChangeTracker, ChangeType
+from .version import SuiteVersion, VersionManager
 
-if TYPE_CHECKING:
-    from .branch import BranchManager
-    from .hub import CollaborationHub, Lock
-    from .merge import Conflict, ConflictResolver, MergeResult, MergeStrategy
-    from .tracking import Change, ChangeLog, ChangeTracker, ChangeType
-    from .version import SuiteVersion, VersionManager
 
 __version__ = "0.4.0"
 __author__ = "AgentUnit Contributors"

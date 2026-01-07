@@ -294,9 +294,9 @@ class CodeGenerator:
             # Escape quotes and format as string
             escaped = value.replace('"', '\\"')
             return f'"{escaped}"'
-        if isinstance(value, (int, float, bool)):
+        if isinstance(value, int | float | bool):
             return str(value)
-        if isinstance(value, (list, dict)):
+        if isinstance(value, list | dict):
             return repr(value)
         return repr(value)
 
