@@ -69,7 +69,7 @@ ignore = [
     "ERA001",  # commented-out-code
     "PERF401", # manual-list-comprehension
     "B027",    # empty-method-without-abstract-decorator
-    "PLC0206", # dict-index-missing-items
+
     "EM101",   # raw-string-in-exception
     "EM102",   # f-string-in-exception
     "RET505",  # superfluous-else-return
