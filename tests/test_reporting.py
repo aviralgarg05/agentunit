@@ -1,7 +1,8 @@
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-from agentunit.reporting.results import TraceLog
+from agentunit.core.trace import TraceLog
+
 
 
 from agentunit.reporting.results import (
@@ -18,7 +19,7 @@ def test_markdown_contains_emojis():
         success=True,
         metrics={},
         duration_ms=10,
-        trace=TraceLog(entries=[]),
+        trace=[],
         error=None,
     )
 
@@ -28,7 +29,7 @@ def test_markdown_contains_emojis():
         success=False,
         metrics={},
         duration_ms=10,
-        trace=TraceLog(entries=[]),
+        trace=[],
         error="AssertionError",
     )
 
