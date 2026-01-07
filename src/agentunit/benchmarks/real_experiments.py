@@ -88,6 +88,7 @@ class LLMConfig:
         max_tokens: Max tokens for response
         temperature: Sampling temperature
     """
+
     provider: str
     model: str
     api_key: str | None = None
@@ -119,6 +120,7 @@ class RealTaskResult:
         api_response: Raw API response metadata
         timestamp: When evaluation was run
     """
+
     task_id: str
     benchmark: str
     system: str
@@ -228,12 +230,15 @@ class LLMClient:
         elif provider == "google":
             self._init_google()
         else:
-            raise ValueError(f"Unsupported provider: {provider}. Supported: openai, anthropic, groq, ollama, google")
+            raise ValueError(
+                f"Unsupported provider: {provider}. Supported: openai, anthropic, groq, ollama, google"
+            )
 
     def _init_openai(self) -> None:
         """Initialize OpenAI client."""
         try:
             import openai
+
             api_key = self.config.api_key or os.environ.get("OPENAI_API_KEY")
             if not api_key:
                 raise ValueError("OpenAI API key not provided. Set OPENAI_API_KEY env var.")
@@ -248,6 +253,7 @@ class LLMClient:
         """Initialize Anthropic client."""
         try:
             import anthropic
+
             api_key = self.config.api_key or os.environ.get("ANTHROPIC_API_KEY")
             if not api_key:
                 raise ValueError("Anthropic API key not provided. Set ANTHROPIC_API_KEY env var.")
@@ -259,6 +265,7 @@ class LLMClient:
         """Initialize Groq client (FREE tier available)."""
         try:
             from groq import Groq
+
             api_key = self.config.api_key or os.environ.get("GROQ_API_KEY")
             if not api_key:
                 raise ValueError(
@@ -273,6 +280,7 @@ class LLMClient:
         """Initialize Ollama client (FREE local inference)."""
         try:
             import ollama
+
             # Test connection
             base_url = self.config.base_url or "http://localhost:11434"
             self._client = ollama
@@ -288,6 +296,7 @@ class LLMClient:
         """Initialize Google Gemini client (FREE tier)."""
         try:
             import google.generativeai as genai
+
             api_key = self.config.api_key or os.environ.get("GOOGLE_API_KEY")
             if not api_key:
                 raise ValueError(
@@ -297,7 +306,9 @@ class LLMClient:
             genai.configure(api_key=api_key)
             self._client = genai
         except ImportError:
-            raise ImportError("google-generativeai not installed. Run: pip install google-generativeai")
+            raise ImportError(
+                "google-generativeai not installed. Run: pip install google-generativeai"
+            )
 
     def complete(
         self,
@@ -558,10 +569,7 @@ Be strict but fair. Consider semantic equivalence."""
         self.output_dir = output_dir or Path("./experiments")
 
         # Initialize clients
-        self.clients = {
-            f"{c.provider}/{c.model}": LLMClient(c)
-            for c in llm_configs
-        }
+        self.clients = {f"{c.provider}/{c.model}": LLMClient(c) for c in llm_configs}
         self.grader = LLMClient(self.grader_config)
 
         self.results: list[RealTaskResult] = []
@@ -709,10 +717,26 @@ Grade this response. Return JSON only."""
         """Count reasoning steps in response."""
         # Simple heuristics for step counting
         step_indicators = [
-            "\n1.", "\n2.", "\n3.", "\n4.", "\n5.",
-            "First,", "Second,", "Third,", "Fourth,", "Fifth,",
-            "Step 1", "Step 2", "Step 3", "Step 4", "Step 5",
-            "- ", "* ", "Therefore,", "Finally,", "In conclusion",
+            "\n1.",
+            "\n2.",
+            "\n3.",
+            "\n4.",
+            "\n5.",
+            "First,",
+            "Second,",
+            "Third,",
+            "Fourth,",
+            "Fifth,",
+            "Step 1",
+            "Step 2",
+            "Step 3",
+            "Step 4",
+            "Step 5",
+            "- ",
+            "* ",
+            "Therefore,",
+            "Finally,",
+            "In conclusion",
         ]
 
         count = 1  # Minimum 1 step
@@ -898,28 +922,32 @@ Grade this response. Return JSON only."""
         # Pairwise comparisons
         systems = list(by_system.keys())
         for i, sys_a in enumerate(systems):
-            for sys_b in systems[i+1:]:
+            for sys_b in systems[i + 1 :]:
                 scores_a = [r.score for r in by_system[sys_a]]
                 scores_b = [r.score for r in by_system[sys_b]]
 
                 comparison = stats.compare_systems(
-                    scores_a, scores_b,
-                    sys_a, sys_b,
+                    scores_a,
+                    scores_b,
+                    sys_a,
+                    sys_b,
                     "score",
                     paired=False,
                 )
 
-                analysis["statistical_comparisons"].append({
-                    "system_a": sys_a,
-                    "system_b": sys_b,
-                    "mean_a": comparison.mean_a,
-                    "mean_b": comparison.mean_b,
-                    "difference": comparison.difference,
-                    "p_value": comparison.statistical_test.p_value,
-                    "significant": comparison.statistical_test.significant,
-                    "effect_size": comparison.statistical_test.effect_size,
-                    "winner": comparison.winner,
-                })
+                analysis["statistical_comparisons"].append(
+                    {
+                        "system_a": sys_a,
+                        "system_b": sys_b,
+                        "mean_a": comparison.mean_a,
+                        "mean_b": comparison.mean_b,
+                        "difference": comparison.difference,
+                        "p_value": comparison.statistical_test.p_value,
+                        "significant": comparison.statistical_test.significant,
+                        "effect_size": comparison.statistical_test.effect_size,
+                        "winner": comparison.winner,
+                    }
+                )
 
         # Research gaps addressed
         for gap_id, gap_info in RESEARCH_GAPS.items():
@@ -944,7 +972,9 @@ Grade this response. Return JSON only."""
         """
         if filepath is None:
             self.output_dir.mkdir(parents=True, exist_ok=True)
-            filepath = self.output_dir / f"experiment_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            filepath = (
+                self.output_dir / f"experiment_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
 
         analysis = self.analyze_results()
 
@@ -1003,16 +1033,20 @@ def run_real_experiment(
     configs = []
 
     if include_openai and os.environ.get("OPENAI_API_KEY"):
-        configs.append(LLMConfig(
-            provider="openai",
-            model=openai_model,
-        ))
+        configs.append(
+            LLMConfig(
+                provider="openai",
+                model=openai_model,
+            )
+        )
 
     if include_anthropic and os.environ.get("ANTHROPIC_API_KEY"):
-        configs.append(LLMConfig(
-            provider="anthropic",
-            model=anthropic_model,
-        ))
+        configs.append(
+            LLMConfig(
+                provider="anthropic",
+                model=anthropic_model,
+            )
+        )
 
     if not configs:
         raise ValueError("No API keys found. Set OPENAI_API_KEY or ANTHROPIC_API_KEY")

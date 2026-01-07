@@ -42,6 +42,7 @@ class CoordinationMetrics:
         role_adherence: How well agents follow assigned roles
         load_balance_score: Evenness of work distribution
     """
+
     handoff_success_rate: float = 0.0
     avg_handoff_time: float = 0.0
     conflict_rate: float = 0.0
@@ -64,6 +65,7 @@ class NetworkMetrics:
         hub_agents: Agents with high connectivity
         bottleneck_agents: Agents that are communication bottlenecks
     """
+
     density: float = 0.0
     centralization: float = 0.0
     avg_path_length: float = 0.0
@@ -83,6 +85,7 @@ class EmergentBehaviorMetrics:
         adaptation_rate: How quickly system adapts to changes
         swarm_intelligence_score: Collective problem-solving capability
     """
+
     self_organization_score: float = 0.0
     specialization_emergence: float = 0.0
     collective_decision_score: float = 0.0
@@ -325,10 +328,7 @@ class NetworkAnalyzer:
         for agent in self.agents:
             # Simple heuristic: agents with both high in-degree and out-degree
             # that connect different "communities"
-            in_degree = sum(
-                1 for other in self.agents
-                if agent in self.adjacency.get(other, set())
-            )
+            in_degree = sum(1 for other in self.agents if agent in self.adjacency.get(other, set()))
             out_degree = len(self.adjacency.get(agent, set()))
             betweenness[agent] = in_degree * out_degree
 
@@ -459,7 +459,11 @@ class EmergentBehaviorDetector:
             hhi = sum((count / total) ** 2 for count in type_counts.values())
             specialization_scores.append(hhi)
 
-        return sum(specialization_scores) / len(specialization_scores) if specialization_scores else 0.0
+        return (
+            sum(specialization_scores) / len(specialization_scores)
+            if specialization_scores
+            else 0.0
+        )
 
     def detect_collective_decision_making(self) -> float:
         """Detect collective decision-making patterns.
@@ -481,8 +485,7 @@ class EmergentBehaviorDetector:
         }
 
         collaborative_count = sum(
-            1 for i in self.interactions
-            if i.interaction_type in collaborative_types
+            1 for i in self.interactions if i.interaction_type in collaborative_types
         )
 
         return collaborative_count / len(self.interactions)
@@ -496,10 +499,7 @@ class EmergentBehaviorDetector:
         if len(self.interactions) < 5:
             return 0.5  # Not enough data
 
-        response_times = [
-            i.response_time for i in self.interactions
-            if i.response_time > 0
-        ]
+        response_times = [i.response_time for i in self.interactions if i.response_time > 0]
 
         if len(response_times) < 5:
             return 0.5
@@ -527,12 +527,7 @@ class EmergentBehaviorDetector:
         adaptation = self.detect_adaptation_rate()
 
         # Weighted combination
-        return (
-            0.3 * self_org +
-            0.25 * specialization +
-            0.25 * collective +
-            0.2 * adaptation
-        )
+        return 0.3 * self_org + 0.25 * specialization + 0.25 * collective + 0.2 * adaptation
 
 
 class MultiAgentMetricsCalculator:
@@ -560,9 +555,7 @@ class MultiAgentMetricsCalculator:
 
         # Build network analyzer
         agents = list(agent_roles.keys())
-        self.network_analyzer = NetworkAnalyzer(
-            self.interaction_analyzer.adjacency, agents
-        )
+        self.network_analyzer = NetworkAnalyzer(self.interaction_analyzer.adjacency, agents)
 
     def calculate_coordination_metrics(self) -> CoordinationMetrics:
         """Calculate all coordination metrics."""
@@ -627,7 +620,9 @@ class MultiAgentMetricsCalculator:
                 continue
 
             # Higher authority agents should handle more RESPONSE types
-            if (interaction_type == "response" and role.authority_level >= 5) or interaction_type != "response":
+            if (
+                interaction_type == "response" and role.authority_level >= 5
+            ) or interaction_type != "response":
                 adherent_count += 1
 
         return adherent_count / total_count if total_count > 0 else 1.0
@@ -673,6 +668,7 @@ class MultiAgentMetricsCalculator:
 
 # Metric classes for integration with AgentUnit metrics system
 
+
 class CoordinationEfficiencyMetric(Metric):
     """Metric for overall coordination efficiency in multi-agent systems."""
 
@@ -688,24 +684,20 @@ class CoordinationEfficiencyMetric(Metric):
 
         if not interactions:
             return MetricResult(
-                name=self.name,
-                value=None,
-                detail={"error": "No interaction data in trace"}
+                name=self.name, value=None, detail={"error": "No interaction data in trace"}
             )
 
-        calculator = MultiAgentMetricsCalculator(
-            interactions, handoffs, conflicts, agent_roles
-        )
+        calculator = MultiAgentMetricsCalculator(interactions, handoffs, conflicts, agent_roles)
 
         metrics = calculator.calculate_coordination_metrics()
 
         # Combined score
         score = (
-            0.25 * metrics.handoff_success_rate +
-            0.20 * metrics.conflict_resolution_rate +
-            0.25 * metrics.communication_efficiency +
-            0.15 * metrics.role_adherence +
-            0.15 * metrics.load_balance_score
+            0.25 * metrics.handoff_success_rate
+            + 0.20 * metrics.conflict_resolution_rate
+            + 0.25 * metrics.communication_efficiency
+            + 0.15 * metrics.role_adherence
+            + 0.15 * metrics.load_balance_score
         )
 
         return MetricResult(
@@ -717,7 +709,7 @@ class CoordinationEfficiencyMetric(Metric):
                 "communication_efficiency": metrics.communication_efficiency,
                 "role_adherence": metrics.role_adherence,
                 "load_balance_score": metrics.load_balance_score,
-            }
+            },
         )
 
 
@@ -733,9 +725,7 @@ class SwarmIntelligenceMetric(Metric):
 
         if not interactions:
             return MetricResult(
-                name=self.name,
-                value=None,
-                detail={"error": "No interaction data in trace"}
+                name=self.name, value=None, detail={"error": "No interaction data in trace"}
             )
 
         detector = EmergentBehaviorDetector(interactions, agent_roles)
@@ -756,7 +746,7 @@ class SwarmIntelligenceMetric(Metric):
                 "specialization": metrics.specialization_emergence,
                 "collective_decision": metrics.collective_decision_score,
                 "adaptation_rate": metrics.adaptation_rate,
-            }
+            },
         )
 
 
@@ -774,7 +764,7 @@ class NetworkFaultToleranceMetric(Metric):
             return MetricResult(
                 name=self.name,
                 value=None,
-                detail={"error": "Insufficient data for network analysis"}
+                detail={"error": "Insufficient data for network analysis"},
             )
 
         # Build adjacency from interactions
@@ -809,7 +799,7 @@ class NetworkFaultToleranceMetric(Metric):
                 "clustering": network_metrics.clustering_coefficient,
                 "hub_agents": network_metrics.hub_agents,
                 "bottleneck_count": len(network_metrics.bottleneck_agents),
-            }
+            },
         )
 
 

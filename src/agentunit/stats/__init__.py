@@ -36,6 +36,7 @@ class StatisticalResult:
         confidence_interval: Tuple of (lower, upper) bounds
         interpretation: Human-readable interpretation
     """
+
     test_name: str
     statistic: float
     p_value: float
@@ -58,6 +59,7 @@ class BootstrapResult:
         confidence_level: Confidence level (e.g., 0.95)
         bootstrap_samples: Number of bootstrap samples used
     """
+
     estimate: float
     std_error: float
     ci_lower: float
@@ -81,6 +83,7 @@ class ComparisonResult:
         winner: Which system is significantly better (or 'tie')
         practical_significance: Whether difference is practically meaningful
     """
+
     system_a: str
     system_b: str
     metric: str
@@ -134,9 +137,7 @@ class StatisticalAnalyzer:
         return self.std_dev(values) / math.sqrt(len(values))
 
     def confidence_interval(
-        self,
-        values: list[float],
-        confidence: float = 0.95
+        self, values: list[float], confidence: float = 0.95
     ) -> tuple[float, float]:
         """Calculate confidence interval for the mean.
 
@@ -293,7 +294,9 @@ class StatisticalAnalyzer:
         interpretation = self._interpret_effect_size(effect_size)
         if significant:
             direction = "higher" if mean_diff > 0 else "lower"
-            interpretation = f"Significant difference (p={p_value:.4f}). A is {direction}. {interpretation}"
+            interpretation = (
+                f"Significant difference (p={p_value:.4f}). A is {direction}. {interpretation}"
+            )
         else:
             interpretation = f"No significant difference (p={p_value:.4f}). {interpretation}"
 
@@ -357,9 +360,7 @@ class StatisticalAnalyzer:
         p_value = self._approximate_t_pvalue(abs(t_stat), df)
 
         # Pooled effect size (Cohen's d)
-        pooled_std = math.sqrt(
-            ((n_a - 1) * var_a + (n_b - 1) * var_b) / (n_a + n_b - 2)
-        )
+        pooled_std = math.sqrt(((n_a - 1) * var_a + (n_b - 1) * var_b) / (n_a + n_b - 2))
         effect_size = (mean_a - mean_b) / pooled_std if pooled_std > 0 else 0.0
 
         significant = p_value < self.alpha
@@ -367,7 +368,9 @@ class StatisticalAnalyzer:
         interpretation = self._interpret_effect_size(effect_size)
         if significant:
             direction = "higher" if mean_a > mean_b else "lower"
-            interpretation = f"Significant difference (p={p_value:.4f}). A is {direction}. {interpretation}"
+            interpretation = (
+                f"Significant difference (p={p_value:.4f}). A is {direction}. {interpretation}"
+            )
         else:
             interpretation = f"No significant difference (p={p_value:.4f}). {interpretation}"
 
@@ -580,8 +583,12 @@ class StatisticalAnalyzer:
             raise ValueError("Paired samples must have equal length")
 
         # Count discordant pairs
-        b = sum(1 for a, b in zip(successes_a, successes_b, strict=False) if a and not b)  # A correct, B wrong
-        c = sum(1 for a, b in zip(successes_a, successes_b, strict=False) if not a and b)  # A wrong, B correct
+        b = sum(
+            1 for a, b in zip(successes_a, successes_b, strict=False) if a and not b
+        )  # A correct, B wrong
+        c = sum(
+            1 for a, b in zip(successes_a, successes_b, strict=False) if not a and b
+        )  # A wrong, B correct
 
         if b + c == 0:
             return StatisticalResult(
@@ -710,7 +717,7 @@ class StatisticalAnalyzer:
             return 2 * self._normal_cdf(math.sqrt(x)) - 1
 
         # General approximation using Wilson-Hilferty transformation
-        z = (((x / df) ** (1/3)) - (1 - 2 / (9 * df))) / math.sqrt(2 / (9 * df))
+        z = (((x / df) ** (1 / 3)) - (1 - 2 / (9 * df))) / math.sqrt(2 / (9 * df))
         return self._normal_cdf(z)
 
     def _interpret_effect_size(self, d: float) -> str:
@@ -761,12 +768,14 @@ class BenchmarkAnalyzer:
             passed: Whether task passed
             metadata: Additional metadata
         """
-        self.results[system_name][benchmark].append({
-            "task_id": task_id,
-            "score": score,
-            "passed": passed,
-            "metadata": metadata or {},
-        })
+        self.results[system_name][benchmark].append(
+            {
+                "task_id": task_id,
+                "score": score,
+                "passed": passed,
+                "metadata": metadata or {},
+            }
+        )
 
     def get_summary(self, system_name: str, benchmark: str) -> dict[str, Any]:
         """Get summary statistics for a system on a benchmark.
@@ -900,21 +909,21 @@ class BenchmarkAnalyzer:
             for j in range(i + 1, len(systems)):
                 for benchmark in report["benchmarks"]:
                     try:
-                        comparison = self.compare_systems(
-                            systems[i], systems[j], benchmark
+                        comparison = self.compare_systems(systems[i], systems[j], benchmark)
+                        report["comparisons"].append(
+                            {
+                                "system_a": comparison.system_a,
+                                "system_b": comparison.system_b,
+                                "benchmark": benchmark,
+                                "mean_a": comparison.mean_a,
+                                "mean_b": comparison.mean_b,
+                                "difference": comparison.difference,
+                                "p_value": comparison.statistical_test.p_value,
+                                "significant": comparison.statistical_test.significant,
+                                "winner": comparison.winner,
+                                "effect_size": comparison.statistical_test.effect_size,
+                            }
                         )
-                        report["comparisons"].append({
-                            "system_a": comparison.system_a,
-                            "system_b": comparison.system_b,
-                            "benchmark": benchmark,
-                            "mean_a": comparison.mean_a,
-                            "mean_b": comparison.mean_b,
-                            "difference": comparison.difference,
-                            "p_value": comparison.statistical_test.p_value,
-                            "significant": comparison.statistical_test.significant,
-                            "winner": comparison.winner,
-                            "effect_size": comparison.statistical_test.effect_size,
-                        })
                     except ValueError:
                         continue
 

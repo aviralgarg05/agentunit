@@ -44,13 +44,14 @@ class ExperimentConfig:
         output_dir: Directory for results
         random_seed: Random seed for reproducibility
     """
+
     name: str
     description: str = ""
     benchmarks: list[str] = field(default_factory=lambda: ["gaia", "arena"])
     gaia_levels: list[int] = field(default_factory=lambda: [1, 2, 3])
-    arena_types: list[str] = field(default_factory=lambda: [
-        "web_browsing", "code_execution", "multi_tool"
-    ])
+    arena_types: list[str] = field(
+        default_factory=lambda: ["web_browsing", "code_execution", "multi_tool"]
+    )
     n_runs: int = 1
     include_coordination_metrics: bool = True
     include_cost_metrics: bool = True
@@ -79,6 +80,7 @@ class TaskResult:
         coordination_metrics: Multi-agent coordination metrics
         metadata: Additional metadata
     """
+
     task_id: str
     benchmark: str
     system: str
@@ -108,6 +110,7 @@ class ExperimentResult:
         gap_analysis: Analysis addressing research gaps
         timestamp: Experiment timestamp
     """
+
     config: ExperimentConfig
     systems: list[str]
     task_results: list[TaskResult]
@@ -295,21 +298,21 @@ class ResearchGapAnalyzer:
 
         # Pairwise comparisons
         for i, sys_a in enumerate(systems):
-            for sys_b in systems[i+1:]:
+            for sys_b in systems[i + 1 :]:
                 for benchmark in benchmarks:
                     try:
-                        comparison = benchmark_analyzer.compare_systems(
-                            sys_a, sys_b, benchmark
+                        comparison = benchmark_analyzer.compare_systems(sys_a, sys_b, benchmark)
+                        analysis["pairwise_comparisons"].append(
+                            {
+                                "system_a": sys_a,
+                                "system_b": sys_b,
+                                "benchmark": benchmark,
+                                "p_value": comparison.statistical_test.p_value,
+                                "significant": comparison.statistical_test.significant,
+                                "effect_size": comparison.statistical_test.effect_size,
+                                "winner": comparison.winner,
+                            }
                         )
-                        analysis["pairwise_comparisons"].append({
-                            "system_a": sys_a,
-                            "system_b": sys_b,
-                            "benchmark": benchmark,
-                            "p_value": comparison.statistical_test.p_value,
-                            "significant": comparison.statistical_test.significant,
-                            "effect_size": comparison.statistical_test.effect_size,
-                            "winner": comparison.winner,
-                        })
                     except Exception:
                         continue
 
@@ -359,8 +362,14 @@ class ResearchGapAnalyzer:
                         total = 0
 
                         for task_id in multi_system_tasks:
-                            res_a = next((r for r in results if r.task_id == task_id and r.system == sys_a), None)
-                            res_b = next((r for r in results if r.task_id == task_id and r.system == sys_b), None)
+                            res_a = next(
+                                (r for r in results if r.task_id == task_id and r.system == sys_a),
+                                None,
+                            )
+                            res_b = next(
+                                (r for r in results if r.task_id == task_id and r.system == sys_b),
+                                None,
+                            )
 
                             if res_a and res_b:
                                 total += 1
@@ -422,7 +431,10 @@ class ResearchGapAnalyzer:
 
             # Cost-efficiency score: accuracy / log(1 + cost)
             import math
-            cost_efficiency = accuracy / math.log1p(cost_per_task) if cost_per_task > 0 else accuracy
+
+            cost_efficiency = (
+                accuracy / math.log1p(cost_per_task) if cost_per_task > 0 else accuracy
+            )
 
             analysis["by_system"][system] = {
                 "total_cost_usd": total_cost,
@@ -454,15 +466,19 @@ class ResearchGapAnalyzer:
             "gap_4_multi_framework": self.analyze_gap_4_multi_framework(results),
             "gap_5_cost_efficiency": self.analyze_gap_5_cost_efficiency(results),
             "summary": {
-                "gaps_addressed": sum([
-                    self.analyze_gap_1_process_metrics(results).get("addressed", False),
-                    self.analyze_gap_2_coordination_metrics(results).get("addressed", False),
-                    self.analyze_gap_3_statistical_rigor(results, benchmark_analyzer).get("addressed", False),
-                    self.analyze_gap_4_multi_framework(results).get("addressed", False),
-                    self.analyze_gap_5_cost_efficiency(results).get("addressed", False),
-                ]),
+                "gaps_addressed": sum(
+                    [
+                        self.analyze_gap_1_process_metrics(results).get("addressed", False),
+                        self.analyze_gap_2_coordination_metrics(results).get("addressed", False),
+                        self.analyze_gap_3_statistical_rigor(results, benchmark_analyzer).get(
+                            "addressed", False
+                        ),
+                        self.analyze_gap_4_multi_framework(results).get("addressed", False),
+                        self.analyze_gap_5_cost_efficiency(results).get("addressed", False),
+                    ]
+                ),
                 "total_gaps": 5,
-            }
+            },
         }
 
 
@@ -552,7 +568,9 @@ class BenchmarkExperiment:
             tool_calls=random.randint(0, 5),
             steps=random.randint(1, 10),
             coordination_metrics={
-                "handoff_success_rate": random.uniform(0.7, 1.0) if passed else random.uniform(0.3, 0.7),
+                "handoff_success_rate": random.uniform(0.7, 1.0)
+                if passed
+                else random.uniform(0.3, 0.7),
                 "communication_efficiency": random.uniform(0.6, 0.95),
                 "conflict_resolution_rate": random.uniform(0.8, 1.0),
                 "load_balance_score": random.uniform(0.5, 1.0),
@@ -560,7 +578,7 @@ class BenchmarkExperiment:
             metadata={
                 "simulated": True,
                 "timestamp": datetime.now().isoformat(),
-            }
+            },
         )
 
     def run_experiment(
@@ -584,18 +602,16 @@ class BenchmarkExperiment:
 
         if "gaia" in self.config.benchmarks:
             gaia_tasks = self.load_gaia_tasks()
-            all_tasks.extend([
-                ("gaia", t.task_id, t.final_answer, t.level.value)
-                for t in gaia_tasks
-            ])
+            all_tasks.extend(
+                [("gaia", t.task_id, t.final_answer, t.level.value) for t in gaia_tasks]
+            )
             logger.info(f"Loaded {len(gaia_tasks)} GAIA tasks")
 
         if "arena" in self.config.benchmarks:
             arena_tasks = self.load_arena_tasks()
-            all_tasks.extend([
-                ("arena", t.task_id, t.expected_outcome, t.task_type.value)
-                for t in arena_tasks
-            ])
+            all_tasks.extend(
+                [("arena", t.task_id, t.expected_outcome, t.task_type.value) for t in arena_tasks]
+            )
             logger.info(f"Loaded {len(arena_tasks)} AgentArena tasks")
 
         # Run for each system
@@ -604,12 +620,9 @@ class BenchmarkExperiment:
 
             for run_idx in range(self.config.n_runs):
                 for benchmark, task_id, expected, task_meta in all_tasks:
-
                     if simulate:
                         # Simulate result
-                        result = self.simulate_system_result(
-                            system, task_id, benchmark, expected
-                        )
+                        result = self.simulate_system_result(system, task_id, benchmark, expected)
                     else:
                         # Actual evaluation would go here
                         # result = self.evaluate_system(system, task, ...)
@@ -672,7 +685,9 @@ class BenchmarkExperiment:
             Path to saved file
         """
         if output_path is None:
-            output_path = self.config.output_dir / f"{self.config.name}_{experiment_result.timestamp}.json"
+            output_path = (
+                self.config.output_dir / f"{self.config.name}_{experiment_result.timestamp}.json"
+            )
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
