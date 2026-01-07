@@ -1,9 +1,9 @@
 import tempfile
-
 from datetime import datetime, timezone
 from pathlib import Path
 
 from agentunit.reporting.results import ScenarioResult, ScenarioRun, SuiteResult
+
 
 def test_markdown_contains_emojis():
     passing_run = ScenarioRun(
@@ -26,23 +26,21 @@ def test_markdown_contains_emojis():
         error="AssertionError",
     )
 
+    scenario = ScenarioResult(
+        name="emoji-scenario",
+        runs=[passing_run, failing_run],
+    )
 
-scenario = ScenarioResult(
-    name="emoji-scenario",
-    runs=[passing_run, failing_run],
-)
+    suite = SuiteResult(
+        scenarios=[scenario],
+        started_at=datetime.now(timezone.utc),
+        finished_at=datetime.now(timezone.utc),
+    )
 
-suite = SuiteResult(
-    scenarios=[scenario],
-    started_at=datetime.now(timezone.utc),
-    finished_at=datetime.now(timezone.utc),
-)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_path = Path(tmpdir) / "suite.md"
+        suite.to_markdown(path=output_path)
+        markdown = output_path.read_text(encoding="utf-8")
 
-
-with tempfile.TemporaryDirectory() as tmpdir:
-    output_path = Path(tmpdir) / "suite.md"
-    suite.to_markdown(path=output_path)
-    markdown = output_path.read_text(encoding="utf-8")
-
-    assert "✅" in markdown
-    assert "❌" in markdown
+        assert "✅" in markdown
+        assert "❌" in markdown
