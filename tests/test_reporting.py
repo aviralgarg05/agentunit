@@ -5,7 +5,6 @@ from pathlib import Path
 
 from agentunit.reporting.results import ScenarioResult, ScenarioRun, SuiteResult
 
-
 def test_markdown_contains_emojis():
     passing_run = ScenarioRun(
         scenario_name="test_pass",
@@ -14,7 +13,7 @@ def test_markdown_contains_emojis():
         metrics={},
         duration_ms=10,
         trace=[],
-        error=None
+        error=None,
     )
 
     failing_run = ScenarioRun(
@@ -24,8 +23,9 @@ def test_markdown_contains_emojis():
         metrics={},
         duration_ms=10,
         trace=[],
-        error="AssertionError"
+        error="AssertionError",
     )
+
 
 scenario = ScenarioResult(
     name="emoji-scenario",
@@ -37,6 +37,7 @@ suite = SuiteResult(
     started_at=datetime.now(timezone.utc),
     finished_at=datetime.now(timezone.utc),
 )
+
 
 with tempfile.TemporaryDirectory() as tmpdir:
     output_path = Path(tmpdir) / "suite.md"
