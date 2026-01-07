@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Garg"
+  given-names: "Aviral"
+title: "AgentUnit: A Framework for Multi-Agent System Evaluation and Benchmarking"
+version: 0.1.0
+date-released: 2024-01-01
+url: "https://github.com/aviralgarg05/agentunit"
+keywords:
+  - ai-agents
+  - evaluation
+  - benchmarking
+  - llm
+  - multi-agent-systems
+  - research
+license: MIT
