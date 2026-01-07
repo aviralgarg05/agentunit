@@ -1,5 +1,5 @@
 import tempfile
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from agentunit.reporting.results import (
@@ -18,7 +18,7 @@ def test_markdown_contains_emojis():
         metrics={},
         duration_ms=10,
         trace=[],
-        error=None
+        error=None,
     )
 
     failing_run = ScenarioRun(
@@ -28,18 +28,15 @@ def test_markdown_contains_emojis():
         metrics={},
         duration_ms=10,
         trace=[],
-        error="AssertionError"
+        error="AssertionError",
     )
 
-    scenario_result = ScenarioResult(
-        name="emoji-scenario",
-        runs=[passing_run, failing_run]
-    )
+    scenario_result = ScenarioResult(name="emoji-scenario", runs=[passing_run, failing_run])
 
     suite = SuiteResult(
         scenarios=[scenario_result],
-        started_at=datetime.now(),
-        finished_at=datetime.now()
+        started_at=datetime.now(timezone.utc),
+        finished_at=datetime.now(timezone.utc),
     )
 
     with tempfile.TemporaryDirectory() as tmpdir:
