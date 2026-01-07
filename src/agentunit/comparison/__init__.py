@@ -4,23 +4,20 @@ This module provides tools for comparing agent versions, detecting performance
 regressions, and conducting statistical analysis with confidence intervals.
 """
 
-from typing import TYPE_CHECKING
+from .comparator import (
+    ABTestRunner,
+    ConfigurationComparator,
+    RegressionDetector,
+    VersionComparator,
+)
+from .reports import ComparisonReport, RegressionReport
+from .statistics import (
+    BootstrapCI,
+    MetricAggregator,
+    SignificanceAnalyzer,
+    StatisticalTest,
+)
 
-
-if TYPE_CHECKING:
-    from .comparator import (
-        ABTestRunner,
-        ConfigurationComparator,
-        RegressionDetector,
-        VersionComparator,
-    )
-    from .reports import ComparisonReport, RegressionReport
-    from .statistics import (
-        BootstrapCI,
-        MetricAggregator,
-        SignificanceAnalyzer,
-        StatisticalTest,
-    )
 
 __all__ = [
     "ABTestRunner",

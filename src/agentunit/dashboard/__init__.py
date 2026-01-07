@@ -8,13 +8,11 @@ This module provides a Streamlit-based web interface for:
 """
 
 import sys
-from typing import TYPE_CHECKING
 
+from .app import DashboardApp
+from .components import ReportExplorer, RunMonitor, SuiteEditor, TraceViewer
+from .server import DashboardConfig, start_dashboard
 
-if TYPE_CHECKING:
-    from .app import DashboardApp
-    from .components import ReportExplorer, RunMonitor, SuiteEditor, TraceViewer
-    from .server import DashboardConfig, start_dashboard
 
 __all__ = [
     "DashboardApp",

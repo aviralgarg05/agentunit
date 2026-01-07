@@ -10,13 +10,27 @@ with the lazy-loading pattern. See PEP 562 for details.
 """
 
 import importlib
-from typing import TYPE_CHECKING
 
+from .agentops_adapter import AgentOpsAdapter
+from .anthropic_bedrock import AnthropicBedrockAdapter
+from .autogen import AutoGenAdapter
+from .autogen_ag2 import AG2Adapter
 from .base import AdapterOutcome, BaseAdapter
+from .crewai import CrewAIAdapter
+from .haystack import HaystackAdapter
+from .langgraph import LangGraphAdapter
+from .langsmith_adapter import LangSmithAdapter
+from .llama_index import LlamaIndexAdapter
+from .mistral_server import MistralServerAdapter
+from .openai_agents import OpenAIAgentsAdapter
+from .openai_swarm import OpenAISwarmAdapter
+from .phidata import PhidataAdapter
+from .promptflow import PromptFlowAdapter
+from .rasa import RasaAdapter
+from .semantic_kernel import SemanticKernelAdapter
+from .swarm_adapter import SwarmAdapter
+from .wandb_adapter import WandbAdapter
 
-
-# Only import adapters that don't have external dependencies at import time
-# Other adapters are imported lazily when needed
 
 __all__ = [
     "AG2Adapter",
@@ -27,7 +41,6 @@ __all__ = [
     "BaseAdapter",
     "CrewAIAdapter",
     "HaystackAdapter",
-    # Lazy-loaded adapters - import when needed
     "LangGraphAdapter",
     "LangSmithAdapter",
     "LlamaIndexAdapter",
@@ -41,27 +54,6 @@ __all__ = [
     "SwarmAdapter",
     "WandbAdapter",
 ]
-
-# Provide type-only imports so linters know these names exist; not executed at runtime
-if TYPE_CHECKING:  # pragma: no cover
-    from .agentops_adapter import AgentOpsAdapter
-    from .anthropic_bedrock import AnthropicBedrockAdapter
-    from .autogen import AutoGenAdapter
-    from .autogen_ag2 import AG2Adapter
-    from .crewai import CrewAIAdapter
-    from .haystack import HaystackAdapter
-    from .langgraph import LangGraphAdapter
-    from .langsmith_adapter import LangSmithAdapter
-    from .llama_index import LlamaIndexAdapter
-    from .mistral_server import MistralServerAdapter
-    from .openai_agents import OpenAIAgentsAdapter
-    from .openai_swarm import OpenAISwarmAdapter
-    from .phidata import PhidataAdapter
-    from .promptflow import PromptFlowAdapter
-    from .rasa import RasaAdapter
-    from .semantic_kernel import SemanticKernelAdapter
-    from .swarm_adapter import SwarmAdapter
-    from .wandb_adapter import WandbAdapter
 
 
 # Mapping of adapter names to their import paths and class names

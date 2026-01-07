@@ -54,7 +54,7 @@ class LangGraphAdapter(BaseAdapter):
         if langgraph is None:
             msg = "langgraph>=1.0.0a4 is required for LangGraphAdapter"
             raise AdapterNotAvailableError(msg)
-        if isinstance(self._source, (str, Path)):
+        if isinstance(self._source, str | Path):
             self._graph_callable = self._load_from_path(Path(self._source))
         else:
             self._graph_callable = self._wrap_callable(self._source)

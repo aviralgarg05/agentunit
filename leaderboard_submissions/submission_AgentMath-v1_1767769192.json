@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-01-07T06:59:52.420021+00:00",
+  "benchmark": "AgentMath-v1",
+  "model_name": "Simulated-GPT-4",
+  "results": [
+    {
+      "task_id": "math_1",
+      "prompt": "What is 15% of 850?",
+      "response": "The answer is 127.5",
+      "correct": true,
+      "latency": 0.5010490417480469,
+      "cost": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "math_2",
+      "prompt": "Solve for x: 2x + 5 = 15",
+      "response": "x = 5",
+      "correct": true,
+      "latency": 0.5005629062652588,
+      "cost": 0.0,
+      "error": null
+    },
+    {
+      "task_id": "math_3",
+      "prompt": "If a triangle has a base of 10 and height of 5, what is its area?",
+      "response": "Area is 25",
+      "correct": true,
+      "latency": 0.5012409687042236,
+      "cost": 0.0,
+      "error": null
+    }
+  ],
+  "metadata": {
+    "description": "Standard mathematical reasoning tasks for agents.",
+    "total_tasks": 3
+  }
+}

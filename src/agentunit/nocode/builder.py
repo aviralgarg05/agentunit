@@ -304,7 +304,7 @@ class ScenarioBuilder:
         metrics = []
 
         for metric in metrics_config:
-            if isinstance(metric, (str, dict)):
+            if isinstance(metric, str | dict):
                 # Placeholder: metric instantiation not yet implemented
                 continue
 

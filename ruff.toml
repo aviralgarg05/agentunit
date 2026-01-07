@@ -69,7 +69,7 @@ ignore = [
     "ERA001",  # commented-out-code
     "PERF401", # manual-list-comprehension
     "B027",    # empty-method-without-abstract-decorator
-    "PLC0206", # dict-index-missing-items
+
     "EM101",   # raw-string-in-exception
     "EM102",   # f-string-in-exception
     "RET505",  # superfluous-else-return
@@ -107,6 +107,9 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Intentional imports for availability checking
 "src/agentunit/dashboard/server.py" = ["F401"]
 "src/agentunit/multimodal/adapters.py" = ["F401"]
+"src/agentunit/multiagent/__init__.py" = ["E402"]  # Lazy imports after module code
+"src/agentunit/pytest/cache.py" = ["TCH003"]  # Path used at runtime
+"src/agentunit/reporting/results.py" = ["N817"]  # ET is conventional for ElementTree
 
 # __init__.py files can have unused imports
 "__init__.py" = ["F401"]

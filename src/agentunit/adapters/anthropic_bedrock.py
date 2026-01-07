@@ -120,7 +120,7 @@ class AnthropicBedrockAdapter(BaseAdapter):
         try:
             if hasattr(data, "read"):
                 data = data.read()
-            if isinstance(data, (bytes, bytearray)):
+            if isinstance(data, bytes | bytearray):
                 data = data.decode("utf-8")
             if isinstance(data, str):
                 return json.loads(data)

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import json
 import statistics
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
+from xml.etree import ElementTree as ET
 
 from agentunit.reporting.html import render_html_report
 

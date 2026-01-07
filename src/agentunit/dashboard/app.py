@@ -328,7 +328,7 @@ class DashboardApp:
             with col1:
                 st.text(metric_name)
             with col2:
-                if isinstance(metric_value, (int, float)):
+                if isinstance(metric_value, int | float):
                     st.progress(min(metric_value, 1.0))
                 else:
                     st.text(str(metric_value))

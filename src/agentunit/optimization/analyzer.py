@@ -253,7 +253,7 @@ class RunAnalyzer:
                 continue
 
             # Calculate statistics
-            numeric_values = [v for v in values if isinstance(v, (int, float))]
+            numeric_values = [v for v in values if isinstance(v, int | float)]
             if numeric_values:
                 summary[metric_name] = {
                     "avg": sum(numeric_values) / len(numeric_values),

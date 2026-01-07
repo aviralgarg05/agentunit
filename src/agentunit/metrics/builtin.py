@@ -29,7 +29,7 @@ except Exception:  # pragma: no cover
 def _coerce_to_text(obj: Any) -> str:
     if obj is None:
         return ""
-    if isinstance(obj, (dict, list)):
+    if isinstance(obj, dict | list):
         return "\n".join(map(str, obj))
     return str(obj)
 
