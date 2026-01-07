@@ -1,15 +1,10 @@
+# Standard library
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
-from agentunit.core.trace import TraceLog
 
-
-
-from agentunit.reporting.results import (
-    ScenarioResult,
-    ScenarioRun,
-    SuiteResult,
-)
+# Local imports
+from agentunit.reporting.results import ScenarioResult, ScenarioRun, SuiteResult
 
 
 def test_markdown_contains_emojis():
@@ -52,5 +47,3 @@ def test_markdown_contains_emojis():
 
         assert "✅" in markdown
         assert "❌" in markdown
-
-
