@@ -80,6 +80,3 @@ class SessionAnalyzer:
             "total_tokens": self.session.total_tokens,
             "total_cost": self.session.total_cost,
         }
-
-
-

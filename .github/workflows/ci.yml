@@ -31,17 +31,20 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install poetry
 
-      - name: Install ruff
-        run: pip install ruff
+      - name: Install dependencies
+        run: poetry install --with dev
 
       - name: Validate project metadata
         run: poetry check
 
       - name: Run ruff linter
-        run: ruff check src/ tests/
+        run: poetry run ruff check src/ tests/
 
       - name: Run ruff formatter check
-        run: ruff format --check src/ tests/
+        run: poetry run ruff format --check src/ tests/
+
+      - name: Run mypy type check
+        run: poetry run mypy src/
 
   test:
     name: Test (Python ${{ matrix.python-version }})
