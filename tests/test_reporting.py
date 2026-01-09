@@ -1,9 +1,7 @@
-# Standard library
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Local imports
 from agentunit.reporting.results import ScenarioResult, ScenarioRun, SuiteResult
 
 
@@ -42,7 +40,6 @@ def test_markdown_contains_emojis():
     with tempfile.TemporaryDirectory() as tmpdir:
         output_path = Path(tmpdir) / "suite.md"
         suite.to_markdown(path=output_path)
-
         markdown = output_path.read_text(encoding="utf-8")
 
         assert "✅" in markdown
