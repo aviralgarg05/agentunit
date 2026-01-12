@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
+import csv
 import json
 import statistics
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from xml.etree import ElementTree as ET
 
 from agentunit.reporting.html import render_html_report
-
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -18,6 +18,10 @@ if TYPE_CHECKING:
 
     from agentunit.core.trace import TraceLog
 
+
+# -------------------------
+# Data Models
+# -------------------------
 
 @dataclass(slots=True)
 class ScenarioRun:
@@ -45,7 +49,11 @@ class ScenarioResult:
         return sum(1 for run in self.runs if run.success) / len(self.runs)
 
     def aggregate_metric(self, name: str) -> float | None:
-        values = [run.metrics.get(name) for run in self.runs if run.metrics.get(name) is not None]
+        values = [
+            run.metrics.get(name)
+            for run in self.runs
+            if run.metrics.get(name) is not None
+        ]
         if not values:
             return None
         return float(statistics.fmean(values))
@@ -68,6 +76,29 @@ class ScenarioResult:
         }
 
 
+# -------------------------
+# Helpers
+# -------------------------
+
+def _flatten_metrics(
+    metrics: dict[str, Any], prefix: str = "metric"
+) -> dict[str, Any]:
+    flat: dict[str, Any] = {}
+
+    for key, value in metrics.items():
+        if isinstance(value, dict):
+            for inner_key, inner_value in value.items():
+                flat[f"{prefix}_{key}_{inner_key}"] = inner_value
+        else:
+            flat[f"{prefix}_{key}"] = value
+
+    return flat
+
+
+# -------------------------
+# Suite Result
+# -------------------------
+
 @dataclass(slots=True)
 class SuiteResult:
     scenarios: list[ScenarioResult]
@@ -84,7 +115,10 @@ class SuiteResult:
     def to_json(self, path: str | Path) -> Path:
         target = Path(path)
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(json.dumps(self.to_dict(), indent=2), encoding="utf-8")
+        target.write_text(
+            json.dumps(self.to_dict(), indent=2),
+            encoding="utf-8",
+        )
         return target
 
     def to_markdown(self, path: str | Path) -> Path:
@@ -99,19 +133,28 @@ class SuiteResult:
     def to_junit(self, path: str | Path) -> Path:
         target = Path(path)
         target.parent.mkdir(parents=True, exist_ok=True)
-        testsuites = ET.Element(
+
+        testsuite = ET.Element(
             "testsuite",
             attrib={
                 "name": "agentunit",
                 "tests": str(sum(len(s.runs) for s in self.scenarios)),
-                "failures": str(sum(1 for s in self.scenarios for r in s.runs if not r.success)),
+                "failures": str(
+                    sum(
+                        1
+                        for s in self.scenarios
+                        for r in s.runs
+                        if not r.success
+                    )
+                ),
                 "time": f"{(self.finished_at - self.started_at).total_seconds():.4f}",
             },
         )
+
         for scenario in self.scenarios:
             for run in scenario.runs:
                 testcase = ET.SubElement(
-                    testsuites,
+                    testsuite,
                     "testcase",
                     attrib={
                         "classname": scenario.name,
@@ -123,10 +166,13 @@ class SuiteResult:
                     failure = ET.SubElement(
                         testcase,
                         "failure",
-                        attrib={"message": run.error or "Scenario failed"},
+                        attrib={
+                            "message": run.error or "Scenario failed"
+                        },
                     )
                     failure.text = json.dumps(run.metrics)
-        tree = ET.ElementTree(testsuites)
+
+        tree = ET.ElementTree(testsuite)
         tree.write(target, encoding="utf-8", xml_declaration=True)
         return target
 
@@ -140,30 +186,94 @@ class SuiteResult:
         target.write_text(html, encoding="utf-8")
         return target
 
+    def to_csv(self, path: str | Path) -> Path:
+        """
+        Export suite results to CSV.
+        One row per scenario run.
+        """
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+
+        rows: list[dict[str, Any]] = []
+
+        for scenario in self.scenarios:
+            for run in scenario.runs:
+                row: dict[str, Any] = {
+                    "scenario_name": scenario.name,
+                    "case_id": run.case_id,
+                    "success": run.success,
+                    "duration_ms": run.duration_ms,
+                    "error": run.error,
+                }
+
+                if run.metrics:
+                    row.update(_flatten_metrics(run.metrics))
+
+                rows.append(row)
+
+        if not rows:
+            return target
+
+        fieldnames = sorted(
+            {key for row in rows for key in row.keys()}
+        )
+
+        with target.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+
+        return target
+
+
+# -------------------------
+# Utilities
+# -------------------------
 
 def merge_results(results: Iterable[SuiteResult]) -> SuiteResult:
     results = list(results)
     scenarios: dict[str, ScenarioResult] = {}
+
     for result in results:
         for scenario in result.scenarios:
-            existing = scenarios.setdefault(scenario.name, ScenarioResult(name=scenario.name))
+            existing = scenarios.setdefault(
+                scenario.name, ScenarioResult(name=scenario.name)
+            )
             for run in scenario.runs:
                 existing.add_run(run)
+
     started = min(result.started_at for result in results)
     finished = max(result.finished_at for result in results)
-    return SuiteResult(scenarios=list(scenarios.values()), started_at=started, finished_at=finished)
+
+    return SuiteResult(
+        scenarios=list(scenarios.values()),
+        started_at=started,
+        finished_at=finished,
+    )
 
 
-def _render_markdown_scenario(scenario: ScenarioResult) -> list[str]:
-    lines = [f"## {scenario.name}", f"Success rate: {scenario.success_rate:.2%}", ""]
+def _render_markdown_scenario(
+    scenario: ScenarioResult,
+) -> list[str]:
+    lines = [
+        f"## {scenario.name}",
+        f"Success rate: {scenario.success_rate:.2%}",
+        "",
+    ]
+
     for run in scenario.runs:
-        lines.append(f"- **{run.case_id}**: {'✅' if run.success else '❌'}")
+        lines.append(
+            f"- **{run.case_id}**: {'✅' if run.success else '❌'}"
+        )
         metrics_repr = ", ".join(
-            f"{name}={value:.2f}" for name, value in run.metrics.items() if value is not None
+            f"{name}={value:.2f}"
+            for name, value in run.metrics.items()
+            if value is not None
         )
         if metrics_repr:
             lines.append(f"  - Metrics: {metrics_repr}")
         if run.error:
             lines.append(f"  - Error: {run.error}")
+
     lines.append("")
     return lines
