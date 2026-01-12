@@ -203,7 +203,7 @@ class SuiteResult:
         if not rows:
             return target
 
-        fieldnames = sorted({key for row in rows for key in row.keys})
+        fieldnames = sorted({key for row in rows for key in row})
 
         with target.open("w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
