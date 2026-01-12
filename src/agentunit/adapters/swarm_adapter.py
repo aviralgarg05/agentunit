@@ -42,6 +42,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
 class SwarmAdapter(MultiAgentAdapter):
     """OpenAI Swarm integration adapter for lightweight multi-agent testing."""
 
