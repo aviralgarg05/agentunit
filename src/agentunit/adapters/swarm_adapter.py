@@ -13,6 +13,17 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+
+try:
+    from swarm import Agent, Swarm
+
+    HAS_SWARM = True
+except ImportError:
+    HAS_SWARM = False
+    logging.getLogger(__name__).warning(
+        "OpenAI Swarm not installed. SwarmAdapter will have limited functionality."
+    )
+
 from agentunit.multiagent import (
     AgentInteraction,
     AgentMetadata,
@@ -23,23 +34,13 @@ from agentunit.multiagent import (
     OrchestrationPattern,
     SessionID,
 )
-from agentunit.reporting.results import ScenarioResult
 
 
 if TYPE_CHECKING:
     from agentunit.core import Scenario
+    from agentunit.reporting.results import ScenarioResult
 
-# Configure logging
 logger = logging.getLogger(__name__)
-
-try:
-    from swarm import Agent, Swarm
-
-    HAS_SWARM = True
-except ImportError:
-    HAS_SWARM = False
-    logger.warning("OpenAI Swarm not installed. SwarmAdapter will have limited functionality.")
-
 
 class SwarmAdapter(MultiAgentAdapter):
     """OpenAI Swarm integration adapter for lightweight multi-agent testing."""
@@ -149,7 +150,11 @@ class SwarmAdapter(MultiAgentAdapter):
         return wrapped_function
 
     def initiate_conversation(
-        self, scenario: Scenario, initial_message: str, participants: list[str], **kwargs
+        self,
+        scenario: Scenario,
+        initial_message: str,
+        participants: list[str],
+        **kwargs,
     ) -> SessionID:
         """Initiate a Swarm conversation."""
         session_id = f"session_{uuid.uuid4().hex[:8]}"
@@ -323,6 +328,14 @@ class SwarmAdapter(MultiAgentAdapter):
         session["status"] = "completed"
         session["end_time"] = datetime.now()
 
+        # Calculate duration in milliseconds
+        start_time = session.get("start_time")
+        if start_time:
+            duration_seconds = (session["end_time"] - start_time).total_seconds()
+            duration_ms = float(duration_seconds * 1000)
+        else:
+            duration_ms = 0.0
+
         # Collect metrics
         metrics = self._calculate_swarm_metrics(session_id)
 
@@ -330,27 +343,37 @@ class SwarmAdapter(MultiAgentAdapter):
         from agentunit.core.trace import TraceLog
 
         trace = TraceLog()
-        trace.record("session_complete", session_id=session_id, metrics=metrics)
+        trace.record(
+            "session_complete",
+            session_id=session_id,
+            metrics=metrics,
+        )
 
         # Create scenario run
         from agentunit.reporting.results import ScenarioRun
 
         scenario_run = ScenarioRun(
-            scenario_name=session["scenario"].name
-            if hasattr(session["scenario"], "name")
-            else "swarm_scenario",
+            scenario_name=(
+                session["scenario"].name
+                if hasattr(session["scenario"], "name")
+                else "swarm_scenario"
+            ),
             case_id=session_id,
             success=True,
             metrics=metrics,
-            duration_ms=0.0,  # TODO: Track actual duration
+            duration_ms=duration_ms,
             trace=trace,
         )
 
         # Create result
+        from agentunit.reporting.results import ScenarioResult
+
         result = ScenarioResult(
-            name=session["scenario"].name
-            if hasattr(session["scenario"], "name")
-            else "swarm_scenario"
+            name=(
+                session["scenario"].name
+                if hasattr(session["scenario"], "name")
+                else "swarm_scenario"
+            )
         )
         result.add_run(scenario_run)
 
@@ -414,7 +437,7 @@ class SwarmAdapter(MultiAgentAdapter):
         return {
             "handoff_counts": patterns,
             "unique_patterns": len(patterns),
-            "most_common": max(patterns.items(), key=lambda x: x[1]) if patterns else None,
+            "most_common": (max(patterns.items(), key=lambda x: x[1]) if patterns else None),
         }
 
     def _calculate_agent_utilization(self, session_id: SessionID) -> dict[str, float]:
