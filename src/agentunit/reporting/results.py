@@ -200,9 +200,6 @@ class SuiteResult:
 
                 rows.append(row)
 
-        if not rows:
-            return target
-
         fieldnames = sorted({key for row in rows for key in row})
 
         with target.open("w", newline="", encoding="utf-8") as f:
