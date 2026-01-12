@@ -7,10 +7,11 @@ import json
 import statistics
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from xml.etree import ElementTree as ET
 
 from agentunit.reporting.html import render_html_report
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -215,7 +216,7 @@ class SuiteResult:
             return target
 
         fieldnames = sorted(
-            {key for row in rows for key in row.keys()}
+            {key for row in rows for key in row.keys}
         )
 
         with target.open("w", newline="", encoding="utf-8") as f:
