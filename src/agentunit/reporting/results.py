@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 # Data Models
 # -------------------------
 
+
 @dataclass(slots=True)
 class ScenarioRun:
     scenario_name: str
@@ -50,11 +51,7 @@ class ScenarioResult:
         return sum(1 for run in self.runs if run.success) / len(self.runs)
 
     def aggregate_metric(self, name: str) -> float | None:
-        values = [
-            run.metrics.get(name)
-            for run in self.runs
-            if run.metrics.get(name) is not None
-        ]
+        values = [run.metrics.get(name) for run in self.runs if run.metrics.get(name) is not None]
         if not values:
             return None
         return float(statistics.fmean(values))
@@ -81,9 +78,8 @@ class ScenarioResult:
 # Helpers
 # -------------------------
 
-def _flatten_metrics(
-    metrics: dict[str, Any], prefix: str = "metric"
-) -> dict[str, Any]:
+
+def _flatten_metrics(metrics: dict[str, Any], prefix: str = "metric") -> dict[str, Any]:
     flat: dict[str, Any] = {}
 
     for key, value in metrics.items():
@@ -99,6 +95,7 @@ def _flatten_metrics(
 # -------------------------
 # Suite Result
 # -------------------------
+
 
 @dataclass(slots=True)
 class SuiteResult:
@@ -140,14 +137,7 @@ class SuiteResult:
             attrib={
                 "name": "agentunit",
                 "tests": str(sum(len(s.runs) for s in self.scenarios)),
-                "failures": str(
-                    sum(
-                        1
-                        for s in self.scenarios
-                        for r in s.runs
-                        if not r.success
-                    )
-                ),
+                "failures": str(sum(1 for s in self.scenarios for r in s.runs if not r.success)),
                 "time": f"{(self.finished_at - self.started_at).total_seconds():.4f}",
             },
         )
@@ -167,9 +157,7 @@ class SuiteResult:
                     failure = ET.SubElement(
                         testcase,
                         "failure",
-                        attrib={
-                            "message": run.error or "Scenario failed"
-                        },
+                        attrib={"message": run.error or "Scenario failed"},
                     )
                     failure.text = json.dumps(run.metrics)
 
@@ -215,9 +203,7 @@ class SuiteResult:
         if not rows:
             return target
 
-        fieldnames = sorted(
-            {key for row in rows for key in row.keys}
-        )
+        fieldnames = sorted({key for row in rows for key in row.keys})
 
         with target.open("w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -231,15 +217,14 @@ class SuiteResult:
 # Utilities
 # -------------------------
 
+
 def merge_results(results: Iterable[SuiteResult]) -> SuiteResult:
     results = list(results)
     scenarios: dict[str, ScenarioResult] = {}
 
     for result in results:
         for scenario in result.scenarios:
-            existing = scenarios.setdefault(
-                scenario.name, ScenarioResult(name=scenario.name)
-            )
+            existing = scenarios.setdefault(scenario.name, ScenarioResult(name=scenario.name))
             for run in scenario.runs:
                 existing.add_run(run)
 
@@ -263,13 +248,9 @@ def _render_markdown_scenario(
     ]
 
     for run in scenario.runs:
-        lines.append(
-            f"- **{run.case_id}**: {'✅' if run.success else '❌'}"
-        )
+        lines.append(f"- **{run.case_id}**: {'✅' if run.success else '❌'}")
         metrics_repr = ", ".join(
-            f"{name}={value:.2f}"
-            for name, value in run.metrics.items()
-            if value is not None
+            f"{name}={value:.2f}" for name, value in run.metrics.items() if value is not None
         )
         if metrics_repr:
             lines.append(f"  - Metrics: {metrics_repr}")
