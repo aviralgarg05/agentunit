@@ -84,9 +84,14 @@ def _parse_list_field(value: str | None, delimiter: str) -> list[str] | None:
     if not value or not isinstance(value, str):
         return None
 
+    if not delimiter:
+        # Empty delimiter is invalid for str.split
+        return [value.strip()] if value.strip() else None
+
     parts = [item.strip() for item in value.split(delimiter)]
     cleaned = [p for p in parts if p]
     return cleaned or None
+
 
 
 def load_local_csv(
