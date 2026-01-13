@@ -93,7 +93,6 @@ def _parse_list_field(value: str | None, delimiter: str) -> list[str] | None:
     return cleaned or None
 
 
-
 def load_local_csv(
     path: str | Path,
     tools_delimiter: str = ";",
