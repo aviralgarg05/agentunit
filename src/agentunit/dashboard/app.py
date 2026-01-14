@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+import plotly.express as px
+
 
 try:
     import streamlit as st
@@ -364,7 +367,41 @@ class DashboardApp:
 
                 # Metric breakdown
                 st.subheader("Metric Breakdown")
-                # TODO: Add charts using plotly or altair
+                ## Prepare metric data
+                report_metrics = {
+                    "Success Rate (%)": (
+                        run_data.get("passed", 0) / max(run_data.get("total", 1), 1) * 100
+                    ),
+                    "Avg Latency (s)": run_data.get("avg_latency", 0),
+                    "Total Cost ($)": run_data.get("cost", 0),
+                }
+
+            df = pd.DataFrame(
+                {
+                    "Metric": list(report_metrics.keys()),
+                    "Value": list(report_metrics.values()),
+                }
+            )
+
+            # Bar chart
+            fig_bar = px.bar(
+                df,
+                x="Metric",
+                y="Value",
+                title="Metric Breakdown",
+                text="Value",
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
+            # Pie chart
+            fig_pie = px.pie(
+                df,
+                names="Metric",
+                values="Value",
+                title="Metric Contribution",
+            )
+            st.plotly_chart(fig_pie, use_container_width=True)
+            # Table view
+            st.dataframe(df)
 
         elif report_type == "Comparison Report":
             self._render_comparison_report()

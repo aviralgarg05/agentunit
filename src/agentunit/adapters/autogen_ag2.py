@@ -318,7 +318,7 @@ class AG2Adapter(MultiAgentAdapter):
             case_id=session_id,
             success=True,
             metrics=metrics,
-            duration_ms=0.0,  # TODO: Track actual duration
+            duration_ms=((session["end_time"] - session["start_time"]).total_seconds() * 1000),
             trace=trace,
         )
 
@@ -340,6 +340,19 @@ class AG2Adapter(MultiAgentAdapter):
             interaction for interaction in self.interactions if interaction.session_id == session_id
         ]
 
+        response_times = []
+
+        # Go through messages one by one
+        for i in range(1, len(session_interactions)):
+            previous_message_time = session_interactions[i - 1].timestamp
+            current_message_time = session_interactions[i].timestamp
+
+            time_difference = (current_message_time - previous_message_time).total_seconds()
+
+            response_times.append(time_difference)
+
+        average_response_time = sum(response_times) / len(response_times) if response_times else 0.0
+
         # Basic metrics
         metrics = {
             "total_messages": len(session_interactions),
@@ -347,7 +360,7 @@ class AG2Adapter(MultiAgentAdapter):
             "duration_seconds": (
                 session.get("end_time", datetime.now()) - session["start_time"]
             ).total_seconds(),
-            "average_response_time": 0.0,  # Would need timing data
+            "average_response_time": average_response_time,
             "conversation_turns": session.get("message_count", 0),
         }
 
