@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import json
 from dataclasses import dataclass
 from typing import Any
 
 from agentunit.datasets.base import DatasetCase, DatasetSource
 
+logger = logging.getLogger(__name__)
 
 try:
     import openai
@@ -41,10 +43,10 @@ class LlamaDatasetGenerator:
     """Generate synthetic datasets using Llama models via HuggingFace Inference API."""
 
     def __init__(
-        self,
-        model: str = "meta-llama/Meta-Llama-3.1-70B-Instruct",
-        api_token: str | None = None,
-        config: GeneratorConfig | None = None,
+            self,
+            model: str = "meta-llama/Meta-Llama-3.1-70B-Instruct",
+            api_token: str | None = None,
+            config: GeneratorConfig | None = None,
     ):
         """Initialize Llama dataset generator.
 
@@ -97,7 +99,7 @@ Make sure to include:
 Ensure diversity in query formulation and complexity."""
 
     async def generate(
-        self, domain: str, task_description: str, constraints: list[str] | None = None
+            self, domain: str, task_description: str, constraints: list[str] | None = None
     ) -> DatasetSource:
         """Generate synthetic dataset.
 
@@ -114,6 +116,8 @@ Ensure diversity in query formulation and complexity."""
         if constraints:
             prompt += "\n\nAdditional constraints:\n" + "\n".join(f"- {c}" for c in constraints)
 
+        logger.debug("Llama generated prompt:\n%s", prompt)
+
         # Generate with Llama
         response = await asyncio.to_thread(
             self.client.text_generation,
@@ -123,6 +127,7 @@ Ensure diversity in query formulation and complexity."""
             temperature=self.config.temperature,
             return_full_text=False,
         )
+        logger.debug("Llama raw response:\n%s", response)
 
         # Parse JSON response
         try:
@@ -155,11 +160,16 @@ Ensure diversity in query formulation and complexity."""
             )
 
         except json.JSONDecodeError as e:
-            msg = f"Failed to parse generated dataset: {e}\nResponse: {response}"
-            raise ValueError(msg)
+            # msg = f"Failed to parse generated dataset: {e}\nResponse: {response}"
+            logger.error(
+                "Failed to parse OpenAI response JSON. Raw response:\n%s",
+                response,
+                exc_info=True,
+            )
+            raise
 
     def generate_sync(
-        self, domain: str, task_description: str, constraints: list[str] | None = None
+            self, domain: str, task_description: str, constraints: list[str] | None = None
     ) -> DatasetSource:
         """Synchronous version of generate."""
         return asyncio.run(self.generate(domain, task_description, constraints))
@@ -169,10 +179,10 @@ class OpenAIDatasetGenerator:
     """Generate synthetic datasets using OpenAI models (GPT-4, etc.)."""
 
     def __init__(
-        self,
-        model: str = "gpt-4o",
-        api_key: str | None = None,
-        config: GeneratorConfig | None = None,
+            self,
+            model: str = "gpt-4o",
+            api_key: str | None = None,
+            config: GeneratorConfig | None = None,
     ):
         """Initialize OpenAI dataset generator.
 
@@ -221,11 +231,11 @@ Distribution:
 Ensure diversity in query formulation and complexity."""
 
     async def generate(
-        self,
-        domain: str,
-        task_description: str,
-        constraints: list[str] | None = None,
-        seed_examples: list[dict[str, Any]] | None = None,
+            self,
+            domain: str,
+            task_description: str,
+            constraints: list[str] | None = None,
+            seed_examples: list[dict[str, Any]] | None = None,
     ) -> DatasetSource:
         """Generate synthetic dataset.
 
@@ -251,6 +261,10 @@ Ensure diversity in query formulation and complexity."""
         if seed_examples:
             messages[1]["content"] += f"\n\nSeed examples:\n{json.dumps(seed_examples, indent=2)}"
 
+        logger.debug(
+            "OpenAI generated prompt (messages):\n%s",
+            json.dumps(messages, indent=2)
+        )
         # Generate with GPT
         response = await self.client.chat.completions.create(
             model=self.model,
@@ -261,6 +275,7 @@ Ensure diversity in query formulation and complexity."""
         )
 
         response_text = response.choices[0].message.content
+        logger.debug("OpenAI raw response text:\n%s", response_text)
 
         # Parse JSON response
         try:
@@ -295,15 +310,19 @@ Ensure diversity in query formulation and complexity."""
             )
 
         except json.JSONDecodeError as e:
-            msg = f"Failed to parse generated dataset: {e}\nResponse: {response_text}"
-            raise ValueError(msg)
+            logger.error(
+                "Failed to parse Llama response JSON. Raw response:\n%s",
+                response_text,
+                exc_info=True,
+            )
+        raise
 
     def generate_sync(
-        self,
-        domain: str,
-        task_description: str,
-        constraints: list[str] | None = None,
-        seed_examples: list[dict[str, Any]] | None = None,
+            self,
+            domain: str,
+            task_description: str,
+            constraints: list[str] | None = None,
+            seed_examples: list[dict[str, Any]] | None = None,
     ) -> DatasetSource:
         """Synchronous version of generate."""
         return asyncio.run(self.generate(domain, task_description, constraints, seed_examples))
