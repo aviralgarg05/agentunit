@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import json
+import logging
 from dataclasses import dataclass
 from typing import Any
 
 from agentunit.datasets.base import DatasetCase, DatasetSource
+
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +160,7 @@ Ensure diversity in query formulation and complexity."""
                 cases, name=f"llama_generated_{domain.replace(' ', '_')}"
             )
 
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             # msg = f"Failed to parse generated dataset: {e}\nResponse: {response}"
             logger.error(
                 "Failed to parse OpenAI response JSON. Raw response:\n%s",
@@ -309,7 +310,7 @@ Ensure diversity in query formulation and complexity."""
                 cases, name=f"openai_generated_{domain.replace(' ', '_')}"
             )
 
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             logger.error(
                 "Failed to parse Llama response JSON. Raw response:\n%s",
                 response_text,
