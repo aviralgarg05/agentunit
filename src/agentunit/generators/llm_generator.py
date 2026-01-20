@@ -44,10 +44,10 @@ class LlamaDatasetGenerator:
     """Generate synthetic datasets using Llama models via HuggingFace Inference API."""
 
     def __init__(
-            self,
-            model: str = "meta-llama/Meta-Llama-3.1-70B-Instruct",
-            api_token: str | None = None,
-            config: GeneratorConfig | None = None,
+        self,
+        model: str = "meta-llama/Meta-Llama-3.1-70B-Instruct",
+        api_token: str | None = None,
+        config: GeneratorConfig | None = None,
     ):
         """Initialize Llama dataset generator.
 
@@ -100,7 +100,7 @@ Make sure to include:
 Ensure diversity in query formulation and complexity."""
 
     async def generate(
-            self, domain: str, task_description: str, constraints: list[str] | None = None
+        self, domain: str, task_description: str, constraints: list[str] | None = None
     ) -> DatasetSource:
         """Generate synthetic dataset.
 
@@ -163,14 +163,14 @@ Ensure diversity in query formulation and complexity."""
         except json.JSONDecodeError:
             # msg = f"Failed to parse generated dataset: {e}\nResponse: {response}"
             logger.error(
-                "Failed to parse OpenAI response JSON. Raw response:\n%s",
+                "Failed to parse Llama response JSON. Raw response:\n%s",
                 response,
                 exc_info=True,
             )
             raise
 
     def generate_sync(
-            self, domain: str, task_description: str, constraints: list[str] | None = None
+        self, domain: str, task_description: str, constraints: list[str] | None = None
     ) -> DatasetSource:
         """Synchronous version of generate."""
         return asyncio.run(self.generate(domain, task_description, constraints))
@@ -180,10 +180,10 @@ class OpenAIDatasetGenerator:
     """Generate synthetic datasets using OpenAI models (GPT-4, etc.)."""
 
     def __init__(
-            self,
-            model: str = "gpt-4o",
-            api_key: str | None = None,
-            config: GeneratorConfig | None = None,
+        self,
+        model: str = "gpt-4o",
+        api_key: str | None = None,
+        config: GeneratorConfig | None = None,
     ):
         """Initialize OpenAI dataset generator.
 
@@ -232,11 +232,11 @@ Distribution:
 Ensure diversity in query formulation and complexity."""
 
     async def generate(
-            self,
-            domain: str,
-            task_description: str,
-            constraints: list[str] | None = None,
-            seed_examples: list[dict[str, Any]] | None = None,
+        self,
+        domain: str,
+        task_description: str,
+        constraints: list[str] | None = None,
+        seed_examples: list[dict[str, Any]] | None = None,
     ) -> DatasetSource:
         """Generate synthetic dataset.
 
@@ -262,10 +262,7 @@ Ensure diversity in query formulation and complexity."""
         if seed_examples:
             messages[1]["content"] += f"\n\nSeed examples:\n{json.dumps(seed_examples, indent=2)}"
 
-        logger.debug(
-            "OpenAI generated prompt (messages):\n%s",
-            json.dumps(messages, indent=2)
-        )
+        logger.debug("OpenAI generated prompt (messages):\n%s", json.dumps(messages, indent=2))
         # Generate with GPT
         response = await self.client.chat.completions.create(
             model=self.model,
@@ -312,18 +309,18 @@ Ensure diversity in query formulation and complexity."""
 
         except json.JSONDecodeError:
             logger.error(
-                "Failed to parse Llama response JSON. Raw response:\n%s",
+                "Failed to parse OpenAI response JSON. Raw response:\n%s",
                 response_text,
                 exc_info=True,
             )
         raise
 
     def generate_sync(
-            self,
-            domain: str,
-            task_description: str,
-            constraints: list[str] | None = None,
-            seed_examples: list[dict[str, Any]] | None = None,
+        self,
+        domain: str,
+        task_description: str,
+        constraints: list[str] | None = None,
+        seed_examples: list[dict[str, Any]] | None = None,
     ) -> DatasetSource:
         """Synchronous version of generate."""
         return asyncio.run(self.generate(domain, task_description, constraints, seed_examples))
