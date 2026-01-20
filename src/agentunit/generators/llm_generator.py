@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from dataclasses import dataclass
 from typing import Any
 
 from agentunit.datasets.base import DatasetCase, DatasetSource
 
+
+logger = logging.getLogger(__name__)
 
 try:
     import openai
@@ -114,6 +117,8 @@ Ensure diversity in query formulation and complexity."""
         if constraints:
             prompt += "\n\nAdditional constraints:\n" + "\n".join(f"- {c}" for c in constraints)
 
+        logger.debug("Llama generated prompt:\n%s", prompt)
+
         # Generate with Llama
         response = await asyncio.to_thread(
             self.client.text_generation,
@@ -123,6 +128,7 @@ Ensure diversity in query formulation and complexity."""
             temperature=self.config.temperature,
             return_full_text=False,
         )
+        logger.debug("Llama raw response:\n%s", response)
 
         # Parse JSON response
         try:
@@ -154,9 +160,14 @@ Ensure diversity in query formulation and complexity."""
                 cases, name=f"llama_generated_{domain.replace(' ', '_')}"
             )
 
-        except json.JSONDecodeError as e:
-            msg = f"Failed to parse generated dataset: {e}\nResponse: {response}"
-            raise ValueError(msg)
+        except json.JSONDecodeError:
+            # msg = f"Failed to parse generated dataset: {e}\nResponse: {response}"
+            logger.error(
+                "Failed to parse Llama response JSON. Raw response:\n%s",
+                response,
+                exc_info=True,
+            )
+            raise
 
     def generate_sync(
         self, domain: str, task_description: str, constraints: list[str] | None = None
@@ -251,6 +262,7 @@ Ensure diversity in query formulation and complexity."""
         if seed_examples:
             messages[1]["content"] += f"\n\nSeed examples:\n{json.dumps(seed_examples, indent=2)}"
 
+        logger.debug("OpenAI generated prompt (messages):\n%s", json.dumps(messages, indent=2))
         # Generate with GPT
         response = await self.client.chat.completions.create(
             model=self.model,
@@ -261,6 +273,7 @@ Ensure diversity in query formulation and complexity."""
         )
 
         response_text = response.choices[0].message.content
+        logger.debug("OpenAI raw response text:\n%s", response_text)
 
         # Parse JSON response
         try:
@@ -294,9 +307,13 @@ Ensure diversity in query formulation and complexity."""
                 cases, name=f"openai_generated_{domain.replace(' ', '_')}"
             )
 
-        except json.JSONDecodeError as e:
-            msg = f"Failed to parse generated dataset: {e}\nResponse: {response_text}"
-            raise ValueError(msg)
+        except json.JSONDecodeError:
+            logger.error(
+                "Failed to parse OpenAI response JSON. Raw response:\n%s",
+                response_text,
+                exc_info=True,
+            )
+        raise
 
     def generate_sync(
         self,
