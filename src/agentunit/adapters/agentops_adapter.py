@@ -72,20 +72,6 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
         self.enable_tracing: bool = kwargs.get("enable_tracing", True)
         self.client: Any = None
         self.platform = MonitoringPlatform.AGENTOPS
-        # """
-        # Initialize LangSmith adapter.
-
-        # Args:
-        #     api_key: LangSmith API key
-        #     project_id: Langsmith project ID
-        #     endpoint: Optional custom LangSmith endpoint
-        #     enable_tracing: Whether to enable automatic tracing
-        #     enable_feedback: Whether to collect feedback data
-        # """
-        # self.api_key = api_key
-        # self.project_id = project_id
-        # self.default_tags = default_tags or []
-        # self.auto_start_session = auto_start_session
 
         # Initialize AgentOps client
         self._initialize_agentops()
@@ -537,7 +523,7 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
             trace_metadata = {
                 "scenario_name": scenario.name,
                 "metrics": session_summary.get("metrics", {}),
-                "success": True,
+                "success": False,
             }
 
             if trace_log and self.enable_tracing:
