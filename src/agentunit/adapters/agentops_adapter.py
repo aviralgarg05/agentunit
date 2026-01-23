@@ -390,6 +390,7 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
                 logger.warning(f"Failed to create scenario trace: {e}")
 
         # Execute scenario (this would typically involve running the actual test)
+        session_summary: dict[str, Any] = {}
         start_time = time.time()
 
         try:
@@ -524,12 +525,13 @@ class AgentOpsAdapter(MultiAgentAdapter, ProductionIntegration):
                 "scenario_name": scenario.name,
                 "metrics": session_summary.get("metrics", {}),
                 "success": False,
+                "error": str(e),
             }
 
             if trace_log and self.enable_tracing:
                 try:
                     self.agentops.update_trace_metadata(
-                        {"error": str(e)},
+                        trace_metadata,
                         prefix="trace.metadata",
                     )
                     self.agentops.end_trace(
