@@ -102,15 +102,19 @@ Ensure diversity in query formulation and complexity."""
     async def generate(
         self, domain: str, task_description: str, constraints: list[str] | None = None
     ) -> DatasetSource:
-        """Generate synthetic dataset.
-
-        Args:
-            domain: Domain of the task (e.g., "customer service", "code review")
-            task_description: Detailed description of what the agent should do
-            constraints: Optional list of constraints or requirements
-
+        """
+        Generate a dataset of synthetic test cases for a given domain and task.
+        
+        Parameters:
+            domain (str): Domain name for the generated cases (e.g., "customer service").
+            task_description (str): Description of the task the cases should exercise.
+            constraints (list[str] | None): Optional list of additional constraints to apply when generating cases.
+        
         Returns:
-            DatasetSource with generated cases
+            DatasetSource: A dataset containing generated DatasetCase objects. Each case includes an `id`, `query`, optional `expected_output`, and `metadata` containing at least `difficulty`, `generated` (True), and `domain`.
+        
+        Raises:
+            json.JSONDecodeError: If the model response cannot be parsed as JSON.
         """
         prompt = self._create_generation_prompt(domain, task_description)
 
@@ -238,16 +242,22 @@ Ensure diversity in query formulation and complexity."""
         constraints: list[str] | None = None,
         seed_examples: list[dict[str, Any]] | None = None,
     ) -> DatasetSource:
-        """Generate synthetic dataset.
-
-        Args:
-            domain: Domain of the task
-            task_description: Detailed description of what the agent should do
-            constraints: Optional list of constraints
-            seed_examples: Optional seed examples to guide generation
-
+        """
+        Generate a synthetic dataset of test cases for a given domain and task.
+        
+        Constructs a chat prompt from the domain, task description, optional constraints, and optional seed examples, sends it to the configured OpenAI chat model, parses the model's JSON array response into DatasetCase objects, and returns a DatasetSource containing those cases.
+        
+        Parameters:
+            domain (str): Domain or subject area for which to generate test cases.
+            task_description (str): Description of the task or problem the generated cases should exercise.
+            constraints (list[str] | None): Optional list of additional constraints to include in the prompt.
+            seed_examples (list[dict[str, Any]] | None): Optional list of example cases to guide generation; included verbatim in the prompt.
+        
         Returns:
-            DatasetSource with generated cases
+            DatasetSource: A dataset source containing generated DatasetCase entries with metadata (including difficulty, generated=True, and domain).
+        
+        Raises:
+            json.JSONDecodeError: If the model's response cannot be parsed as a JSON array of cases.
         """
         messages = [
             {"role": "system", "content": "You are an expert test case generator."},
