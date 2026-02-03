@@ -141,7 +141,7 @@ Ensure diversity in query formulation and complexity."""
 
             cases_data = json.loads(response_text)
 
-            cases = []
+            cases: list[DatasetCase] = []
             for case_data in cases_data:
                 case = DatasetCase(
                     id=case_data.get("id", f"generated_{len(cases)}"),
@@ -288,7 +288,7 @@ Ensure diversity in query formulation and complexity."""
 
             cases_data = json.loads(response_text)
 
-            cases = []
+            cases: list[DatasetCase] = []
             for case_data in cases_data:
                 case = DatasetCase(
                     id=case_data.get("id", f"generated_{len(cases)}"),
